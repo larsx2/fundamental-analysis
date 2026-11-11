@@ -37,6 +37,17 @@ The riskiest work comes first: whether the stack runs on Bun, then whether filin
 - Commits follow the conventional commits format.
 - Each task lists the Effect ideas it introduces, because learning Effect is a goal. The first use of each one gets a plain explanation in a comment.
 
+## Rules for tests
+
+The aim is a few dozen tests for the first slice that each catch something real, not hundreds that pass whatever the code does.
+
+- A test is kept only if it names the mistake it catches. If no realistic wrong change to the code would make it fail, delete it.
+- The right answer comes from outside the code, such as a figure from the filed annual report. Never copy the code's current output into a test as the expected value.
+- Each rule in this plan gets one test, such as a 53-week year counting as a full fiscal year, the latest restated number winning, a products-only tag being ignored, or a gap never becoming zero. New tests come from bugs found: each bug gets one test that reproduces it.
+- Test what goes in and what comes out, not how the code is built. Use a stand-in for the SEC only, never for the project's own code.
+- Do not test what TypeScript, Effect's schema tool or the libraries already guarantee.
+- Now and then, break the code on purpose. If no test fails, the tests are hollow. If many fail for one mistake, they overlap and some should go.
+
 ---
 
 ## Part 1: Prove the pieces start together
@@ -407,7 +418,7 @@ Coarse on purpose. Each task is broken down when it is reached.
 - [ ] Add the MIT licence file.
 - [ ] Confirm the licence of everything installed, and of the typeface and icons.
 - [ ] Decide which email address appears on the commits before the history becomes public.
-- [ ] Add a short guide for contributors and for coding agents: the glossary rule, RFCs and decision records, the task names, the commit format.
+- [ ] Add a short guide for contributors and for coding agents: the glossary rule, the rules for tests, RFCs and decision records, the task names, the commit format.
 
 ### T33: Checks that run by themselves
 
