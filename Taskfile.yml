@@ -19,6 +19,14 @@ silent: true
 # Only tasks that work today are defined. Add the others when there is
 # something real for them to run.
 
+# Shared checks, reused below with `*needs-bun` and `*needs-install`.
+x-needs-bun: &needs-bun
+  sh: command -v bun >/dev/null 2>&1
+  msg: "Bun is missing. Install it from https://bun.com, then run `task init`."
+x-needs-install: &needs-install
+  sh: test -d node_modules
+  msg: "Nothing is installed yet. Run `task init` first."
+
 tasks:
   default:
     desc: List available tasks
@@ -28,7 +36,7 @@ tasks:
     desc: Check the tools this project needs, without changing anything
     cmd: |
       missing=0
-      for tool in git node pnpm; do
+      for tool in git bun; do
         if command -v "$tool" >/dev/null 2>&1; then
           printf '%-5s %s\n' "$tool" "$("$tool" --version | head -n 1)"
         else
@@ -36,4 +44,46 @@ tasks:
           missing=1
         fi
       done
+      expected=$(sed -n 's/.*"packageManager": "bun@\([^"]*\)".*/\1/p' package.json)
+      if command -v bun >/dev/null 2>&1 && [ "$(bun --version)" != "$expected" ]; then
+        printf 'Bun %s is installed, but this project is fixed to %s.\n' "$(bun --version)" "$expected"
+        missing=1
+      fi
       exit $missing
+
+  init:
+    desc: Install everything, exactly as recorded in the lockfile
+    preconditions: [*needs-bun]
+    cmd: bun install --frozen-lockfile
+
+  dev:
+    desc: Serve the tool on this machine at http://127.0.0.1:4100
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun run dev
+
+  check:
+    desc: Check formatting, lint rules and types, without changing anything
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun run check
+
+  fix:
+    desc: Format the code and apply the fixes the checks know how to make
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun run fix
+
+  test:
+    desc: Run the tests once
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun run test {{.CLI_ARGS}}
+
+  build:
+    desc: Build the tool for running without the development server
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun run build
+
+  ci:
+    desc: Run everything that must pass before work is handed over
+    cmds:
+      - task: check
+      - task: test
+      - task: build

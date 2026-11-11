@@ -58,10 +58,10 @@ Rests on: [Build on TypeScript, Effect, SQLite and TanStack Start, run on Bun](.
 
 **Depends on:** nothing. **Size:** medium.
 
-- [ ] Create the project with TanStack Start and React, built with Vite+, run by Bun.
-- [ ] `task init` installs everything. `task dev` serves one page on this machine.
-- [ ] `task check`, `task fix`, `task test`, `task build` and `task ci` are defined and pass on the empty project.
-- [ ] `task doctor` checks for Bun instead of Node and pnpm.
+- [x] Create the project with TanStack Start and React, built with Vite+, run by Bun.
+- [x] `task init` installs everything. `task dev` serves one page on this machine.
+- [x] `task check`, `task fix`, `task test`, `task build` and `task ci` are defined and pass on the empty project.
+- [x] `task doctor` checks for Bun instead of Node and pnpm.
 
 **If Vite+ will not start with Bun:** switch to plain Vite with Oxlint and Oxfmt, and add that to the decision record. Do not spend more than half a day on it.
 
