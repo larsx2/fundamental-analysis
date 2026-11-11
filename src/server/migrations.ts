@@ -20,6 +20,19 @@ const settings = Effect.gen(function* () {
   `;
 });
 
+// One row holding the moment the next request to the SEC may start.
+// Every request takes its slot from here, so all copies of the tool that
+// share this database also share the SEC's limit.
+const secRequestSlot = Effect.gen(function* () {
+  const sql = yield* SqlClient;
+  yield* sql`
+    CREATE TABLE sec_request_slot (
+      id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1),
+      next_start_at INTEGER NOT NULL
+    ) STRICT
+  `;
+});
+
 /**
  * Every change to the database's structure, named `<number>_<what it does>`.
  * They run in number order, and a change that has run is never run again,
@@ -27,4 +40,5 @@ const settings = Effect.gen(function* () {
  */
 export const migrations = {
   "0001_settings": settings,
+  "0002_sec_request_slot": secRequestSlot,
 };

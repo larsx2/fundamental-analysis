@@ -111,10 +111,10 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T02. **Size:** medium.
 
-- [ ] One service makes every request to the SEC. Nothing else talks to it.
-- [ ] It never sends more than ten requests per second, however many are waiting.
-- [ ] It tries again after a short wait when a request fails for a passing reason, and gives up with a clear reason when it does not.
-- [ ] It sends the contact details the SEC asks for, read from a local setting that is never committed. Without them it refuses to run and says why.
+- [x] One service makes every request to the SEC. Nothing else talks to it.
+- [x] It never sends more than ten requests per second, however many are waiting.
+- [x] It tries again after a short wait when a request fails for a passing reason, and gives up with a clear reason when it does not.
+- [x] It sends the contact details the SEC asks for, read from a local setting that is never committed. Without them it refuses to run and says why.
 
 **Effect ideas:** the web request module, retry schedules, rate limiting, errors as named kinds.
 
