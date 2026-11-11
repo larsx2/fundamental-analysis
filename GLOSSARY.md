@@ -90,6 +90,11 @@ A company's own version of a figure, leaving out costs that management considers
 _Example_: For 2022 Uber showed an adjusted profit of about $1.7 billion while its reported net income was a loss of about $9 billion.
 _Avoid_: Non-GAAP, core, underlying, normalized
 
+**Restated number**:
+A reported number for a past fiscal year that the company later published again with a different value. Screens show the latest restated number unless they say otherwise.
+_Example_: A company changes how it counts revenue and, in the next annual report, publishes last year's revenue again under the new method.
+_Avoid_: Revised, corrected, adjusted
+
 **Guidance**:
 Management's own public forecast for the coming quarter or year.
 _Example_: In January 2019 Apple lowered its revenue guidance for the holiday quarter because of weak iPhone demand in China.
@@ -405,3 +410,52 @@ _Avoid_: DCF, cash flow model
 The gap between a valuation and a lower share price, kept as protection in case the valuation is wrong.
 _Example_: Estimating a share is worth $100 and buying only at $60 or less.
 _Avoid_: Discount, cushion, upside
+
+### 12. Collecting a company
+
+These are the tool's own words, not words from the field.
+
+**Collecting**:
+Fetching a company's filings from the SEC and checking them, which happens only when a person asks for that company.
+_Example_: Searching for Costco, finding it is not collected, and saying yes starts collecting it in the background.
+_Avoid_: Pulling, importing, syncing, downloading, prefilling
+
+**Not collected**:
+The state of a company the tool knows by name and ticker only.
+_Example_: Before anyone asks for it, every public company is not collected.
+_Avoid_: Missing, unavailable, inactive
+
+**Ready**:
+The state of a company whose reported numbers are collected, have passed their checks, and can be opened.
+_Example_: A quiet notice says "Costco is ready" while you keep reading about another company.
+_Avoid_: Active, done, available, loaded
+
+**As of**:
+The date of the newest filing included in a ready company's data.
+_Example_: "As of 9 October" means the newest filing the tool holds for that company was filed on 9 October.
+_Avoid_: Updated, synced, the day the data was collected
+
+**Last checked**:
+The day the tool last asked the SEC whether a ready company has newer filings.
+_Example_: A company can be as of 9 October and last checked today, which means nothing newer exists yet.
+_Avoid_: Refreshed, updated, as of
+
+**Calculated number**:
+A figure the tool worked out from reported numbers because the company does not publish it as a single line. It is always marked as calculated.
+_Example_: Free cash flow, worked out as operating cash flow minus capital expenditure.
+_Avoid_: Derived, estimated, adjusted number
+
+**Doubtful number**:
+A reported number that failed one of the tool's checks. It is still shown, marked as doubtful, with the check it failed.
+_Example_: A fiscal year where assets do not equal liabilities plus equity in the collected data.
+_Avoid_: Error, bad data, invalid
+
+**Gap**:
+The empty place shown where a company does not report a term. It is never shown as zero.
+_Example_: Costco reports no research and development, so that line is a gap.
+_Avoid_: Zero, N/A, missing data
+
+**Not covered**:
+The answer the tool gives for a kind of company its terms and views do not fit, with the reason. In the first version this means banks, insurers, property trusts, and companies that do not file an annual report (10-K).
+_Example_: Asking for JPMorgan explains that banks have no cost of revenue or gross profit and are not covered yet.
+_Avoid_: Unsupported, blocked, error
