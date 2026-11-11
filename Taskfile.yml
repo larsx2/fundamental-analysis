@@ -1,0 +1,39 @@
+version: "3"
+
+silent: true
+
+# Conventions:
+#
+# - Every task has a `desc`, and `task` on its own lists them all.
+# - The same few names in every project: doctor, init, dev, check, fix, test, build, ci.
+# - `check` never changes a file. `fix` is the one that does.
+# - `ci` runs exactly what must pass before work is handed over.
+# - Related tasks share a prefix and a colon, such as `db:migrate` and `db:reset`.
+# - Extra arguments go after `--` and reach the command through {{.CLI_ARGS}}.
+# - A task that changes stored data only reports what it would do.
+#   Adding `-- --apply` makes it write.
+# - A task that needs a tool checks for it first and says how to install it.
+# - Tasks are a thin layer over the project's own commands, which stay the source of truth.
+# - When this file grows long, groups move into `tasks/<Group>.yml` and are included here.
+#
+# Only tasks that work today are defined. Add the others when there is
+# something real for them to run.
+
+tasks:
+  default:
+    desc: List available tasks
+    cmd: task --list
+
+  doctor:
+    desc: Check the tools this project needs, without changing anything
+    cmd: |
+      missing=0
+      for tool in git node pnpm; do
+        if command -v "$tool" >/dev/null 2>&1; then
+          printf '%-5s %s\n' "$tool" "$("$tool" --version | head -n 1)"
+        else
+          printf '%-5s missing\n' "$tool"
+          missing=1
+        fi
+      done
+      exit $missing

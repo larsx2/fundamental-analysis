@@ -1,0 +1,24 @@
+# Secrets and personal settings
+.env
+.env.*
+!.env.sample
+.claude/settings.local.json
+
+# Collected data. Each person collects their own copy; it is never published here.
+data/
+*.db
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+
+# Design references from other products. Never published here.
+.mobbin/
+
+# Installed and built files
+node_modules/
+dist/
+.output/
+
+# Operating system
+.DS_Store
