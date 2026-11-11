@@ -51,7 +51,7 @@ What is known about Bun with these pieces:
 - Effect has a SQLite connector made for Bun, `@effect/sql-sqlite-bun`, which uses the SQLite built into Bun.
 - One risk: an early bug report describes Vite+ failing to start a TanStack Start project that was installed with Bun ([issue 1391](https://github.com/voidzero-dev/vite-plus/issues/1391)). It was against a much older Vite+ and may be fixed. The first task of the build must prove that all the pieces start together on Bun. If Vite+ is the piece that fails, plain Vite replaces it.
 - Oxc, the fast toolkit for reading, checking and tidying code, needs no separate decision. Vite+ already includes its checker, Oxlint, and its tidier, Oxfmt, and builds with a bundler made on Oxc. If Vite+ has to be replaced by plain Vite, Oxlint and Oxfmt are added by themselves so `task check` and `task fix` stay the same. ESLint and Prettier are not used.
-- Oxlint knows nothing about Effect. Mistakes that are specific to Effect, such as writing an Effect and never running it, are caught by Effect's own checking plugin for TypeScript, which should be added alongside. Its fit with Bun and Vite+ needs confirming during setup.
+- Oxlint knows nothing about Effect. Mistakes that are specific to Effect, such as writing an Effect and never running it, are caught by Effect's own checking plugin for TypeScript, which should be added alongside. Confirmed on 11 November 2026: for TypeScript 7 the plugin is `@effect/tsgo`, and it runs inside `task check`.
 
 ### Recommended: the proposed stack, with two limits and two additions
 
@@ -105,7 +105,7 @@ TanStack Query (MIT). Moving through ten fiscal years on the money flow view ask
 **4. The agent's two halves.**
 
 - Talking to a language model: Effect's own module for it, which fits the goal of learning Effect and lets the model be swapped. It carries the same unstable label as the database client.
-- Finding the right passage of a filing to answer from: the text search built into SQLite, called FTS5, so no extra service is needed. Whether the SQLite inside Bun includes it needs confirming.
+- Finding the right passage of a filing to answer from: the text search built into SQLite, called FTS5, so no extra service is needed. Confirmed on 11 November 2026: on macOS, Bun uses the system SQLite, version 3.43.2, and it includes FTS5. Bun on Linux ships its own SQLite, which has not been checked yet.
 
 **5. Proof that the screens look right.**
 
@@ -149,6 +149,6 @@ A plain Vite app with a small local server. This removes one framework but means
 - The mapping from filing tags to glossary terms has its own RFC: [How filing data becomes glossary terms](./0004-filing-data-to-glossary-terms.md).
 - The SEC asks every program that reads its data to identify itself with contact details, and refuses requests that do not. Each person running the tool must supply their own, and the project cannot ship one. Where is it asked for and stored?
 - New filings arrive every quarter, and companies sometimes file a corrected version of an old one. How is the collected data brought up to date?
-- Confirm the licence of every piece in "What the stack is still missing", and that the SQLite inside Bun includes its text search.
+- Confirm the licence of every piece in "What the stack is still missing". Whether the SQLite inside Bun includes its text search was answered on 11 November 2026: it does on macOS, and Linux is unchecked.
 
 ## Outcome

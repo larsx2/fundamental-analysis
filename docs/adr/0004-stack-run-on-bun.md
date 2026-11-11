@@ -24,4 +24,11 @@ Vite+ 1.6.0 starts TanStack Start 1.169.5 on Bun 1.4.0, so no fallback was neede
 
 Formatting, lint rules and type checks all run through `vp check`, which also formats the Markdown documents. The server listens on port 4100, on this machine only.
 
+## What the next two tasks proved, on 11 November 2026
+
+- Effect 4.1.4 reads and writes SQLite through `@effect/sql-sqlite-bun`, and changes to the database's structure run through its migrator. Tests run on Bun through `@effect/vitest`, against a database in memory.
+- Effect's checking plugin works. For TypeScript 7 it is `@effect/tsgo`, not `@effect/language-service`, and it supports exactly the TypeScript, Oxlint and type checker versions Vite+ 1.6.0 bundles. `task check` runs through its `effect-tsgo` command, which loads Effect's rules into Oxlint without changing anything installed. The recommended set of rules is on, except the warning about modules labelled unstable, since exact versions are fixed instead.
+- A server function runs an Effect program through one shared runtime and returns plain data. Screens fetch it through TanStack Query and contain no Effect code, and none of the database code reaches the browser.
+- On macOS, Bun uses the SQLite that comes with the system, version 3.43.2, which includes FTS5 text search.
+
 Explored in [Which technology to build the first version on](../rfc/0003-technology-stack.md). The database client is covered separately in [Use Effect's own database client to talk to SQLite](./0001-effect-database-client-for-sqlite.md).

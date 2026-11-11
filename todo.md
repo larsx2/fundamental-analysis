@@ -71,11 +71,11 @@ Rests on: [Build on TypeScript, Effect, SQLite and TanStack Start, run on Bun](.
 
 **Depends on:** T01. **Size:** small.
 
-- [ ] One Effect program opens a SQLite file through Effect's own database client and Bun's connector.
-- [ ] A first change to the database's structure runs through Effect's built-in tool for that.
-- [ ] The program writes one row and reads it back, with the row's shape described by Effect's schema tool.
-- [ ] A test covers it using Effect's helper for Vitest.
-- [ ] Effect's checking plugin for TypeScript is switched on, or noted as not working with this setup.
+- [x] One Effect program opens a SQLite file through Effect's own database client and Bun's connector.
+- [x] A first change to the database's structure runs through Effect's built-in tool for that.
+- [x] The program writes one row and reads it back, with the row's shape described by Effect's schema tool.
+- [x] A test covers it using Effect's helper for Vitest.
+- [x] Effect's checking plugin for TypeScript is switched on, or noted as not working with this setup.
 
 **Effect ideas:** an Effect as a description of work, running one, services and layers, the schema tool.
 
@@ -85,9 +85,9 @@ Rests on: [Build on TypeScript, Effect, SQLite and TanStack Start, run on Bun](.
 
 **Depends on:** T02. **Size:** small.
 
-- [ ] A function on the server runs an Effect program that reads SQLite and returns plain data.
-- [ ] The page calls it through TanStack Query and shows the value.
-- [ ] No Effect code appears in any screen file.
+- [x] A function on the server runs an Effect program that reads SQLite and returns plain data.
+- [x] The page calls it through TanStack Query and shows the value.
+- [x] No Effect code appears in any screen file.
 
 **Effect ideas:** turning an Effect into a plain promise at the edge.
 
@@ -95,9 +95,9 @@ Rests on: [Build on TypeScript, Effect, SQLite and TanStack Start, run on Bun](.
 
 ### Checkpoint A: the stack is proven
 
-- [ ] `task ci` passes.
-- [ ] The decision record says what was actually used, including any fallback.
-- [ ] Confirm that the SQLite inside Bun includes its text search, and note the answer in the stack RFC.
+- [x] `task ci` passes.
+- [x] The decision record says what was actually used, including any fallback.
+- [x] Confirm that the SQLite inside Bun includes its text search, and note the answer in the stack RFC.
 
 ---
 
