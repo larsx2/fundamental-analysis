@@ -24,7 +24,7 @@ Every screen shows glossary terms, and every filing uses the company's own label
 
 **What the SEC's data shows for the three slice companies, read on 11 November 2026**
 
-Taken from the SEC's public numbers for Apple, Costco and Microsoft, looking only at the six terms the money flow screen needs.
+Taken from the SEC's public numbers for Apple, Costco and Microsoft, looking only at the seven terms the money flow screen needs.
 
 | Term | Apple | Costco | Microsoft |
 | --- | --- | --- | --- |

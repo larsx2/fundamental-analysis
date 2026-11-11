@@ -31,7 +31,7 @@ The riskiest work comes first: whether the stack runs on Bun, then whether filin
 
 - A task is done when `task ci` passes and its "Check" has been carried out.
 - Screens and messages use the words in [`GLOSSARY.md`](./GLOSSARY.md) and no others.
-- Collected data is never committed. Tests use small made-up data in the same shape as the SEC's.
+- Collected data is never committed. Tests use small made-up data in the same shape as the SEC's, or small extracts of the SEC's public data for Apple, Costco and Microsoft, trimmed to the tags the tests need and kept beside the tests. `task ci` never reaches the SEC.
 - Exact versions are fixed for everything installed.
 - Before adopting anything new, confirm its licence allows sharing under MIT.
 - Commits follow the conventional commits format.
@@ -136,6 +136,7 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 - [ ] Fetch all reported numbers for one company in a single request and check their shape with the schema tool.
 - [ ] Keep only numbers from annual reports (10-K) that cover a full fiscal year.
 - [ ] A number in an unexpected shape is reported, not silently dropped.
+- [ ] A small script trims the SEC's data for Apple, Costco and Microsoft down to the tags the tests need, and the extracts are committed beside the tests.
 
 **Effect ideas:** decoding outside data with the schema tool, doing database work in one transaction.
 
@@ -151,11 +152,11 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Check:** Apple's fiscal 2023 is the period ending 30 September 2023. Microsoft's is the year ending 30 June 2023. Costco's ends on 3 September 2023.
 
-### T09: Turn tags into six glossary terms
+### T09: Turn tags into seven glossary terms
 
 **Depends on:** T08. **Size:** medium.
 
-- [ ] For each of the six terms, an ordered list of the tags that count is kept as data, not buried in code.
+- [ ] For each of the seven terms, an ordered list of the tags that count is kept as data, not buried in code.
 - [ ] For each fiscal year the latest restated number is chosen, and the original stays available.
 - [ ] Tags that cover only part of a term, such as revenue from products only, are never used.
 - [ ] A company's tags that look related but are not on any list are reported, so the lists can grow.
@@ -179,7 +180,7 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 - [ ] Each fiscal year is checked: gross profit equals revenue minus cost of revenue, and operating income equals gross profit minus the operating expense lines, within a small rounding allowance.
 - [ ] A number that fails becomes a doubtful number and keeps the check it failed.
-- [ ] `task collect -- AAPL` collects one company and prints the six terms for every fiscal year, with calculated, doubtful and gap marks.
+- [ ] `task collect -- AAPL` collects one company and prints the seven terms for every fiscal year, with calculated, doubtful and gap marks.
 - [ ] A test holds Apple's fiscal 2023 to its filed values, in millions of dollars: revenue 383,285, cost of revenue 214,137, gross profit 169,148, research and development 29,915, selling general and administrative 24,932, operating income 114,301, net income 96,995.
 
 **Effect ideas:** the command line module.
@@ -274,7 +275,7 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 **Depends on:** T11, T16, T17. **Size:** medium.
 
-- [ ] The chosen drawing shows the six terms for one fiscal year, each as dollars and as a share of revenue.
+- [ ] The chosen drawing shows the seven terms for one fiscal year, each as dollars and as a share of revenue.
 - [ ] A control moves through the fiscal years. The chosen year lives in the address bar, so reloading or going back keeps it.
 - [ ] Calculated numbers, doubtful numbers and gaps each have their own quiet mark.
 - [ ] Every number can show which filing it came from, with a link to it.
@@ -299,7 +300,7 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 - [ ] Movement: values roll when the fiscal year changes, and the drawing moves from one year to the next instead of jumping.
 - [ ] Every state has a designed screen: not collected, waiting, collecting, failed, and not covered.
 - [ ] The whole slice works with the keyboard alone.
-- [ ] Playwright saves a picture of the screen for each of the three companies, and `task ci` compares against them.
+- [ ] Playwright saves a picture of the screen for each of the three companies, built from the committed extracts, and `task ci` compares against them.
 
 **Check:** someone who has not seen it uses it for ten minutes with no help.
 
@@ -321,7 +322,7 @@ Coarse on purpose. Each task is broken down when it is reached.
 
 **Depends on:** Checkpoint C.
 
-- [ ] Extend the tag lists from six terms to every reported term in the glossary's income statement, balance sheet and cash flow statement groups.
+- [ ] Extend the tag lists from seven terms to every reported term in the glossary's income statement, balance sheet and cash flow statement groups.
 - [ ] Add the checks for the other statements, starting with assets equal liabilities plus equity.
 - [ ] Adjust share counts and earnings per share for share splits.
 - [ ] Add the calculated terms: free cash flow, net debt, the margins.
