@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { secContactQuery } from "../functions/settings";
 
 export const Route = createFileRoute("/")({
-  // Fetch before the page is drawn, so it never flashes an empty value.
   loader: ({ context }) => context.queryClient.ensureQueryData(secContactQuery),
   component: CompaniesPage,
 });

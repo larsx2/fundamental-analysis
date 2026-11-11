@@ -35,7 +35,8 @@ The riskiest work comes first: whether the stack runs on Bun, then whether filin
 - Exact versions are fixed for everything installed.
 - Before adopting anything new, confirm its licence allows sharing under MIT.
 - Commits follow the conventional commits format.
-- Each task lists the Effect ideas it introduces, because learning Effect is a goal. The first use of each one gets a plain explanation in a comment.
+- Comments in code only say what the code cannot, such as a reason or an outside rule. Nothing that restates the code.
+- Each task lists the Effect ideas it introduces, because learning Effect is a goal. The first use of each one gets a plain explanation in [`docs/learning-effect.md`](./docs/learning-effect.md), not in a comment.
 
 ## Rules for tests
 

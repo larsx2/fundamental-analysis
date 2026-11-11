@@ -3,10 +3,6 @@ import { SqlClient } from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
 import * as SqlSchema from "effect/sql/SqlSchema";
 
-// The schema tool describes the shape of a piece of data once. The same
-// description checks rows as they come back from the database, so a row
-// in an unexpected shape fails loudly instead of flowing on as bad data.
-/** The contact details the SEC asks every program that reads its data to send. */
 export const secContactKey = "sec-contact";
 
 const SettingRow = Schema.Struct({
@@ -14,14 +10,6 @@ const SettingRow = Schema.Struct({
   value: Schema.String,
 });
 
-/**
- * Small local settings kept in the database, such as the contact details
- * the SEC asks for. They live with the collected data, so they are never
- * committed.
- */
-// A service is a named piece of the program that others ask for by name.
-// This class is both the name (used with `yield* Settings`) and the
-// description of what the service offers.
 export class Settings extends Context.Service<
   Settings,
   {

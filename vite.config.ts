@@ -5,7 +5,6 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   server: {
-    // The tool runs on this machine only, so the server never listens beyond it.
     host: "127.0.0.1",
     port: 4100,
     strictPort: true,
@@ -25,12 +24,10 @@ export default defineConfig({
       typeAware: true,
       typeCheck: true,
     },
-    // Effect's own rules, such as an Effect that is written but never run.
-    // They only load when the check is started through `effect-tsgo`.
+    // The Effect rules load only when the check runs through `effect-tsgo`.
     rules: {
       ...recommended.rules,
-      // The database, web request and command line modules are all labelled
-      // unstable. Exact versions are fixed instead, as the stack decision says.
+      // Unstable Effect modules are used on purpose, with exact versions fixed.
       "effecttsgo/unstable-api-usage": "off",
     },
   },

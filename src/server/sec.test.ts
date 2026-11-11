@@ -10,13 +10,8 @@ import { Settings, secContactKey } from "./settings";
 const url = "https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json";
 const contact = "Test Person test@example.com";
 
-/** What the stand-in saw: when each request started, and its User-Agent. */
 type Seen = { at: number; userAgent: string | undefined };
 
-/**
- * A stand-in for the SEC. `answer` gives the status for the nth request,
- * counting from 0. Every request is recorded in `seen`.
- */
 const standIn = (seen: Array<Seen>, answer: (n: number) => number) =>
   Layer.succeed(
     HttpClient.HttpClient,
@@ -35,7 +30,6 @@ const standIn = (seen: Array<Seen>, answer: (n: number) => number) =>
     ),
   );
 
-/** A fresh database in memory, with contact details given unless told otherwise. */
 const setup = (seen: Array<Seen>, answer: (n: number) => number, withContact = true) => {
   const services = Settings.layer.pipe(
     Layer.provideMerge(databaseLayer(":memory:")),
@@ -50,7 +44,6 @@ const setup = (seen: Array<Seen>, answer: (n: number) => number, withContact = t
   return { services, giveContact };
 };
 
-/** Runs `program` in the background and moves the test clock far enough for it to finish. */
 const runWithClock = <A, E>(program: Effect.Effect<A, E>) =>
   Effect.gen(function* () {
     const fiber = yield* Effect.forkChild(program);
@@ -59,8 +52,6 @@ const runWithClock = <A, E>(program: Effect.Effect<A, E>) =>
   });
 
 describe("Sec", () => {
-  // Catches: no limit at all, a limit kept only in memory so two copies of
-  // the tool together go over it, and a gap that is too short.
   it.effect("two copies sharing a database never send more than ten requests in any second", () => {
     const seen: Array<Seen> = [];
     const { services, giveContact } = setup(seen, () => 200);
@@ -84,7 +75,6 @@ describe("Sec", () => {
     }).pipe(Effect.provide(services));
   });
 
-  // Catches: requests sent without the contact details, which the SEC refuses.
   it.effect("every request carries the contact details", () => {
     const seen: Array<Seen> = [];
     const { services, giveContact } = setup(seen, () => 200);
@@ -96,7 +86,6 @@ describe("Sec", () => {
     }).pipe(Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))));
   });
 
-  // Catches: a request sent anonymously when no contact details were given.
   it.effect("without contact details nothing is sent", () => {
     const seen: Array<Seen> = [];
     const { services } = setup(seen, () => 200, false);
@@ -108,7 +97,6 @@ describe("Sec", () => {
     }).pipe(Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))));
   });
 
-  // Catches: giving up on the first passing failure, such as the SEC being busy.
   it.effect("a busy SEC is tried again until it answers", () => {
     const seen: Array<Seen> = [];
     const { services, giveContact } = setup(seen, (n) => (n < 2 ? 503 : 200));
@@ -121,7 +109,6 @@ describe("Sec", () => {
     }).pipe(Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))));
   });
 
-  // Catches: retrying forever, or failing with no reason the caller can show.
   it.effect("a SEC that stays busy is given up on with a reason", () => {
     const seen: Array<Seen> = [];
     const { services, giveContact } = setup(seen, () => 503);
@@ -134,8 +121,6 @@ describe("Sec", () => {
     }).pipe(Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))));
   });
 
-  // Catches: retrying a refusal. The SEC refuses when too many requests were
-  // sent, and retrying would only make the block last longer.
   it.effect("a refusal is never tried again", () => {
     const seen: Array<Seen> = [];
     const { services, giveContact } = setup(seen, () => 403);

@@ -4,7 +4,6 @@ import { Effect, Option } from "effect";
 import { runtime } from "../server/runtime";
 import { Settings, secContactKey } from "../server/settings";
 
-/** Runs on the server. Screens call it like a plain function and get plain data. */
 const getSecContact = createServerFn({ method: "GET" }).handler(() =>
   runtime.runPromise(
     Effect.gen(function* () {
