@@ -125,9 +125,9 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T04. **Size:** small.
 
-- [ ] Fetch the SEC's list of public companies and store name, ticker and company number.
-- [ ] Search by name or ticker returns matches, best first.
-- [ ] Every company starts as not collected.
+- [x] Fetch the SEC's list of public companies and store name, ticker and company number.
+- [x] Search by name or ticker returns matches, best first.
+- [x] Every company starts as not collected.
 
 **Check:** searching "cost" finds Costco. Searching "MSFT" finds Microsoft.
 

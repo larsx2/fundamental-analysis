@@ -1,15 +1,6 @@
 import { Effect } from "effect";
 import { SqlClient } from "effect/sql/SqlClient";
 
-// An Effect is a description of work, not the work itself. Writing
-// `Effect.gen(function* () { ... })` runs nothing. It describes steps, and
-// `yield*` inside it means "do this step and give me its result". Nothing
-// happens until the description is handed to a runtime, which is done by
-// the migrator here.
-//
-// `yield* SqlClient` asks for the database client service. The function
-// does not know or care which file it is; the layer decides that.
-
 const settings = Effect.gen(function* () {
   const sql = yield* SqlClient;
   yield* sql`
@@ -20,9 +11,6 @@ const settings = Effect.gen(function* () {
   `;
 });
 
-// One row holding the moment the next request to the SEC may start.
-// Every request takes its slot from here, so all copies of the tool that
-// share this database also share the SEC's limit.
 const secRequestSlot = Effect.gen(function* () {
   const sql = yield* SqlClient;
   yield* sql`
@@ -33,12 +21,31 @@ const secRequestSlot = Effect.gen(function* () {
   `;
 });
 
-/**
- * Every change to the database's structure, named `<number>_<what it does>`.
- * They run in number order, and a change that has run is never run again,
- * so a change is never edited once it has been committed. Add a new one.
- */
+const companies = Effect.gen(function* () {
+  const sql = yield* SqlClient;
+  yield* sql`
+    CREATE TABLE company (
+      cik INTEGER PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      list_position INTEGER NOT NULL,
+      state TEXT NOT NULL DEFAULT 'not_collected'
+        CHECK (state IN ('not_collected', 'waiting', 'collecting', 'ready', 'failed'))
+    ) STRICT
+  `;
+  yield* sql`
+    CREATE TABLE company_ticker (
+      ticker TEXT PRIMARY KEY NOT NULL,
+      cik INTEGER NOT NULL REFERENCES company (cik),
+      list_position INTEGER NOT NULL
+    ) STRICT
+  `;
+  yield* sql`CREATE INDEX company_ticker_by_company ON company_ticker (cik)`;
+});
+
+// A migration that has been committed is never edited, because databases
+// that already ran it would not run it again. Add a new one instead.
 export const migrations = {
   "0001_settings": settings,
   "0002_sec_request_slot": secRequestSlot,
+  "0003_companies": companies,
 };
