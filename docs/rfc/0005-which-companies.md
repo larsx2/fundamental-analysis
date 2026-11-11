@@ -45,13 +45,13 @@ Proposed on 11 November 2026.
 3. Saying yes starts the collecting in the background. The person can keep using the tool.
 4. The company moves through clear states, each visible wherever the company appears:
 
-| State | Meaning |
-| --- | --- |
-| Not collected | Known by name and ticker only. |
-| Waiting | Asked for, and in line behind others. |
-| Collecting | Being fetched and checked now, with progress shown. |
-| Ready | Its numbers are in and passed their checks. It can be opened. |
-| Failed | Collecting stopped. The reason is shown and it can be tried again. |
+| State         | Meaning                                                            |
+| ------------- | ------------------------------------------------------------------ |
+| Not collected | Known by name and ticker only.                                     |
+| Waiting       | Asked for, and in line behind others.                              |
+| Collecting    | Being fetched and checked now, with progress shown.                |
+| Ready         | Its numbers are in and passed their checks. It can be opened.      |
+| Failed        | Collecting stopped. The reason is shown and it can be tried again. |
 
 5. A ready company shows two dates: the date of the newest filing it includes, and the day the SEC was last checked for newer ones. Together they say how current it is and make "check for new filings" a simple action.
 6. The numbers arrive first and make the company ready. The filing text for the agent keeps arriving afterwards, and the agent says so until it is complete.

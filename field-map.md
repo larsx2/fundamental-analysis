@@ -77,14 +77,14 @@ Valuation comes last. It only means something once you understand the pieces abo
 
 ## How this maps to your tool
 
-| What you asked for | What it is called | Where the data comes from |
-| --- | --- | --- |
-| Year-over-year progress | Horizontal analysis | XBRL data from EDGAR |
-| Distribution of expenses and income | Common-size and segment analysis | XBRL data, plus notes in the 10-K |
-| History of decisions | Capital allocation history, corporate timeline | 8-K filings, 10-K text, call transcripts |
-| Market context at the time | Macro and industry backdrop | FRED, the US central bank's free data service |
-| Correlation with news | Event study | Price history plus dated filings and news |
-| An agent that explains it | Research assistant over filings | Your language model subscription reading the documents |
+| What you asked for                  | What it is called                              | Where the data comes from                              |
+| ----------------------------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| Year-over-year progress             | Horizontal analysis                            | XBRL data from EDGAR                                   |
+| Distribution of expenses and income | Common-size and segment analysis               | XBRL data, plus notes in the 10-K                      |
+| History of decisions                | Capital allocation history, corporate timeline | 8-K filings, 10-K text, call transcripts               |
+| Market context at the time          | Macro and industry backdrop                    | FRED, the US central bank's free data service          |
+| Correlation with news               | Event study                                    | Price history plus dated filings and news              |
+| An agent that explains it           | Research assistant over filings                | Your language model subscription reading the documents |
 
 ## A realistic boundary for a first version
 
@@ -98,8 +98,8 @@ Understanding 100 companies well does not by itself lead to beating the market. 
 
 ## Where to learn the foundations
 
-- *The Intelligent Investor* by Benjamin Graham. The mindset.
-- *Financial Statements* by Thomas Ittelson. The three statements, from zero.
-- *The Outsiders* by William Thorndike. Capital allocation told through eight chief executives.
+- _The Intelligent Investor_ by Benjamin Graham. The mindset.
+- _Financial Statements_ by Thomas Ittelson. The three statements, from zero.
+- _The Outsiders_ by William Thorndike. Capital allocation told through eight chief executives.
 - Aswath Damodaran's free valuation course from New York University, on YouTube.
 - Warren Buffett's annual letters to Berkshire Hathaway shareholders, free online.

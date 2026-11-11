@@ -42,4 +42,3 @@ The builder is the first person tested. One other person who is new to the field
 - Does the order in which companies are studied matter, starting with simple businesses before complicated ones?
 
 ## Outcome
-

@@ -59,4 +59,3 @@ The prototype needs readable figures, clear statement tables, labelled charts an
 - Company logos and brand colours belong to each company. Can the tool show a company's colour as a background glow without shipping its logo, and where would the colour come from?
 
 ## Outcome
-

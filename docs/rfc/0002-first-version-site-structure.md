@@ -57,27 +57,31 @@ Each screen answers one question a beginner would ask, in the order they would a
 A plain list of the public companies already collected, with name, ticker, industry, and revenue for the latest fiscal year. Search by name or ticker covers every public company, and choosing one that is not collected yet offers to collect it. Nothing else. This is the home screen. How collecting on demand works is explored in [Which companies are covered, and how they get in](./0005-which-companies.md).
 
 **Company, Overview.** "What is this company and is it growing?"
+
 - One paragraph on the business model, in plain words.
 - Revenue and net income for the last ten fiscal years as the main chart.
 - A strip of key figures for the latest fiscal year: revenue, year-over-year change, gross margin, operating margin, net income, free cash flow, cash, debt.
 
 **Company, Where the money goes.** "Out of every dollar it takes in, where does it go?"
+
 - A common-size view of one fiscal year: revenue on one side, splitting into cost of revenue, research and development, selling general and administrative, and what remains as operating income and net income.
 - A control to move through the fiscal years and watch the split change.
-This is the screen that teaches the income statement without calling it a lesson.
+  This is the screen that teaches the income statement without calling it a lesson.
 
 **Company, Statements.** "Show me the real numbers."
+
 - The income statement, balance sheet and cash flow statement as three tabs.
 - Fiscal years as columns, ten or more.
 - Every number links to the place in the filing it came from.
 
 **Company, Timeline.** "What did it do, and what was going on at the time?"
 One horizontal timeline across ten or more fiscal years, in stacked rows that share the same time axis:
+
 - Revenue and net income.
 - Capital allocation: acquisitions, share buybacks, dividends, capital expenditure, debt raised or repaid.
 - Corporate events, taken from current reports (8-K).
 - Economic context: interest rate, inflation, recessions.
-Selecting any point in time shows everything that was true at that moment.
+  Selecting any point in time shows everything that was true at that moment.
 
 **Glossary.** "What does this word mean?"
 The glossary as a browsable page, in the same learning order as `GLOSSARY.md`.
@@ -88,16 +92,16 @@ The glossary as a browsable page, in the same learning order as `GLOSSARY.md`.
 
 ### Left for later
 
-| Screen or feature | Why it can wait |
-| --- | --- |
-| Comparing two companies side by side | One company must be understandable first. |
-| Segments | Segment data is reported differently by every company and needs its own exploring. |
-| Industry context | Needs a reliable way to group rivals. |
-| Market context and event study | Both need share prices or index values, and the first version holds none. |
-| Quarters | The fourth quarter is never reported by itself and would have to be worked out. |
-| Valuation | The tool's first job is understanding the business, not pricing it. |
-| Reading filings inside the tool | A link out to the filing is enough at first. |
-| Accounts, settings, saved lists | The tool runs locally for one person. |
+| Screen or feature                    | Why it can wait                                                                    |
+| ------------------------------------ | ---------------------------------------------------------------------------------- |
+| Comparing two companies side by side | One company must be understandable first.                                          |
+| Segments                             | Segment data is reported differently by every company and needs its own exploring. |
+| Industry context                     | Needs a reliable way to group rivals.                                              |
+| Market context and event study       | Both need share prices or index values, and the first version holds none.          |
+| Quarters                             | The fourth quarter is never reported by itself and would have to be worked out.    |
+| Valuation                            | The tool's first job is understanding the business, not pricing it.                |
+| Reading filings inside the tool      | A link out to the filing is enough at first.                                       |
+| Accounts, settings, saved lists      | The tool runs locally for one person.                                              |
 
 ### A smaller alternative
 

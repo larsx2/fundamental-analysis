@@ -26,15 +26,15 @@ Every screen shows glossary terms, and every filing uses the company's own label
 
 Taken from the SEC's public numbers for Apple, Costco and Microsoft, looking only at the seven terms the money flow screen needs.
 
-| Term | Apple | Costco | Microsoft |
-| --- | --- | --- | --- |
-| Revenue | Three different tags over the years, changing in 2017 | Three tags | Four tags, one of which covers products only and must be ignored |
-| Cost of revenue | One tag throughout | Two tags, changing in 2016 | Three tags, one of them products only |
-| Gross profit | Reported | Not reported, so it must be calculated | Reported |
-| Research and development | Reported | Not reported at all, so it is a gap | Reported |
-| Selling, general and administrative | Reported as one line | Reported as one line | Never reported as one line. Selling and marketing, and general and administrative, are separate lines that must be added |
-| Operating income | One tag | One tag | One tag |
-| Net income | One tag | Two tags that mean slightly different things | One tag |
+| Term                                | Apple                                                 | Costco                                       | Microsoft                                                                                                                |
+| ----------------------------------- | ----------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Revenue                             | Three different tags over the years, changing in 2017 | Three tags                                   | Four tags, one of which covers products only and must be ignored                                                         |
+| Cost of revenue                     | One tag throughout                                    | Two tags, changing in 2016                   | Three tags, one of them products only                                                                                    |
+| Gross profit                        | Reported                                              | Not reported, so it must be calculated       | Reported                                                                                                                 |
+| Research and development            | Reported                                              | Not reported at all, so it is a gap          | Reported                                                                                                                 |
+| Selling, general and administrative | Reported as one line                                  | Reported as one line                         | Never reported as one line. Selling and marketing, and general and administrative, are separate lines that must be added |
+| Operating income                    | One tag                                               | One tag                                      | One tag                                                                                                                  |
+| Net income                          | One tag                                               | Two tags that mean slightly different things | One tag                                                                                                                  |
 
 - All three have fiscal years with more than one published value: two for Apple, four for Costco, and four for Microsoft.
 - The data reaches back to fiscal 2008 for all three, because the first machine-readable filings also carried the two years before them.
@@ -58,4 +58,3 @@ Taken from the SEC's public numbers for Apple, Costco and Microsoft, looking onl
 - Can each mapped number carry where it came from, so any figure on screen links back to its filing?
 
 ## Outcome
-

@@ -55,14 +55,14 @@ What is known about Bun with these pieces:
 
 ### Recommended: the proposed stack, with two limits and two additions
 
-| Piece | Verdict | Reason |
-| --- | --- | --- |
-| TypeScript | Keep | One language for collecting, storing and drawing. |
-| SQLite | Keep | A single local file fits a single local user, and the data is small. |
-| Kysely | Drop, in favour of Effect's own database client | Its official bridge to Effect stops at version 3, and the data collecting already runs inside Effect. |
-| Effect | Keep, for everything behind the screens | Learning Effect is a goal of this project. Rate limits, retries, checking messy data and resuming a half-finished run are also what it is best at. |
-| TanStack Start | Keep | Screens can read the database directly with no separate service in between, and the chosen company, fiscal year and range live in the address bar. |
-| Vite+ | Keep | It is stable now, and it sits on plain Vite, so stepping back to plain Vite is cheap. |
+| Piece          | Verdict                                         | Reason                                                                                                                                             |
+| -------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript     | Keep                                            | One language for collecting, storing and drawing.                                                                                                  |
+| SQLite         | Keep                                            | A single local file fits a single local user, and the data is small.                                                                               |
+| Kysely         | Drop, in favour of Effect's own database client | Its official bridge to Effect stops at version 3, and the data collecting already runs inside Effect.                                              |
+| Effect         | Keep, for everything behind the screens         | Learning Effect is a goal of this project. Rate limits, retries, checking messy data and resuming a half-finished run are also what it is best at. |
+| TanStack Start | Keep                                            | Screens can read the database directly with no separate service in between, and the chosen company, fiscal year and range live in the address bar. |
+| Vite+          | Keep                                            | It is stable now, and it sits on plain Vite, so stepping back to plain Vite is cheap.                                                              |
 
 **Limit one: Effect stays out of the screens.** Settled on 11 November 2026: learning Effect is a goal of this project, alongside learning fundamental analysis. So Effect covers everything behind the screens: collecting the data, the database, and the functions the screens call. Screen code stays plain React that calls a function and gets data back. This keeps the drawing code simple and gives Effect a clear territory to be learned in.
 
@@ -89,37 +89,39 @@ Companies label the same thing differently in their filings. Revenue alone appea
 
 **2. A look-and-feel layer. D3 draws charts, not the controls and layout around them.**
 
-| Need | Suggested piece | Licence |
-| --- | --- | --- |
-| Colours, spacing and type sizes defined once and reused everywhere | Tailwind CSS version 4, with the values held as CSS variables | MIT |
-| Tabs, switches, pop-up cards, tooltips and dialogs that work with a keyboard and a screen reader | Base UI | MIT |
-| Search that opens from any screen with one key | cmdk | MIT |
-| Movement: panels sliding, lines drawing, values changing smoothly | Motion | MIT |
-| Numbers that roll from one value to the next when the fiscal year changes | NumberFlow | MIT |
-| A typeface whose digits all have the same width, so columns of numbers line up | Inter or Geist | Open Font License |
-| Icons | Lucide | ISC |
+| Need                                                                                             | Suggested piece                                               | Licence           |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------- |
+| Colours, spacing and type sizes defined once and reused everywhere                               | Tailwind CSS version 4, with the values held as CSS variables | MIT               |
+| Tabs, switches, pop-up cards, tooltips and dialogs that work with a keyboard and a screen reader | Base UI                                                       | MIT               |
+| Search that opens from any screen with one key                                                   | cmdk                                                          | MIT               |
+| Movement: panels sliding, lines drawing, values changing smoothly                                | Motion                                                        | MIT               |
+| Numbers that roll from one value to the next when the fiscal year changes                        | NumberFlow                                                    | MIT               |
+| A typeface whose digits all have the same width, so columns of numbers line up                   | Inter or Geist                                                | Open Font License |
+| Icons                                                                                            | Lucide                                                        | ISC               |
 
 **3. A cache between the screens and the functions they call.**
 TanStack Query (MIT). Moving through ten fiscal years on the money flow view asks for the same data again and again. This keeps what was already fetched, fetches the neighbouring years ahead of time, and is made to work with TanStack Start.
 
 **4. The agent's two halves.**
+
 - Talking to a language model: Effect's own module for it, which fits the goal of learning Effect and lets the model be swapped. It carries the same unstable label as the database client.
 - Finding the right passage of a filing to answer from: the text search built into SQLite, called FTS5, so no extra service is needed. Whether the SQLite inside Bun includes it needs confirming.
 
 **5. Proof that the screens look right.**
+
 - Playwright (Apache 2.0) to open each screen and compare it against a saved picture, so a change to one chart cannot quietly break another.
 - Effect's helper for Vitest, to test the collecting code.
 
 **Deliberately not added**
 
-| Tempting piece | Why it is not needed |
-| --- | --- |
-| A ready-made chart library | The timeline and money flow view are custom. D3's own parts for flows and for zooming cover them. |
-| A table library | The statements are about sixty lines by ten fiscal years. A plain table handles that. |
-| Drawing on canvas or with the graphics card | A few hundred points per chart is far below where SVG slows down. |
-| A separate tool for holding screen state | The address bar holds the company, fiscal year and range. The cache holds the data. |
-| A date or number library | Effect has both, and the browser formats numbers by itself. |
-| A separate tool for changing the database's structure over time | Effect's database client includes one. |
+| Tempting piece                                                  | Why it is not needed                                                                              |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| A ready-made chart library                                      | The timeline and money flow view are custom. D3's own parts for flows and for zooming cover them. |
+| A table library                                                 | The statements are about sixty lines by ten fiscal years. A plain table handles that.             |
+| Drawing on canvas or with the graphics card                     | A few hundred points per chart is far below where SVG slows down.                                 |
+| A separate tool for holding screen state                        | The address bar holds the company, fiscal year and range. The cache holds the data.               |
+| A date or number library                                        | Effect has both, and the browser formats numbers by itself.                                       |
+| A separate tool for changing the database's structure over time | Effect's database client includes one.                                                            |
 
 ### What unstable means, and the stable alternative
 
@@ -150,4 +152,3 @@ A plain Vite app with a small local server. This removes one framework but means
 - Confirm the licence of every piece in "What the stack is still missing", and that the SQLite inside Bun includes its text search.
 
 ## Outcome
-

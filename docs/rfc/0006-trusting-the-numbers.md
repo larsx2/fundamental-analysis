@@ -39,4 +39,3 @@ Nothing unsure is hidden, and nothing unsure is shown as if it were certain.
 - What do the marks for doubtful and calculated numbers look like, so they are noticed without shouting?
 
 ## Outcome
-

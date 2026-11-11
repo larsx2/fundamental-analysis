@@ -1,6 +1,7 @@
 # Fundamental Analysis
 
 A local tool for understanding how a public company works by looking at its numbers, its decisions and the world around it, all on one timeline.
+
 ## Why it exists
 
 To make it possible to understand 100 US-listed public companies in a short time, starting with no background in fundamental analysis.
@@ -41,29 +42,29 @@ The plan is to publish it as open source under the MIT licence. Until a licence 
 
 ## Where things are
 
-| File or folder | What it holds |
-| --- | --- |
-| [`GLOSSARY.md`](./GLOSSARY.md) | The official words of the project, in the order to learn them. The tool uses these words and no others. |
-| [`field-map.md`](./field-map.md) | A short map of the field: what it is called, what it includes, and where the data comes from. |
-| [`todo.md`](./todo.md) | The work to reach the first version, in order, with a check for every task. |
-| [`docs/rfc/`](./docs/rfc/) | Open questions and ideas being explored. Start with its README. |
-| [`docs/adr/`](./docs/adr/) | Decisions that were made, and why. Each one is a short file. |
+| File or folder                   | What it holds                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| [`GLOSSARY.md`](./GLOSSARY.md)   | The official words of the project, in the order to learn them. The tool uses these words and no others. |
+| [`field-map.md`](./field-map.md) | A short map of the field: what it is called, what it includes, and where the data comes from.           |
+| [`todo.md`](./todo.md)           | The work to reach the first version, in order, with a check for every task.                             |
+| [`docs/rfc/`](./docs/rfc/)       | Open questions and ideas being explored. Start with its README.                                         |
+| [`docs/adr/`](./docs/adr/)       | Decisions that were made, and why. Each one is a short file.                                            |
 
 ## Tasks
 
 Commands are run through [Task](https://taskfile.dev).
 
-| Command | What it does | Works today |
-| --- | --- | --- |
-| `task` | Lists every task | Yes |
-| `task doctor` | Checks the tools the project needs, without changing anything | Yes |
-| `task init` | Installs what the project depends on | Not yet |
-| `task dev` | Starts the tool locally | Not yet |
-| `task check` | Looks for problems without changing any file | Not yet |
-| `task fix` | Applies the automatic fixes | Not yet |
-| `task test` | Runs the tests | Not yet |
-| `task build` | Builds the tool | Not yet |
-| `task ci` | Runs everything that must pass before work is handed over | Not yet |
+| Command       | What it does                                                  | Works today |
+| ------------- | ------------------------------------------------------------- | ----------- |
+| `task`        | Lists every task                                              | Yes         |
+| `task doctor` | Checks the tools the project needs, without changing anything | Yes         |
+| `task init`   | Installs what the project depends on                          | Not yet     |
+| `task dev`    | Starts the tool locally                                       | Not yet     |
+| `task check`  | Looks for problems without changing any file                  | Not yet     |
+| `task fix`    | Applies the automatic fixes                                   | Not yet     |
+| `task test`   | Runs the tests                                                | Not yet     |
+| `task build`  | Builds the tool                                               | Not yet     |
+| `task ci`     | Runs everything that must pass before work is handed over     | Not yet     |
 
 The rules behind these names are written at the top of [`Taskfile.yml`](./Taskfile.yml).
 

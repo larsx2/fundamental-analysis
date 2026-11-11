@@ -6,12 +6,12 @@ RFCs are where the thinking happens. Decisions that come out of them are recorde
 
 ## How RFCs and ADRs differ
 
-| | RFC | ADR |
-| --- | --- | --- |
-| Holds | A question, the options, and what was learned | One decision and its reason |
-| Written | Before the answer is known | After the answer is known |
-| Length | As long as the exploring needs | One to three sentences |
-| Changes over time | Yes, until it is closed | No. A new ADR replaces an old one |
+|                   | RFC                                           | ADR                               |
+| ----------------- | --------------------------------------------- | --------------------------------- |
+| Holds             | A question, the options, and what was learned | One decision and its reason       |
+| Written           | Before the answer is known                    | After the answer is known         |
+| Length            | As long as the exploring needs                | One to three sentences            |
+| Changes over time | Yes, until it is closed                       | No. A new ADR replaces an old one |
 
 ## Files
 

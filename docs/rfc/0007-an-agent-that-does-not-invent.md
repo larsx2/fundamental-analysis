@@ -31,4 +31,3 @@ Language models state wrong figures with full confidence. An agent that does tha
 - What leaves the machine when a question is asked, and is the reader told?
 
 ## Outcome
-
