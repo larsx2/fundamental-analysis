@@ -168,10 +168,10 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T08. **Size:** medium.
 
-- [ ] For each of the seven terms, an ordered list of the tags that count is kept as data, not buried in code.
-- [ ] For each fiscal year the latest restated number is chosen, and the original stays available.
-- [ ] Tags that cover only part of a term, such as revenue from products only, are never used.
-- [ ] A company's tags that look related but are not on any list are reported, so the lists can grow.
+- [x] For each of the seven terms, an ordered list of the tags that count is kept as data, not buried in code.
+- [x] For each fiscal year the latest restated number is chosen, and the original stays available.
+- [x] Tags that cover only part of a term, such as revenue from products only, are never used.
+- [x] A company's tags that look related but are not on any list are reported, so the lists can grow.
 
 **Check:** revenue is continuous with no missing or doubled fiscal year, from 2008 to 2026, for all three companies.
 
@@ -179,10 +179,10 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T09. **Size:** small.
 
-- [ ] Gross profit is calculated from revenue and cost of revenue when the company does not report it, as with Costco.
-- [ ] Selling, general and administrative is added up from its two parts when the company reports them separately, as with Microsoft.
-- [ ] A term the company never reports, such as research and development at Costco, is a gap and never zero.
-- [ ] Every calculated number is marked as calculated and keeps the numbers it was made from.
+- [x] Gross profit is calculated from revenue and cost of revenue when the company does not report it, as with Costco.
+- [x] Selling, general and administrative is added up from its two parts when the company reports them separately, as with Microsoft.
+- [x] A term the company never reports, such as research and development at Costco, is a gap and never zero.
+- [x] Every calculated number is marked as calculated and keeps the numbers it was made from.
 
 **Check:** Costco has a calculated gross profit and a gap for research and development. Microsoft has a calculated selling, general and administrative.
 
@@ -190,10 +190,10 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T10. **Size:** medium.
 
-- [ ] Each fiscal year is checked: gross profit equals revenue minus cost of revenue, and operating income equals gross profit minus the operating expense lines, within a small rounding allowance.
-- [ ] A number that fails becomes a doubtful number and keeps the check it failed.
-- [ ] `task collect -- AAPL` collects one company and prints the seven terms for every fiscal year, with calculated, doubtful and gap marks.
-- [ ] A test holds Apple's fiscal 2023 to its filed values, in millions of dollars: revenue 383,285, cost of revenue 214,137, gross profit 169,148, research and development 29,915, selling general and administrative 24,932, operating income 114,301, net income 96,995.
+- [x] Each fiscal year is checked: gross profit equals revenue minus cost of revenue, and operating income equals gross profit minus the operating expense lines, within a small rounding allowance.
+- [x] A number that fails becomes a doubtful number and keeps the check it failed.
+- [x] `task collect -- AAPL` collects one company and prints the seven terms for every fiscal year, with calculated, doubtful and gap marks.
+- [x] A test holds Apple's fiscal 2023 to its filed values, in millions of dollars: revenue 383,285, cost of revenue 214,137, gross profit 169,148, research and development 29,915, selling general and administrative 24,932, operating income 114,301, net income 96,995.
 
 **Effect ideas:** the command line module.
 
@@ -201,9 +201,9 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 ### Checkpoint B: the numbers are right in the terminal
 
-- [ ] Three companies print, and one fiscal year of each has been confirmed by hand.
-- [ ] Every doubtful number has been looked at: is the data wrong, or the check?
-- [ ] What was learned about tags is written back into the RFC.
+- [x] Three companies print, and one fiscal year of each has been confirmed by hand.
+- [x] Every doubtful number has been looked at: is the data wrong, or the check?
+- [x] What was learned about tags is written back into the RFC.
 - [ ] Review together before any screen work starts.
 
 ---

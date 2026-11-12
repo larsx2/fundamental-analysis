@@ -75,3 +75,9 @@ Read: [`src/server/companies.ts`](../src/server/companies.ts).
 `Schema.decodeUnknownEffect(schema)(data)` checks data from outside and fails the whole Effect if anything is off. When one bad entry should not sink the rest, `Schema.decodeUnknownResult(schema)` checks a single entry and returns a `Result`: `Result.isFailure(result)` says whether it failed, `result.failure.message` says why, and `result.success` holds the checked value.
 
 Read: [`src/server/collect.ts`](../src/server/collect.ts).
+
+## The command line module
+
+`Command.make("collect", { ticker: Argument.String("ticker") }, handler)` declares a command, its arguments and the Effect it runs. `Command.run(command, { version })` reads the arguments, prints help and errors, and runs the handler. `BunRuntime.runMain` runs the whole program on Bun and turns a failure into an exit code, and `BunServices.layer` supplies the files, terminal and standard input the command module needs.
+
+Read: [`src/cli/collect.ts`](../src/cli/collect.ts).
