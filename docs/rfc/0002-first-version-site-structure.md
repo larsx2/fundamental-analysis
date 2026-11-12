@@ -18,7 +18,7 @@ Every screen added is a screen to design, fill with data and keep correct. The f
 
 ### Settled on 11 November 2026
 
-- **The first slice.** The first thing built end to end with real data is: search for one company, collect it, and show "Where the money goes" across its fiscal years. It needs seven terms: revenue, cost of revenue, gross profit, research and development, selling general and administrative, operating income and net income.
+- **The first slice.** The first thing built end to end with real data is: search for one company, collect it, and show "Where the money goes" across its fiscal years. It needs eight terms: revenue, cost of revenue, gross profit, research and development, selling general and administrative, other operating expenses, operating income and net income.
 - **The agent comes after.** The first version is the Companies list, the four company screens, the Glossary and the term card. The agent is built next, on data already proven right.
 - **Fiscal years only.** Nothing in the first version is shown by quarter.
 - **The slice is proven on three companies.** Apple, because the glossary examples use it. Costco, because it reports no research and development and labels its costs differently. Microsoft, because its fiscal year ends in June and its filing labels differ again.

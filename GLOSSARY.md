@@ -123,7 +123,7 @@ _Example_: Apple kept about $169 billion of gross profit from its $383 billion o
 _Avoid_: Gross income, gross earnings
 
 **Operating expenses**:
-The costs of running the company that are not tied to each unit sold. In most filings these are research and development plus selling, general and administrative.
+The costs of running the company that are not tied to each unit sold. In most filings these are research and development plus selling, general and administrative, and in some years other operating expenses as well.
 _Example_: Apple's operating expenses in fiscal 2023 were about $55 billion.
 _Avoid_: Opex, overhead, running costs
 
@@ -136,6 +136,11 @@ _Avoid_: R&D, product spend, engineering cost
 What a company spends on marketing, sales staff, management, offices, legal and accounting.
 _Example_: Apple spent about $25 billion on selling, general and administrative in fiscal 2023.
 _Avoid_: SG&A, overhead, admin
+
+**Other operating expenses**:
+Operating costs outside research and development and selling, general and administrative, such as writing down a business that lost value, restructuring, or the cost of opening new stores. The tool works it out as whatever lies between those two lines and operating income, so every year adds up.
+_Example_: Microsoft's other operating expenses in fiscal 2015 were about $10 billion, mostly writing down the phone business it bought from Nokia.
+_Avoid_: One-off charges, special items, non-recurring costs
 
 **Operating income**:
 Gross profit minus operating expenses: what the business itself earned, before interest and tax.

@@ -30,6 +30,7 @@ Nothing unsure is hidden, and nothing unsure is shown as if it were certain.
 - A term the company does not report appears as a gap with a short note, never as zero.
 - A term worked out from others appears marked as a calculated number.
 - A company with doubtful numbers still becomes ready.
+- When a filed figure breaks its term's own definition, the calculated number is shown and the filed figure stays attached, marked as doubtful. Settled with [the decision on definitions and differences](../adr/0006-definitions-win-differences-are-shown.md).
 
 ## Open points
 

@@ -164,11 +164,11 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Check:** Apple's fiscal 2023 is the period ending 30 September 2023. Microsoft's is the year ending 30 June 2023. Costco's ends on 3 September 2023.
 
-### T09: Turn tags into seven glossary terms
+### T09: Turn tags into eight glossary terms
 
 **Depends on:** T08. **Size:** medium.
 
-- [x] For each of the seven terms, an ordered list of the tags that count is kept as data, not buried in code.
+- [x] For each of the eight terms, an ordered list of the tags that count is kept as data, not buried in code.
 - [x] For each fiscal year the latest restated number is chosen, and the original stays available.
 - [x] Tags that cover only part of a term, such as revenue from products only, are never used.
 - [x] A company's tags that look related but are not on any list are reported, so the lists can grow.
@@ -190,10 +190,10 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T10. **Size:** medium.
 
-- [x] Each fiscal year is checked: gross profit equals revenue minus cost of revenue, and operating income equals gross profit minus the operating expense lines, within a small rounding allowance.
+- [x] Each fiscal year is checked: gross profit equals revenue minus cost of revenue, and operating income equals gross profit minus the operating expense lines, within a small rounding allowance. Since review, a gross profit that breaks its definition is set aside behind the calculated one, other operating expenses make every year add up, and operating income is checked against the totals the company reports. See [the decision](./docs/adr/0006-definitions-win-differences-are-shown.md).
 - [x] A number that fails becomes a doubtful number and keeps the check it failed.
-- [x] `task collect -- AAPL` collects one company and prints the seven terms for every fiscal year, with calculated, doubtful and gap marks.
-- [x] A test holds Apple's fiscal 2023 to its filed values, in millions of dollars: revenue 383,285, cost of revenue 214,137, gross profit 169,148, research and development 29,915, selling general and administrative 24,932, operating income 114,301, net income 96,995.
+- [x] `task collect -- AAPL` collects one company and prints the eight terms for every fiscal year, with calculated, doubtful and gap marks.
+- [x] A test holds Apple's fiscal 2023 to its filed values, in millions of dollars: revenue 383,285, cost of revenue 214,137, gross profit 169,148, research and development 29,915, selling general and administrative 24,932, other operating expenses 0, operating income 114,301, net income 96,995.
 
 **Effect ideas:** the command line module.
 
@@ -204,7 +204,7 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 - [x] Three companies print, and one fiscal year of each has been confirmed by hand.
 - [x] Every doubtful number has been looked at: is the data wrong, or the check?
 - [x] What was learned about tags is written back into the RFC.
-- [ ] Review together before any screen work starts.
+- [x] Review together before any screen work starts. Settled by [the decision on definitions and differences](./docs/adr/0006-definitions-win-differences-are-shown.md).
 
 ---
 
@@ -287,7 +287,7 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 **Depends on:** T11, T16, T17. **Size:** medium.
 
-- [ ] The chosen drawing shows the seven terms for one fiscal year, each as dollars and as a share of revenue.
+- [ ] The chosen drawing shows the eight terms for one fiscal year, each as dollars and as a share of revenue.
 - [ ] A control moves through the fiscal years. The chosen year lives in the address bar, so reloading or going back keeps it.
 - [ ] Calculated numbers, doubtful numbers and gaps each have their own quiet mark.
 - [ ] Every number can show which filing it came from, with a link to it.
@@ -334,7 +334,7 @@ Coarse on purpose. Each task is broken down when it is reached.
 
 **Depends on:** Checkpoint C.
 
-- [ ] Extend the tag lists from seven terms to every reported term in the glossary's income statement, balance sheet and cash flow statement groups.
+- [ ] Extend the tag lists from eight terms to every reported term in the glossary's income statement, balance sheet and cash flow statement groups.
 - [ ] Add the checks for the other statements, starting with assets equal liabilities plus equity.
 - [ ] Adjust share counts and earnings per share for share splits.
 - [ ] Add the calculated terms: free cash flow, net debt, the margins.
@@ -437,5 +437,5 @@ Not part of the first version. Each needs its own RFC before any work starts.
 - Industry context and comparing companies.
 - Segments.
 - Banks, insurers, property trusts, and companies that do not file an annual report (10-K).
-- History before 2009.
+- History before the first machine-readable annual reports, which reach back to about fiscal 2007.
 - Your own notes on a company, and progress across the 100. See [How we know the tool teaches](./docs/rfc/0008-knowing-the-tool-teaches.md).
