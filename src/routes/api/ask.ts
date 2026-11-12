@@ -16,11 +16,13 @@ export const Route = createFileRoute("/api/ask")({
           year?: unknown;
           earlier?: unknown;
         } | null;
-        const question = typeof body?.question === "string" ? body.question.trim() : "";
+        const question =
+          typeof body?.question === "string" ? body.question.trim().slice(0, 1000) : "";
         const tickers = [
           ...new Set(
             (Array.isArray(body?.tickers) ? body.tickers : [body?.ticker])
               .filter((each: unknown): each is string => typeof each === "string" && each !== "")
+              .map((each: string) => each.toUpperCase())
               .slice(0, 4),
           ),
         ];

@@ -34,7 +34,7 @@ Answer
 Reply with JSON that matches the schema:
 - lead: one short sentence that answers the question.
 - sentences: one to three short sentences that explain it, in the glossary's words.
-- drawing: "" .
+- drawing: "".
 - next: three short questions a beginner might ask next, about words or ideas, or about a company such as "Is Apple growing?".
 
 ${

@@ -135,8 +135,9 @@ function CollectSheet({
     setSending(true);
     try {
       if (asking) await saveContact({ data: { name: name.trim(), email: email.trim() } });
-      if (openOnReady) openWhenReady(company.cik);
       const answer = await collectCompany({ data: { cik: company.cik } });
+      const started = answer.answer !== "not covered" && answer.answer !== "could not ask";
+      if (started && openOnReady) openWhenReady(company.cik);
       await queryClient.invalidateQueries({ queryKey: ["companies"] });
       await queryClient.invalidateQueries({ queryKey: ["company"] });
       if (answer.answer === "not covered") return notCovered(answer.reason);
