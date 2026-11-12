@@ -1,0 +1,327 @@
+/* The Glossary: sections listed on the left, the chosen section on the right. */
+@layer components {
+  .glossary .shape {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+    margin-top: 32px;
+  }
+
+  /* Changing sections swaps what is on the right. The browser would move the
+     page to keep something in view, and a short section would make the page
+     shorter than the window; neither may move the page. */
+  .glossary {
+    overflow-anchor: none;
+  }
+
+  .glossary .terms {
+    min-height: calc(100dvh - 48px);
+  }
+
+  .glossary .side {
+    position: sticky;
+    top: var(--sticky-top, 24px);
+    padding: 2px;
+  }
+
+  .filter-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: var(--radius-m);
+    color: var(--color-text-3);
+  }
+
+  .filter-box:focus-within {
+    border-color: var(--color-text-2);
+  }
+
+  .filter-box svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+
+  .filter-box input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text-1);
+    font: inherit;
+    font-size: var(--text-s);
+    caret-color: var(--color-text-1);
+  }
+
+  .filter-box input::placeholder {
+    color: var(--color-text-3);
+  }
+
+  .filter-box input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .filter-status {
+    min-height: 1.4em;
+    margin: 8px 2px 12px;
+    font-size: 13px;
+    color: var(--color-text-3);
+  }
+
+  .sections {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1px;
+  }
+
+  .sections a {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: baseline;
+    padding: 6px 10px;
+    border-radius: var(--radius-s);
+    color: var(--color-text-3);
+    text-decoration: none;
+    font-size: var(--text-xs);
+    line-height: 1.4;
+  }
+
+  .sections a:hover {
+    color: var(--color-text-1);
+    background: var(--color-surface-1);
+  }
+
+  .sections a[aria-current="true"] {
+    color: var(--color-text-1);
+    background: var(--color-surface-2);
+  }
+
+  .sections a.empty {
+    opacity: 0.45;
+  }
+
+  .sections .section-number,
+  .sections .n {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-3);
+  }
+
+  .sections .n {
+    font-size: 13px;
+  }
+
+  .group {
+    margin-bottom: 24px;
+    padding: 24px;
+    background: color-mix(in oklab, var(--color-surface-1) 88%, transparent);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-l);
+  }
+
+  .group h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0 0 12px;
+    font-size: var(--text-m);
+    font-weight: 600;
+  }
+
+  .group h2 .section-number {
+    color: var(--color-text-3);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .group h2:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  .group-note {
+    margin: 12px 0;
+    color: var(--color-text-3);
+    font-size: var(--text-s);
+    max-width: 66ch;
+  }
+
+  .entry {
+    display: grid;
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    column-gap: 24px;
+    padding: 16px 0;
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  .entry > :not(h3) {
+    grid-column: 2;
+  }
+
+  .entry h3 {
+    grid-row: 1 / span 3;
+    margin: 0 0 8px;
+    font-size: var(--text-s);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 700px) {
+    .entry {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .entry > :not(h3),
+    .entry h3 {
+      grid-column: 1;
+      grid-row: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .entry.jumped {
+      animation: jumped 2.4s var(--ease-out-soft);
+    }
+
+    .group.enter {
+      animation: settle 300ms ease-out both;
+    }
+  }
+
+  .entry h3 a {
+    color: var(--color-text-1);
+    text-decoration: none;
+  }
+
+  .entry h3 a::after {
+    content: "#";
+    margin-left: 8px;
+    color: var(--color-text-3);
+    font-weight: 400;
+    opacity: 0;
+  }
+
+  .entry h3 a:hover::after,
+  .entry h3 a:focus-visible::after {
+    opacity: 1;
+  }
+
+  .entry p {
+    margin: 0;
+    max-width: 66ch;
+  }
+
+  .definition {
+    color: var(--color-text-1);
+    font-size: var(--text-s);
+  }
+
+  .example {
+    margin-top: 8px !important;
+    color: var(--color-text-2);
+    font-size: var(--text-s);
+  }
+
+  .avoid {
+    margin-top: 8px !important;
+    color: var(--color-text-3);
+    font-size: var(--text-xs);
+  }
+
+  .entry .label {
+    font-size: var(--text-xs);
+    color: var(--color-text-3);
+    margin-right: 6px;
+  }
+
+  .xref {
+    color: inherit;
+    text-decoration-color: var(--color-hairline-strong);
+  }
+
+  .xref:hover {
+    text-decoration-color: var(--color-text-1);
+  }
+
+  .glossary mark {
+    background: color-mix(in oklab, var(--color-text-1) 18%, transparent);
+    color: var(--color-text-1);
+    border-radius: 3px;
+    padding: 0 1px;
+  }
+
+  .none {
+    padding: 32px 0;
+    color: var(--color-text-2);
+  }
+
+  .none strong {
+    display: block;
+    color: var(--color-text-1);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 900px) {
+    .glossary .shape {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .glossary .side {
+      top: 0;
+      z-index: 10;
+      max-height: none;
+      overflow: visible;
+      margin: 0 calc(-1 * var(--gutter));
+      padding: 12px var(--gutter) 8px;
+      background: color-mix(in oklab, var(--color-surface-0) 88%, transparent);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-hairline);
+    }
+
+    .filter-status {
+      margin: 6px 2px;
+      min-height: 0;
+    }
+
+    .filter-status:empty {
+      display: none;
+    }
+
+    .sections {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      margin: 8px -4px 0;
+      padding: 2px 4px 4px;
+    }
+
+    .sections a {
+      display: inline-flex;
+      white-space: nowrap;
+      gap: 6px;
+      border: 1px solid var(--color-hairline);
+      border-radius: var(--radius-full);
+      padding: 4px 12px;
+    }
+
+    .sections .n {
+      display: none;
+    }
+  }
+}
+
+@keyframes jumped {
+  from {
+    background: var(--color-surface-2);
+  }
+}

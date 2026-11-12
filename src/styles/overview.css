@@ -1,0 +1,311 @@
+/* The Overview screen. */
+@layer components {
+  .intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+    margin-bottom: 32px;
+  }
+
+  .overview-lead {
+    margin: 8px 0 16px;
+    font-size: clamp(24px, 2.6vw, 34px);
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--color-text-1);
+    max-width: 30ch;
+    text-wrap: balance;
+  }
+
+  .quote {
+    padding-top: 6px;
+  }
+
+  /* Four lines at most; the whole passage is one click away. */
+  .quote blockquote {
+    margin: 8px 0 10px;
+    padding: 0;
+    color: var(--color-text-2);
+    font-size: var(--text-s);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    overflow: hidden;
+  }
+
+  .quote blockquote p {
+    margin: 0;
+  }
+
+  /* One dollar split into its parts, under the sentence it pictures. */
+  .dollar {
+    margin-top: 8px;
+  }
+
+  .dollar-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-bottom: 10px;
+  }
+
+  .dollar-head h2 {
+    margin: 0;
+    font-size: var(--text-m);
+    font-weight: 600;
+  }
+
+  .more-link {
+    font-size: var(--text-s);
+    color: var(--color-text-2);
+    text-decoration: none;
+  }
+
+  /* The cents inside a part are bold at 19 pixels, which counts as large
+     text: 5.07 to 5.78 to 1 on the part colours meets the strictest level
+     (AAA, 4.5 to 1 for large text). At 13 pixels they would not. */
+  .dollar-bar {
+    display: flex;
+    gap: 2px;
+    height: 32px;
+    text-decoration: none;
+  }
+
+  .dollar-bar span {
+    display: flex;
+    align-items: center;
+    min-width: 4px;
+    padding: 0 8px;
+    border-radius: 4px;
+    font-size: 19px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .dollar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-xs);
+    color: var(--color-text-2);
+  }
+
+  .dollar-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dollar-legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  .dollar-legend .numbers {
+    color: var(--color-text-1);
+    font-weight: 600;
+  }
+
+  /* What the company did with its cash, and where to look next. */
+  .cash-use {
+    margin-top: 40px;
+  }
+
+  .cash-use h2 {
+    margin: 0 0 8px;
+    font-size: var(--text-m);
+    font-weight: 600;
+  }
+
+  .next {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .next a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-m);
+    background: color-mix(in oklab, var(--color-surface-1) 88%, transparent);
+    color: var(--color-text-1);
+    font-size: var(--text-s);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .next a span {
+    color: var(--color-text-3);
+  }
+
+  @media (hover: hover) {
+    .next a:hover,
+    .more-link:hover {
+      color: var(--color-text-1);
+      border-color: var(--color-hairline-strong);
+    }
+  }
+
+  @media (max-width: 760px) {
+    .next {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .source {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-3);
+  }
+
+  .source a {
+    color: var(--color-text-1);
+    white-space: nowrap;
+  }
+
+  .year-text {
+    fill: var(--color-text-3);
+    font-size: 13px;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-text.current {
+    fill: var(--color-text-1);
+    font-weight: 600;
+  }
+
+  .value-text {
+    fill: var(--color-text-1);
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    paint-order: stroke;
+    stroke: var(--color-surface-1);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+
+  .years-table {
+    min-width: 520px;
+  }
+
+  .years-table tr[aria-current="true"] :is(th, td) {
+    color: var(--color-text-1);
+    font-weight: 600;
+    background: rgb(255 255 255 / 0.04);
+  }
+
+  .no-underline {
+    text-decoration: none;
+  }
+
+  .strip {
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-l);
+    background: color-mix(in oklab, var(--color-surface-1) 88%, transparent);
+    overflow: hidden;
+  }
+
+  .strip-row {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .sparkline {
+    display: block;
+    margin: 4px 0 2px;
+  }
+
+  .sparkline path {
+    stroke: var(--color-text-3);
+  }
+
+  .sparkline circle {
+    fill: var(--color-text-1);
+    stroke: var(--color-surface-1);
+    stroke-width: 2px;
+  }
+
+  .tile {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    padding: 16px 20px 20px;
+    box-shadow:
+      -1px 0 0 var(--color-hairline),
+      0 -1px 0 var(--color-hairline);
+    min-width: 0;
+  }
+
+  .tile-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-3);
+  }
+
+  .tile-value {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    color: var(--color-text-1);
+  }
+
+  .tile-value small {
+    font-size: var(--text-s);
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--color-text-2);
+  }
+
+  .tile .change {
+    font-size: 13px;
+    color: var(--color-text-2);
+    white-space: normal;
+  }
+
+  @media (max-width: 960px) {
+    .intro {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .strip-row {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .strip-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .tile {
+      padding: 12px 16px 16px;
+    }
+
+    .tile-value {
+      font-size: var(--text-l);
+    }
+  }
+}

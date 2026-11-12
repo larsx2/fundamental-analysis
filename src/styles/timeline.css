@@ -1,0 +1,350 @@
+/* The Timeline screen: one time axis shared by stacked rows. */
+@layer components {
+  .tl-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+    align-items: start;
+    margin-top: 32px;
+  }
+
+  @media (max-width: 1180px) {
+    .tl-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .tl-wrap {
+    position: relative;
+  }
+
+  /* On a narrow screen the box scrolls sideways; its edges fade as the cue. */
+  .tl-wrap::before,
+  .tl-wrap::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 8px;
+    width: 40px;
+    z-index: 4;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 160ms var(--ease-out-soft);
+  }
+
+  /* The fade starts after the scale, which stays in view. */
+  .tl-wrap::before {
+    left: 52px;
+    background: linear-gradient(to left, transparent, var(--color-surface-1));
+  }
+
+  .tl-wrap::after {
+    right: 0;
+    background: linear-gradient(to right, transparent, var(--color-surface-1));
+  }
+
+  .tl-wrap.can-left::before,
+  .tl-wrap.can-right::after {
+    opacity: 1;
+  }
+
+  .tl-scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 8px;
+  }
+
+  .tl-rows {
+    position: relative;
+  }
+
+  .tl-under,
+  .tl-over {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .tl-under {
+    z-index: 0;
+  }
+
+  .tl-over {
+    z-index: 2;
+  }
+
+  .tl-row {
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .tl-head,
+  .tl-sub-head {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    width: fit-content;
+    background: var(--color-surface-1);
+    padding-right: 8px;
+    border-radius: var(--radius-s);
+  }
+
+  .tl-row svg,
+  .tl-axis svg {
+    display: block;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tl-head {
+    max-width: min(100%, calc(100vw - 64px));
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 16px;
+    margin-bottom: 8px;
+    font-size: var(--text-s);
+    font-weight: 600;
+    color: var(--color-text-1);
+  }
+
+  .tl-legend {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: var(--text-xs);
+    font-weight: 400;
+    color: var(--color-text-2);
+  }
+
+  .tl-legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tl-legend svg {
+    width: 14px;
+    height: 14px;
+    flex: none;
+  }
+
+  .tl-sub {
+    margin-top: 8px;
+  }
+
+  .tl-sub-head {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    font-size: var(--text-xs);
+    color: var(--color-text-2);
+  }
+
+  .tl-sub-head .numbers {
+    color: var(--color-text-1);
+  }
+
+  .tl-plot {
+    display: grid;
+  }
+
+  .tl-plot > * {
+    grid-area: 1 / 1;
+  }
+
+  .tl-ticks {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    justify-self: start;
+    background: var(--color-surface-1);
+    pointer-events: none;
+  }
+
+  .tl-ticks span {
+    position: absolute;
+    right: 8px;
+    transform: translateY(-50%);
+    color: var(--color-text-3);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .tl-text {
+    fill: var(--color-text-3);
+    font-size: 13px;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    paint-order: stroke;
+    stroke: var(--color-surface-1);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+
+  .tl-end {
+    fill: var(--color-text-1);
+    font-weight: 600;
+  }
+
+  .tl-axis {
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    border-radius: var(--radius-s);
+    touch-action: pan-x;
+  }
+
+  .tl-axis:focus-visible {
+    outline-offset: 4px;
+  }
+
+  .tl-year {
+    fill: var(--color-text-3);
+    font-size: 13px;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tl-year.current {
+    fill: var(--color-text-1);
+    font-weight: 600;
+  }
+
+  .tl-pill rect {
+    fill: var(--color-text-1);
+  }
+
+  .tl-pill text {
+    fill: var(--color-surface-0);
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+  }
+
+  .tl-hint {
+    margin: 8px 0 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-3);
+  }
+
+  .tl-summary {
+    display: none;
+    margin: 8px 0 0;
+    font-size: var(--text-s);
+    color: var(--color-text-2);
+  }
+
+  .tl-summary a {
+    color: var(--color-text-1);
+  }
+
+  @media (max-width: 1180px) {
+    .tl-summary {
+      display: block;
+    }
+  }
+
+  .tl-side {
+    position: sticky;
+    top: var(--sticky-top, 16px);
+  }
+
+  @media (max-width: 1180px) {
+    .tl-side {
+      position: static;
+    }
+  }
+
+  .tl-side h2 {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .side-section {
+    border-top: 1px solid var(--color-hairline);
+    padding-top: 16px;
+    margin-top: 16px;
+  }
+
+  .side-section h3 {
+    margin: 0 0 12px;
+    font-size: var(--text-s);
+    font-weight: 600;
+    color: var(--color-text-1);
+  }
+
+  .side-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 16px;
+    margin: 0;
+    font-size: var(--text-s);
+  }
+
+  .side-list dt {
+    color: var(--color-text-2);
+  }
+
+  .side-list dd {
+    margin: 0;
+    text-align: right;
+    color: var(--color-text-1);
+    font-weight: 600;
+  }
+
+  .side-note {
+    margin: 12px 0 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-3);
+  }
+
+  .events {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+    font-size: var(--text-s);
+  }
+
+  .events li {
+    display: grid;
+    gap: 4px;
+  }
+
+  .events .when {
+    font-size: var(--text-xs);
+    color: var(--color-text-3);
+  }
+
+  .events .what {
+    color: var(--color-text-1);
+    font-weight: 600;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .events .what svg {
+    width: 12px;
+    height: 12px;
+    flex: none;
+  }
+
+  .events p {
+    margin: 0;
+    color: var(--color-text-2);
+    font-size: var(--text-xs);
+  }
+
+  .events li.near .when {
+    color: var(--color-text-1);
+  }
+}

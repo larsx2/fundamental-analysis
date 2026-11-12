@@ -1,0 +1,53 @@
+/* Motion shared by every screen. On arrival a screen's sections settle in one
+   after another, set from the first paint so nothing shows before its
+   entrance. Everything has a version that does not move. */
+@media (prefers-reduced-motion: no-preference) {
+  .settle > * {
+    animation: settle 300ms ease-out both;
+  }
+
+  .settle > :nth-child(2) {
+    animation-delay: 80ms;
+  }
+
+  .settle > :nth-child(3) {
+    animation-delay: 160ms;
+  }
+
+  .settle > :nth-child(4) {
+    animation-delay: 240ms;
+  }
+
+  .settle > :nth-child(n + 5) {
+    animation-delay: 320ms;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 220ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+}

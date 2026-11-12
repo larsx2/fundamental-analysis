@@ -1,0 +1,87 @@
+/* Every colour, size, space and radius is named once here and used through
+   Tailwind's utilities or these variables. The tool is dark only. */
+@theme {
+  --color-*: initial;
+  --color-surface-0: #0b0b0c;
+  --color-surface-1: #121213;
+  --color-surface-2: #1a1a1c;
+  --color-surface-3: #232326;
+  --color-hairline: rgb(255 255 255 / 0.09);
+  --color-hairline-strong: rgb(255 255 255 / 0.16);
+  --color-text-1: #f4f4f2;
+  --color-text-2: #c9c8c1;
+  --color-text-3: #a3a29b;
+  --color-transparent: transparent;
+
+  /* The six parts of a dollar of revenue, in the order the income statement
+     reads. Checked as a set for colour blindness and for 3:1 on surface-0. */
+  --color-part-cost: #3987e5;
+  --color-part-research: #d95926;
+  --color-part-selling: #199e70;
+  --color-part-other: #c98500;
+  --color-part-below: #d55181;
+  --color-part-kept: #008300;
+  --color-part-interest: #a08ae6;
+
+  --color-delta-up: #6fd39b;
+  --color-delta-down: #f08a6c;
+
+  /* Text set inside a part of a dollar: near-black on the five lighter
+     parts, white on net income's darker green. */
+  --color-text-on-part: #0b0b0c;
+  --color-text-on-kept: #ffffff;
+
+  /* The quiet lines of a chart: grid, baseline at zero, the chosen year
+     and the year under the pointer. */
+  --color-chart-grid: rgb(255 255 255 / 0.07);
+  --color-chart-baseline: rgb(255 255 255 / 0.22);
+  --color-chart-chosen: rgb(255 255 255 / 0.28);
+  --color-chart-hover: rgb(255 255 255 / 0.14);
+
+  /* Doubtful numbers. Always with an icon and a word, never colour alone. */
+  --color-doubtful: #fab219;
+
+  /* Drawn totals and neutral bars. */
+  --color-flow-total: #8a8a90;
+  --color-flow-total-band: #6b6b70;
+  --color-bar-neutral: #7c7c82;
+  --color-line-rate: #a99bf0;
+  --color-line-inflation: #ef8f7d;
+
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+
+  --text-*: initial;
+  --text-2xs: 0.75rem;
+  --text-xs: 0.875rem;
+  --text-s: 0.9375rem;
+  --text-m: 1.0625rem;
+  --text-l: 1.3125rem;
+  --text-xl: 1.75rem;
+  --text-hero: 3.5rem;
+
+  --radius-*: initial;
+  --radius-s: 6px;
+  --radius-m: 12px;
+  --radius-l: 18px;
+  --radius-full: 999px;
+
+  --ease-out-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-glide: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --breakpoint-phone: 560px;
+}
+
+:root {
+  color-scheme: dark;
+  --leading: 1.55;
+  --glow: #8e8e93;
+  --page-max: 1240px;
+  --gutter: 24px;
+}
+
+@media (max-width: 560px) {
+  :root {
+    --gutter: 16px;
+  }
+}

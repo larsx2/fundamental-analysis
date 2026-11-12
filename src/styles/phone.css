@@ -1,0 +1,96 @@
+@media (max-width: 640px) {
+  .sheet-wrap {
+    --label: 172px;
+    --col: 80px;
+  }
+
+  .ask-dock::before {
+    left: -16px;
+    right: -16px;
+  }
+
+  .ask-turn > .ask-question {
+    max-width: 88%;
+  }
+
+  .ask-dock .ask-topics {
+    flex: 1;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    mask-image: linear-gradient(90deg, #000 82%, transparent);
+  }
+
+  .ask-dock .ask-topics button {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .ask-dock .tools {
+    padding-left: 16px;
+  }
+
+  .ask-dock .mention-editor {
+    padding-inline: 16px;
+  }
+
+  .ask-dock .mention-placeholder {
+    inset: 16px 16px auto;
+  }
+
+  .figures.parts-table :is(th, td):nth-child(2) {
+    width: 74px;
+  }
+
+  .figures.parts-table :is(th, td):nth-child(3),
+  .figures.parts-table :is(th, td):nth-child(4) {
+    width: 54px;
+  }
+
+  .figures.parts-table td {
+    padding-left: 8px;
+  }
+
+  .figures.parts-table thead th {
+    padding-left: 8px;
+  }
+}
+
+@media (pointer: coarse) {
+  .chip,
+  .ask-topics button,
+  .segmented > * {
+    min-height: 40px;
+  }
+
+  .ask-history-delete {
+    width: 40px;
+    height: 40px;
+  }
+
+  .ask-history-list a {
+    padding-right: 44px;
+  }
+
+  .sections a {
+    padding-block: 10px;
+  }
+
+  .ruler {
+    height: 62px;
+  }
+
+  .ruler input[type="range"] {
+    height: 34px;
+  }
+
+  .ruler-labels {
+    top: 34px;
+  }
+
+  .ruler-labels button {
+    min-height: 28px;
+  }
+}

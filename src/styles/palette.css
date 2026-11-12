@@ -1,0 +1,212 @@
+/* The search panel: frosted glass over the screen. */
+@layer components {
+  .palette-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgb(4 4 5 / 0.3);
+    transition: opacity 160ms var(--ease-out-soft);
+  }
+
+  .palette-backdrop[data-starting-style],
+  .palette-backdrop[data-ending-style] {
+    opacity: 0;
+  }
+
+  .palette {
+    position: fixed;
+    top: 13vh;
+    left: 50%;
+    z-index: 41;
+    width: min(640px, calc(100vw - 32px));
+    transform: translateX(-50%);
+    background:
+      radial-gradient(
+        520px 180px at 50% -60px,
+        color-mix(in oklab, var(--glow) 26%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02) 40%),
+      rgb(22 22 24 / 0.52);
+    backdrop-filter: blur(28px) saturate(170%);
+    -webkit-backdrop-filter: blur(28px) saturate(170%);
+    border: 1px solid rgb(255 255 255 / 0.14);
+    border-radius: 20px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.16),
+      inset 0 0 0 1px rgb(255 255 255 / 0.03),
+      0 30px 90px rgb(0 0 0 / 0.55);
+    overflow: hidden;
+    transition:
+      opacity 200ms var(--ease-out-soft),
+      transform 200ms var(--ease-out-soft);
+  }
+
+  .palette[data-starting-style],
+  .palette[data-ending-style] {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.985);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .palette {
+      background: var(--color-surface-2);
+      backdrop-filter: none;
+    }
+  }
+
+  .palette-input {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+    color: var(--color-text-3);
+  }
+
+  .palette-input svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+  }
+
+  .palette-input input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text-1);
+    font: inherit;
+    font-size: 19px;
+    letter-spacing: -0.005em;
+    caret-color: var(--color-text-1);
+  }
+
+  .palette-input input::placeholder {
+    color: var(--color-text-3);
+  }
+
+  .palette-list {
+    max-height: 56vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px 8px 12px;
+  }
+
+  .palette-section {
+    padding: 12px 12px 6px;
+    font-size: 13px;
+    color: var(--color-text-3);
+  }
+
+  .palette-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 12px;
+    min-height: 54px;
+    border-radius: var(--radius-m);
+    cursor: pointer;
+    transition: background 120ms var(--ease-out-soft);
+  }
+
+  .palette-option[aria-selected="true"] {
+    background: rgb(255 255 255 / 0.08);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  }
+
+  .palette-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    font-size: var(--text-m);
+  }
+
+  .palette-main strong {
+    font-weight: 600;
+  }
+
+  .palette-meta {
+    font-size: var(--text-xs);
+    color: var(--color-text-3);
+    white-space: nowrap;
+  }
+
+  .palette-current {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-text-3);
+  }
+
+  .palette-current::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--color-text-2);
+  }
+
+  .palette-enter {
+    opacity: 0;
+    transition: opacity 120ms var(--ease-out-soft);
+  }
+
+  .palette-option[aria-selected="true"] .palette-enter {
+    opacity: 1;
+  }
+
+  .palette-glyph {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    color: var(--color-text-2);
+    border-radius: 10px;
+    background: rgb(255 255 255 / 0.04);
+    box-shadow: inset 0 0 0 1px var(--color-hairline);
+  }
+
+  .palette-glyph svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .palette-empty {
+    display: grid;
+    gap: 4px;
+    padding: 16px 12px;
+    color: var(--color-text-2);
+    font-size: var(--text-s);
+  }
+
+  .palette-empty strong {
+    color: var(--color-text-1);
+    font-weight: 600;
+  }
+
+  .palette-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    align-items: center;
+    padding: 10px 24px;
+    border-top: 1px solid rgb(255 255 255 / 0.08);
+    background: rgb(0 0 0 / 0.12);
+    font-size: 13px;
+    color: var(--color-text-3);
+  }
+
+  @media (max-width: 560px) {
+    .palette-meta,
+    .palette-foot {
+      display: none;
+    }
+  }
+}
