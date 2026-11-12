@@ -4,7 +4,8 @@ import { SqliteClient, SqliteMigrator } from "@effect/sql-sqlite-bun";
 import { Effect, Layer } from "effect";
 import { migrations } from "./migrations";
 
-export const databaseFile = "data/fundamental-analysis.db";
+// The screenshot tests point the tool at a database of their own.
+export const databaseFile = process.env.DATABASE_FILE ?? "data/fundamental-analysis.db";
 
 const client = (filename: string) =>
   Layer.unwrap(

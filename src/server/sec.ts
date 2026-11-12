@@ -49,7 +49,10 @@ class WorthRetrying extends Data.TaggedError("WorthRetrying")<{
 
 export class Sec extends Context.Service<
   Sec,
-  { readonly getJson: (url: string) => Effect.Effect<unknown, SecError> }
+  {
+    readonly getJson: (url: string) => Effect.Effect<unknown, SecError>;
+    readonly getText: (url: string) => Effect.Effect<string, SecError>;
+  }
 >()("Sec") {
   static readonly layer = Layer.effect(
     Sec,
@@ -83,23 +86,25 @@ export class Sec extends Context.Service<
         ),
       );
 
-      const attempt = (url: string, userAgent: string) =>
+      const attempt = (url: string, userAgent: string, as: "json" | "text") =>
         Effect.gen(function* () {
           yield* waitForSlot;
           const response = yield* http
             .execute(
               HttpClientRequest.get(url).pipe(
                 HttpClientRequest.setHeader("User-Agent", userAgent),
-                HttpClientRequest.setHeader("Accept", "application/json"),
+                HttpClientRequest.setHeader(
+                  "Accept",
+                  as === "json" ? "application/json" : "text/html",
+                ),
               ),
             )
             .pipe(Effect.mapError((cause) => new WorthRetrying({ cause })));
 
           const status = response.status;
           if (status === 200) {
-            return yield* response.json.pipe(
-              Effect.mapError((cause) => new WorthRetrying({ cause })),
-            );
+            const body = as === "json" ? response.json : response.text;
+            return yield* body.pipe(Effect.mapError((cause) => new WorthRetrying({ cause })));
           }
           if (status === 404) return yield* new SecNotFound({ url });
           if (status === 429 || status >= 500) {
@@ -112,10 +117,10 @@ export class Sec extends Context.Service<
 
       const retrySchedule = Schedule.exponential(Duration.millis(500)).pipe(Schedule.jittered);
 
-      const getJson = (url: string) =>
+      const get = (url: string, as: "json" | "text") =>
         Effect.gen(function* () {
           const userAgent = yield* contact;
-          return yield* attempt(url, userAgent).pipe(
+          return yield* attempt(url, userAgent, as).pipe(
             Effect.retry({
               schedule: retrySchedule,
               times: retries,
@@ -127,7 +132,10 @@ export class Sec extends Context.Service<
           );
         });
 
-      return Sec.of({ getJson });
+      return Sec.of({
+        getJson: (url) => get(url, "json"),
+        getText: (url) => get(url, "text").pipe(Effect.map(String)),
+      });
     }),
   );
 }

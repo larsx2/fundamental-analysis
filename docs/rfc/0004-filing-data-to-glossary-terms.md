@@ -54,6 +54,29 @@ The eight terms now come from ordered tag lists in [`src/server/terms/term-tags.
 - Apple's revenue reaches back to fiscal 2007, because its first machine-readable annual reports carried three years of income statements. Balances at year ends reach back further still.
 - Collecting one company is one request of about four megabytes and takes about a second. It yields 8,000 to 10,000 reported numbers from annual reports.
 
+**What the statements mock taught, on 11 November 2026**
+
+Tags tried for the balance sheet and cash flow statement, still to be confirmed in the statements work:
+
+- Balance sheet: `CashAndCashEquivalentsAtCarryingValue`, `AccountsReceivableNetCurrent` then `ReceivablesNetCurrent`, `InventoryNet`, `PropertyPlantAndEquipmentNet`, `Goodwill`, `Assets`, `Liabilities`, and equity from `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest` then `StockholdersEquity`. Debt is calculated from `ShortTermBorrowings` or `CommercialPaper`, `LongTermDebtCurrent` and `LongTermDebtNoncurrent`.
+- Cash flow statement: `DepreciationDepletionAndAmortization`, `ShareBasedCompensation`, `NetCashProvidedByUsedInOperatingActivities` then its continuing operations version, `PaymentsToAcquirePropertyPlantAndEquipment`, `PaymentsOfDividends` then `PaymentsOfDividendsCommonStock`, `PaymentsForRepurchaseOfCommonStock`, and the long-term debt proceeds and repayment tags.
+
+What it found:
+
+- Taking the latest restated value line by line can break a statement's own rule. Microsoft's fiscal 2016 assets and liabilities come from the fiscal 2017 report while its equity was restated in the fiscal 2018 report, so assets no longer equal liabilities plus equity. A balance sheet may need to be taken whole from one filing.
+- Apple's earnings per share for fiscal 2015 to 2017 were filed before its four-for-one share split and do not compare with later years until adjusted.
+- Microsoft files depreciation and amortization under its own label, outside the standard list, so it shows as a gap. Its acquisitions use no standard tag either.
+
+**What building the three statements taught, on 11 November 2026**
+
+The tags tried in the mocks are now lists in [`src/server/terms/statement-tags.ts`](../../src/server/terms/statement-tags.ts), worked into fiscal years by [`statements.ts`](../../src/server/terms/statements.ts).
+
+- A balance counts for a fiscal year only when it is dated within a week of that year's last day, taken from the revenue the year reports. Balances at other dates in an annual report are left out.
+- Each year's balance sheet is taken from the newest filing that holds its assets, and every line comes from that same filing where it can. Microsoft's fiscal 2016 now adds up: 193,468 of assets, 121,471 of liabilities and 71,997 of equity, all from the fiscal 2017 report. Assets that do not equal liabilities plus equity are marked doubtful. Two fiscal years are, and both show it: Apple's 2008, whose restated report tags no total liabilities, and Costco's 2014.
+- Share splits are found in the data itself: a later report that gives an earlier year's earnings per share divided by a whole number. Apple's 7-for-1 split of 2014 and 4-for-1 split of 2020 are both found, and its fiscal 2013 earnings per share read $1.42, as Apple's own later reports state. Each adjusted figure is a calculated number that says what was filed.
+- Microsoft files neither depreciation and amortization nor its acquisitions under a standard tag, so both are gaps. Apple stopped tagging acquisitions after fiscal 2022.
+- Share counts are not shown on any screen yet, so only earnings per share are adjusted.
+
 ## Options
 
 ### Settled on 11 November 2026
@@ -66,7 +89,7 @@ The eight terms now come from ordered tag lists in [`src/server/terms/term-tags.
 ## Open points
 
 - For each glossary term, which tags count, and in what order of preference? Answered for the eight terms of the money flow, above. The other terms follow in the statements work.
-- How are share counts and earnings per share adjusted for share splits?
+- How are share counts and earnings per share adjusted for share splits? Answered for earnings per share, above.
 - What happens when a company uses a tag that is not yet mapped? Answered: related tags on no list are reported by `task collect`.
 - Can each mapped number carry where it came from, so any figure on screen links back to its filing? Answered: every reported figure keeps its tag, filing and publication date, for the latest and the original value.
 

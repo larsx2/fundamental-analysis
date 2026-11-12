@@ -119,6 +119,14 @@ Everything under "Settled on 11 November 2026" above is decided. The limits of t
 - Where a person enters the contact details the SEC asks for. The working assumption is that the tool asks once, the first time a company is collected, and keeps them on that person's machine.
 - The order of the screens after the slice. The working assumption is Statements, then Overview, then Timeline, then the Glossary page.
 
+**Settled while building, on 11 November 2026**
+
+- The term card shows the company's own figure for every term of the three statements, and for the margins, free cash flow and net debt. Terms that are not numbers show their definition and example only.
+- The contact details are asked for once, in the dialog that asks to collect the first company, or before the SEC's list of companies is first fetched. They stay on this computer.
+- Economic context comes from the St. Louis Fed's FRED service: the federal funds rate (FEDFUNDS), consumer prices (CPIAUCSL) and US recessions (USREC). All three are in the public domain, and FRED's terms let anyone fetch them for their own use as long as FRED is named as the source, which the timeline does. Each copy of the tool fetches them itself, at most once a day, with no contact details.
+- Company logos come from Wikidata, which records each company's SEC number and its official logo, and the pictures from Wikimedia Commons. Each copy of the tool fetches a company's logo once, when it collects the company, and keeps it locally. The requests name the tool but carry no contact details. Logos stay their owners' trademarks; they are shown only to say which company a screen is about.
+- The Overview's paragraph in plain words is worked out from the numbers. Writing a description of each business in plain words waits for the agent.
+
 **Moved elsewhere**
 
 - How each person connects their own language model is in [An agent that does not invent numbers](./0007-an-agent-that-does-not-invent.md).

@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { statementTags } from "../src/server/terms/statement-tags";
 import { partTags, partialTags, termTags } from "../src/server/terms/term-tags";
 
 const [input, output] = process.argv.slice(2);
@@ -18,6 +19,7 @@ const keep = new Set([
   ...Object.values(termTags).flat(),
   ...Object.values(partTags).flat(),
   ...partialTags,
+  ...statementTags,
 ]);
 
 const full: Facts = JSON.parse(readFileSync(input, "utf8"));

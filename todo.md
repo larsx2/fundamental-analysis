@@ -148,7 +148,7 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 - [x] Fetch all reported numbers for one company in a single request and check their shape with the schema tool.
 - [x] Keep only numbers from annual reports (10-K) that cover a full fiscal year, and the balances at each year end.
 - [x] A number in an unexpected shape is reported, not silently dropped.
-- [ ] A small script trims the SEC's data for Apple, Costco and Microsoft down to the tags the tests need, and the extracts are committed beside the tests.
+- [x] A small script trims the SEC's data for Apple, Costco and Microsoft down to the tags the tests need, and the extracts are committed beside the tests.
 
 **Effect ideas:** decoding outside data with the schema tool, doing database work in one transaction.
 
@@ -255,10 +255,10 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 **Depends on:** T01. **Size:** medium.
 
-- [ ] Colours, type sizes, spacing and hairlines are defined once, as named values, with Tailwind.
-- [ ] The surface is near black. Text is white for main figures and greys for the rest, with readable type and strong contrast.
-- [ ] The typeface has digits of equal width, and its licence allows sharing.
-- [ ] A bare page layout exists with the floating bar at the bottom.
+- [x] Colours, type sizes, spacing and hairlines are defined once, as named values, with Tailwind.
+- [x] The surface is near black. Text is white for main figures and greys for the rest, with readable type and strong contrast.
+- [x] The typeface has digits of equal width, and its licence allows sharing.
+- [x] A bare page layout exists with the floating bar at the bottom.
 
 **Check:** a sample page with a column of numbers lines up digit under digit. Text contrast passes a standard readability check.
 
@@ -266,10 +266,11 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 **Depends on:** T05, T12, T14, T15. **Size:** medium.
 
-- [ ] Search covers every public company and shows each one's state.
-- [ ] Choosing a company that is not collected says what will happen and asks first. The first time, it also asks for the contact details the SEC requires.
-- [ ] A company being collected shows progress. A quiet notice appears when it is ready, and the current screen stays in place.
-- [ ] Ready companies are listed with their as of date.
+- [x] Search covers every public company and shows each one's state.
+- [x] Choosing a company that is not collected says what will happen and asks first. The first time, it also asks for the contact details the SEC requires.
+- [x] A company being collected shows progress. A quiet notice appears when it is ready, and the current screen stays in place.
+- [x] Ready companies are listed with their as of date.
+- [x] Ready companies sit side by side in a table that sorts, with ten fiscal years of revenue and operating margin, and become cards when the table does not fit.
 
 **Check:** from an empty database, search for Costco, agree, and watch it become ready without leaving the screen.
 
@@ -277,9 +278,9 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 **Depends on:** T15. **Size:** small. **Needs a decision from you.**
 
-- [ ] Two quick throwaway drawings with Apple's real fiscal 2023 figures: a flow diagram where revenue splits into streams, and stacked bars with one bar per fiscal year.
-- [ ] Look at both, for one fiscal year and across ten.
-- [ ] Pick one, write the choice and the reason into the look and feel RFC, and delete both throwaways.
+- [x] Two quick throwaway drawings with Apple's real fiscal 2023 figures: a flow diagram where revenue splits into streams, and stacked bars with one bar per fiscal year.
+- [x] Look at both, for one fiscal year and across ten.
+- [x] Pick one, write the choice and the reason into the look and feel RFC, and delete both throwaways.
 
 **Check:** the choice is written down.
 
@@ -287,10 +288,10 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 **Depends on:** T11, T16, T17. **Size:** medium.
 
-- [ ] The chosen drawing shows the eight terms for one fiscal year, each as dollars and as a share of revenue.
-- [ ] A control moves through the fiscal years. The chosen year lives in the address bar, so reloading or going back keeps it.
-- [ ] Calculated numbers, doubtful numbers and gaps each have their own quiet mark.
-- [ ] Every number can show which filing it came from, with a link to it.
+- [x] The chosen drawing shows the eight terms for one fiscal year, each as dollars and as a share of revenue.
+- [x] A control moves through the fiscal years. The chosen year lives in the address bar, so reloading or going back keeps it.
+- [x] Calculated numbers, doubtful numbers and gaps each have their own quiet mark.
+- [x] Every number can show which filing it came from, with a link to it.
 
 **Check:** Apple, Costco and Microsoft each open and match what `task collect` printed. Costco shows a gap for research and development.
 
@@ -298,10 +299,10 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 **Depends on:** T18. **Size:** medium.
 
-- [ ] The glossary file is read into terms, each with its definition, example and words to avoid. It stays the only source.
-- [ ] Every term on the screen can be clicked, and opens a card with its definition and example.
-- [ ] Where the term maps to a number, the card also shows this company's own figure for the chosen fiscal year.
-- [ ] The card opens and closes with the keyboard.
+- [x] The glossary file is read into terms, each with its definition, example and words to avoid. It stays the only source.
+- [x] Every term on the screen can be clicked, and opens a card with its definition and example.
+- [x] Where the term maps to a number, the card also shows this company's own figure for the chosen fiscal year.
+- [x] The card opens and closes with the keyboard.
 
 **Check:** on Costco, click "gross profit". The card explains the term, shows Costco's figure, and says it is calculated.
 
@@ -309,10 +310,10 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 **Depends on:** T19. **Size:** medium.
 
-- [ ] Movement: values roll when the fiscal year changes, and the drawing moves from one year to the next instead of jumping.
-- [ ] Every state has a designed screen: not collected, waiting, collecting, failed, and not covered.
-- [ ] The whole slice works with the keyboard alone.
-- [ ] Playwright saves a picture of the screen for each of the three companies, built from the committed extracts, and `task ci` compares against them.
+- [x] Movement: values roll when the fiscal year changes, and the drawing moves from one year to the next instead of jumping.
+- [x] Every state has a designed screen: not collected, waiting, collecting, failed, and not covered.
+- [x] The whole slice works with the keyboard alone.
+- [x] Playwright saves a picture of the screen for each of the three companies, built from the committed extracts, and `task ci` compares against them. `task screens:update` saves new ones after a change has been looked at.
 
 **Check:** someone who has not seen it uses it for ten minutes with no help.
 
@@ -320,7 +321,7 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 - [ ] Search, collect, and "Where the money goes" work for Apple, Costco and Microsoft from an empty database.
 - [ ] You can answer "where does each dollar of revenue go?" for each of the three after a few minutes.
-- [ ] What was learned is written into the RFCs. Anything hard to change later has a decision record.
+- [x] What was learned is written into the RFCs. Anything hard to change later has a decision record.
 - [ ] Part 5 is broken down in full, using what the slice taught.
 - [ ] Review together before going on.
 
@@ -334,57 +335,70 @@ Coarse on purpose. Each task is broken down when it is reached.
 
 **Depends on:** Checkpoint C.
 
-- [ ] Extend the tag lists from eight terms to every reported term in the glossary's income statement, balance sheet and cash flow statement groups.
-- [ ] Add the checks for the other statements, starting with assets equal liabilities plus equity.
-- [ ] Adjust share counts and earnings per share for share splits.
-- [ ] Add the calculated terms: free cash flow, net debt, the margins.
+- [x] Extend the tag lists from eight terms to every reported term in the glossary's income statement, balance sheet and cash flow statement groups.
+- [x] Add the checks for the other statements, starting with assets equal liabilities plus equity.
+- [x] Adjust share counts and earnings per share for share splits.
+- [x] Add the calculated terms: free cash flow, net debt, the margins.
 
 ### T22: The Statements screen
 
 **Depends on:** T21.
 
-- [ ] Three tabs, fiscal years as columns, calculated lines in grey under the line they come from, the newest fiscal year tinted.
-- [ ] Every number links to its filing, and every term opens its card.
+- [x] Three tabs, fiscal years as columns, calculated lines in grey under the line they come from, the newest fiscal year tinted.
+- [x] Every number links to its filing, and every term opens its card.
 
 ### T23: The Overview screen
 
 **Depends on:** T21.
 
-- [ ] Revenue and net income across the fiscal years as the main chart.
-- [ ] A strip of key figures for the latest fiscal year.
-- [ ] The opening of the company's own description of its business, quoted from its annual report (10-K), with a link.
+- [x] Revenue and net income across the fiscal years as the main chart.
+- [x] A strip of key figures for the latest fiscal year.
+- [x] The opening of the company's own description of its business, quoted from its annual report (10-K), with a link.
+- [x] One dollar of revenue split into its parts under the headline, opening Where the money goes.
+- [x] What the company did with its cash: free cash flow against net income, and what it spent on, with three links to look further.
+
+### T23b: What the Overview still lacks
+
+From the review by a financial adviser, a product manager and a designer on 11 November 2026.
+
+- [ ] Collect short-term investments, so cash and net debt count everything a company can turn into money quickly. Until then the Overview shows neither, because Apple and Microsoft would look as if they owe more than they hold.
+- [ ] Mark a year whose net income was moved by a one-off item, such as Tesla's tax gain or Microsoft's charge under the 2017 US tax law, so a beginner does not read it as the business changing.
+- [ ] Collect the share count, and show whether it shrank through share buybacks or grew through dilution.
+- [ ] Work out return on invested capital from operating income, tax, debt and equity.
+- [ ] Say what the company sells: its industry from the SEC, and the revenue lines on its own income statement, such as Apple's products and services or Costco's membership fees.
+- [ ] Decide whether the fiscal year ruler on the Overview can shrink to a label with a picker.
 
 ### T24: What the company did with its money
 
 **Depends on:** T21.
 
-- [ ] Capital allocation per fiscal year from the cash flow statement: acquisitions, share buybacks, dividends, capital expenditure, debt raised and repaid.
+- [x] Capital allocation per fiscal year from the cash flow statement: acquisitions, share buybacks, dividends, capital expenditure, debt raised and repaid.
 
 ### T25: Two kinds of corporate event
 
 **Depends on:** T07.
 
-- [ ] From current reports (8-K), keep only those the SEC labels as a change of chief executive or finance chief, or as a completed acquisition or sale of a business.
+- [x] From current reports (8-K), keep only those the SEC labels as a change of chief executive or finance chief, or as a completed acquisition or sale of a business.
 
 ### T26: Economic context
 
 **Depends on:** T04.
 
-- [ ] Collect interest rate, inflation and recession periods from the US central bank's public data.
-- [ ] Confirm its terms allow each person to fetch it this way, and note the source.
+- [x] Collect interest rate, inflation and recession periods from the US central bank's public data.
+- [x] Confirm its terms allow each person to fetch it this way, and note the source. FRED, public domain, named on the timeline. See the site structure RFC.
 
 ### T27: The Timeline screen
 
 **Depends on:** T24, T25, T26.
 
-- [ ] One time axis with stacked rows: revenue and net income, capital allocation, corporate events, economic context.
-- [ ] Choosing a point in time shows everything that was true then.
+- [x] One time axis with stacked rows: revenue and net income, capital allocation, corporate events, economic context.
+- [x] Choosing a point in time shows everything that was true then.
 
 ### T28: The Glossary page
 
 **Depends on:** T19.
 
-- [ ] Every term, in learning order, on one browsable page.
+- [x] Every term, in learning order, on one browsable page.
 
 ### T29: Renamed and reorganised companies
 
@@ -397,7 +411,8 @@ Coarse on purpose. Each task is broken down when it is reached.
 
 **Depends on:** T12.
 
-- [ ] One action asks the SEC for filings newer than a company's as of date, collects them, and updates last checked.
+- [x] Ready companies are checked for filings newer than their as of date, monthly and weekly around their annual report, behind anything asked for. New ones are collected and last checked moves on.
+- [ ] A button to check one company now, shown first as a mock.
 
 ### Checkpoint D: the first version is done
 

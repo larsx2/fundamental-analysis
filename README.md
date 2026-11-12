@@ -35,8 +35,8 @@ The plan is to publish it as open source under the MIT licence. Until a licence 
 
 ## Rules that follow from being open source
 
-- Everything the tool is built on must have a licence that allows it to be shared under MIT.
-- The repository holds code and documents only. It never holds collected filing data, share prices, index values, company logos, or screens from other products. Each person collects their own data when they run the tool.
+- Everything the tool is built on must have a licence that allows it to be shared under MIT. One file is the exception: the photo behind the home screen is under the Unsplash licence, as [its note](src/assets/LICENCES.md) says.
+- The repository holds code and documents only. It never holds collected filing data, share prices, index values, company logos, or screens from other products. Each person collects their own data when they run the tool, and the tool fetches each collected company's logo from Wikidata onto that computer.
 - No secrets, personal settings or references to private work are committed.
 - Nothing here is investment advice.
 

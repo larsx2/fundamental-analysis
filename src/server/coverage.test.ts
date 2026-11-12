@@ -1,10 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { coverageOf } from "./coverage";
 
-const company = (name: string, sic: string, forms: ReadonlyArray<string>) => ({
+const today = new Date("2026-11-11");
+
+const company = (name: string, sic: string, forms: ReadonlyArray<string>, date = "2026-02-20") => ({
   name,
   sic,
-  forms: ["8-K", "4", ...forms],
+  filings: ["8-K", "4", ...forms].map((form) => ({ form, date })),
+  today,
 });
 
 describe("coverageOf", () => {
@@ -28,10 +31,17 @@ describe("coverageOf", () => {
     ]);
   });
 
-  it("declines a company whose yearly report is not an annual report (10-K), naming its form", () => {
+  it("declines a company that files another form instead of an annual report (10-K), naming it", () => {
     expect(coverageOf(company("Toyota", "3711", ["6-K", "20-F"]))).toMatchObject({
       covered: false,
-      reason: expect.stringContaining("as a 20-F"),
+      reason: expect.stringContaining("files a 20-F each year"),
+    });
+  });
+
+  it("declines a company whose newest annual report (10-K) is more than eighteen months old", () => {
+    expect(coverageOf(company("Gone Dark", "3571", ["10-K"], "2024-03-01"))).toMatchObject({
+      covered: false,
+      reason: expect.stringContaining("filed its last annual report (10-K) on 2024-03-01"),
     });
   });
 });

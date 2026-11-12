@@ -19,7 +19,10 @@ const madeUpList = {
 };
 
 const secAnswering = (list: unknown) =>
-  Layer.succeed(Sec, Sec.of({ getJson: () => Effect.succeed(list) }));
+  Layer.succeed(
+    Sec,
+    Sec.of({ getJson: () => Effect.succeed(list), getText: () => Effect.die("unused") }),
+  );
 
 const companiesWith = (list: unknown) =>
   Companies.layer.pipe(

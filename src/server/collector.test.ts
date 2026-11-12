@@ -4,23 +4,52 @@ import { SqlClient } from "effect/sql/SqlClient";
 import { Collect } from "./collect";
 import { Collector } from "./collector";
 import type { CompanyState } from "./companies";
+import { Logos } from "./logos";
 import { CoverageCheck } from "./coverage";
 import { databaseLayer } from "./database";
+import type { CompanyFiling } from "./filings";
 
 const apple = 1;
 const microsoft = 2;
 const costco = 3;
 const jpmorgan = 4;
 
-type Event = `${"start" | "end"} ${number}`;
+type Event = `${"start" | "end" | "check"} ${number}`;
 
-const services = (events: Array<Event>, failFirstTry: ReadonlySet<number> = new Set()) => {
+const newAnnualReport = (cik: number): CompanyFiling => ({
+  accession: `a-${cik}`,
+  form: "10-K",
+  filedOn: "2025-10-31",
+  reportDate: "2025-09-27",
+  items: "",
+  primaryDocument: "report.htm",
+});
+
+const services = (
+  events: Array<Event>,
+  failFirstTry: ReadonlySet<number> = new Set(),
+  checks: {
+    readonly found?: ReadonlyArray<CompanyFiling>;
+    readonly fail?: boolean;
+  } = {},
+) => {
   const tried = new Set<number>();
   const collect = Layer.effect(
     Collect,
     Effect.gen(function* () {
       const sql = yield* SqlClient;
       return Collect.of({
+        filings: () => Effect.succeed(0),
+        newFilings: (cik) =>
+          Effect.gen(function* () {
+            events.push(`check ${cik}`);
+            if (checks.fail === true) {
+              return yield* Effect.die(new Error("The SEC could not be reached."));
+            }
+            return checks.found ?? [];
+          }),
+        addFilings: () => Effect.void,
+        businessDescription: () => Effect.void,
         reportedNumbers: (cik) =>
           Effect.gen(function* () {
             events.push(`start ${cik}`);
@@ -56,7 +85,17 @@ const services = (events: Array<Event>, failFirstTry: ReadonlySet<number> = new 
         ),
     }),
   );
-  return Layer.mergeAll(collect, coverage).pipe(Layer.provideMerge(databaseLayer(":memory:")));
+  const logos = Layer.succeed(
+    Logos,
+    Logos.of({
+      fetch: () => Effect.void,
+      logo: () => Effect.succeedNone,
+      missing: Effect.succeed([]),
+    }),
+  );
+  return Layer.mergeAll(collect, coverage, logos).pipe(
+    Layer.provideMerge(databaseLayer(":memory:")),
+  );
 };
 
 const seed = (companies: ReadonlyArray<[number, CompanyState?]>) =>
@@ -180,6 +219,58 @@ describe("Collector", () => {
         expect(Option.getOrThrow(yield* collector.status(jpmorgan)).state).toBe("not_collected");
         expect(events).toEqual([]);
       }).pipe(Effect.provide(services(events)));
+    },
+  );
+
+  it.live(
+    "a ready company due for a check gets its new annual report, and its dates move on",
+    () => {
+      const events: Array<Event> = [];
+      return Effect.gen(function* () {
+        const sql = yield* SqlClient;
+        yield* seed([[apple, "ready"]]);
+        yield* sql`UPDATE company SET last_checked_on = '2020-01-01' WHERE cik = ${apple}`;
+        const collector = yield* startCollector;
+        const company = yield* collector.status(apple).pipe(
+          Effect.map(Option.getOrThrow),
+          Effect.repeat({
+            schedule: Schedule.spaced("5 millis"),
+            until: (each) => each.lastCheckedOn !== "2020-01-01",
+            times: 400,
+          }),
+        );
+        expect(events).toEqual([`check ${apple}`, `start ${apple}`, `end ${apple}`]);
+        expect([company.state, company.asOf]).toEqual(["ready", "2025-10-31"]);
+      }).pipe(Effect.provide(services(events, new Set(), { found: [newAnnualReport(apple)] })));
+    },
+  );
+
+  it.live("a company checked recently is not asked about again", () => {
+    const events: Array<Event> = [];
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient;
+      yield* seed([[apple, "ready"]]);
+      yield* sql`UPDATE company SET last_checked_on = date('now', 'localtime') WHERE cik = ${apple}`;
+      yield* startCollector;
+      yield* Effect.sleep("100 millis");
+      expect(events).toEqual([]);
+    }).pipe(Effect.provide(services(events)));
+  });
+
+  it.live(
+    "a check that fails leaves the last checked date as it was, and is not retried at once",
+    () => {
+      const events: Array<Event> = [];
+      return Effect.gen(function* () {
+        const sql = yield* SqlClient;
+        yield* seed([[apple, "ready"]]);
+        yield* sql`UPDATE company SET last_checked_on = '2020-01-01' WHERE cik = ${apple}`;
+        const collector = yield* startCollector;
+        yield* Effect.sleep("100 millis");
+        const company = Option.getOrThrow(yield* collector.status(apple));
+        expect([company.state, company.lastCheckedOn]).toEqual(["ready", "2020-01-01"]);
+        expect(events).toEqual([`check ${apple}`]);
+      }).pipe(Effect.provide(services(events, new Set(), { fail: true })));
     },
   );
 });

@@ -147,6 +147,11 @@ Gross profit minus operating expenses: what the business itself earned, before i
 _Example_: Apple's operating income in fiscal 2023 was about $114 billion.
 _Avoid_: Operating profit, operating earnings, EBIT
 
+**Interest, other income and tax**:
+Everything between operating income and net income: interest the company paid or earned, gains and losses outside the business itself, and income tax. The tool works it out as operating income minus net income.
+_Example_: In fiscal 2023 Apple's operating income was about $114.3 billion and its net income about $97.0 billion. The $17.3 billion between them was mostly about $16.7 billion of income tax.
+_Avoid_: Non-operating items, below the line, other expenses
+
 **Net income**:
 What is left for the owners after every cost, interest payment and tax.
 _Example_: Apple's net income in fiscal 2023 was about $97 billion.

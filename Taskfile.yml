@@ -54,7 +54,9 @@ tasks:
   init:
     desc: Install everything, exactly as recorded in the lockfile
     preconditions: [*needs-bun]
-    cmd: bun install --frozen-lockfile
+    cmds:
+      - bun install --frozen-lockfile
+      - bunx playwright install chromium
 
   dev:
     desc: Serve the tool on this machine at http://127.0.0.1:4100
@@ -86,9 +88,20 @@ tasks:
     preconditions: [*needs-bun, *needs-install]
     cmd: bun run collect {{.CLI_ARGS}}
 
+  screens:
+    desc: Compare pictures of the money flow for Apple, Costco and Microsoft with the saved ones
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bunx playwright test {{.CLI_ARGS}}
+
+  screens:update:
+    desc: Save new pictures of the money flow, after looking at what changed
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bunx playwright test --update-snapshots
+
   ci:
     desc: Run everything that must pass before work is handed over
     cmds:
       - task: check
       - task: test
       - task: build
+      - task: screens

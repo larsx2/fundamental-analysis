@@ -49,6 +49,87 @@ The prototype needs readable figures, clear statement tables, labelled charts an
 - One timeline that holds the reported numbers, capital allocation, corporate events and the three kinds of context together.
 - A view of where each dollar of revenue goes, following common-size analysis.
 
+### Settled on 11 November 2026, from the mocks of "Where the money goes"
+
+Local mocks were built with the real collected numbers and approved step by step. They are not committed.
+
+- **Two drawings of the same numbers, one switch.** Stacked bars compare ten fiscal years, with net income on the baseline and a row of cents kept under the years. Bands follow one year's dollar from revenue to net income. A two-icon switch in the corner of the chart swaps them, and the choice lives in the address bar like the fiscal year. Bars open by default. Bands alone failed for a company like Costco, where nearly every dollar is cost of revenue; bars alone lose the feeling of following a dollar.
+- **In the bands, each bar is a tinted block holding its own label.** Bands run only between blocks, so a label never sits on a band. This was checked by measurement for every fiscal year of Apple, Costco and Microsoft.
+- **A sentence before the chart.** "Of each dollar Apple brought in, it spent 56¢ on cost of revenue … It kept 25¢ as net income." Under the chart title, a factual line in plain words, such as the cents kept at the two ends of ten years. Never a judgement.
+- **Year-over-year change on every line of the figures table**, against the fiscal year before.
+- **The fiscal year is a ruler.** One tick per fiscal year, a white marker on the chosen one, draggable, with the arrow keys, Home and End. A native range input does the work, so it is announced properly and works by touch.
+- **Companies are switched with Command K.** The search panel is frosted glass, lists the ready companies with their logos, tickers and as of dates, and lists the screens of the company shown. The top of every company screen shows only the company's logo and ticker, which opens the same search. The mocks use the real logos locally; where the published tool gets them is still the open point below.
+- **Navigation is a small bar centred at the bottom of the screen,** with no borders. Only the icon under the pointer grows a little; the others stay still. Names show as tooltips. A row of names along the top and a box beside the content were tried and set aside.
+- **Six colours, one per part of a dollar,** always the same part on every screen, checked as a set for colour blindness and contrast against the near-black surface: blue for cost of revenue, orange for research and development, aqua for selling, general and administrative, yellow for other operating expenses, magenta for the step from operating income to net income, green for net income.
+- **All text passes the strictest contrast level (AAA)** on the surface: white for main figures, two greys for the rest, the smallest text 14 pixels.
+
+### Settled later on 11 November 2026, from the mocks of every screen
+
+- **Seven screens.** Home, Companies, Overview, Where the money goes, Statements, Timeline and Glossary. The bottom bar holds Home, Companies, the four company screens, Glossary and search, in that order. The home has no bar.
+- **Home.** "Follow the money." over a night city photo graded into the app's blues, breathing slowly and shifting a little with the pointer. One composer: what you type on top, three example chips and a send button underneath, and its placeholder types real example questions until you type. It reads companies, tickers, glossary terms, screens and years, and says what Enter will open before you press it: "Where does Costco's money go?" opens Costco's money flow, "What is gross profit?" opens the glossary, a company that is not collected opens Companies to collect it. It is not the agent; it is the box the agent will grow into. Ready companies sit under it as logo chips.
+- **Where the money goes had three drawings of the same numbers** (since narrowed to two, see below): bars for ten fiscal years (the default), bands for one year, and the figures table. A switch in the corner of the chart picks one, and the choice lives in the address bar. Bands hide on a screen too narrow for their four columns of labels.
+- **Glossary is two panes.** The list of sections stays fixed on the left; the right shows only the chosen section, which fades in. Filtering shows matches from every section. A link to a term opens its section with the term highlighted. Clicking a term there opens no card, because its explanation is already on screen.
+- **One content width and one pair of side margins on every screen:** 1240 pixels at most, 24 pixels at each side, 16 on a phone. No screen overrides it.
+- **Motion.** On arrival a screen's sections settle in one after another, 80 milliseconds apart, from the first paint so nothing shows before its entrance. Changing company or year crossfades the screen. Bars grow from the baseline; bands sweep in from revenue on the left and glide between years. Everything moving has a reduced-motion version that does not move.
+- **Content fades and softens as it scrolls under the bottom bar,** solid behind the bar and fading above it, so nothing collides with the icons.
+- **Numbers on a term card.** Every term on every screen opens its card with the definition, the example and this company's figure. The card knows every glossary term.
+
+### Ideas from the analysis-screen research, on 11 November 2026
+
+Looked at: financial stats, comparing financial metrics, comparing stock metrics, peer analysis, and search. Each idea is adapted to teaching, not copied.
+
+- **The statements table.** Fiscal years as columns, the newest one tinted and labelled, lines grouped into blocks with space between, a missing value written in words. Here the word is "gap", from the glossary, and calculated lines sit in grey under the line they come from.
+- **Select lines, then compare.** Ticking lines in a statement and pressing return draws them together across the fiscal years. While a line is selected, the change from one year to the next shows between the columns. That teaches year-over-year change in place.
+- **A comparison chart with a summary table under it.** Each line ends in a label with its latest value, and the table gives each line's lowest, average and highest value and its change over the range.
+- **A factual sentence under a chart title.** The words are worked out from the numbers, not an investment judgement.
+- **Search that lists a company's screens as well as companies.** Typing a company offers its overview, statements and timeline directly.
+- **Peer comparison is not in the first version.** A later comparison could mark the company's own row, use small bars to show where it sits among peers, and let the reader edit the list of peers.
+
+### Settled on 11 November 2026, while building the screens
+
+- **Logos** were first letter tiles, and **the home picture** a city drawn by the tool. Both were replaced the same day, after trying them; see below.
+- **The fiscal year ruler widens with history.** Apple has twenty fiscal years. Each year keeps room for its label, and on a phone only every few years are named, plus the chosen one.
+- **Timeline.** The interest rate is a solid line and inflation a dashed one, each named with its latest value at its end. Axis labels sit in a margin the bars never enter. Bars for years not chosen are solid colours of at least 3 to 1 against the panel, and so is the recession hatch. On a narrow screen the timeline box fades at the edge that scrolls and opens at the chosen month. It covers every fiscal year collected, and its corporate events reach back as far, because the SEC's older pages of filings are read too.
+- **The term card knows every number.** Every term of the three statements, the margins, free cash flow and net debt open their card with this company's figure for the fiscal year shown, and where it came from.
+- **The step between operating income and net income** is now the glossary term "Interest, other income and tax".
+- **Overview.** The big sentence is worked out from the numbers, such as "Apple brought in $478.8 billion in fiscal 2026 and kept 28¢ of each dollar". The mock's plain description of the business was written by hand, which the tool cannot do for any company. The company's own words come from the opening of the business description in its latest annual report (10-K), with a link.
+- **Collecting progress** is shown by step, out of three, rather than as a percentage the tool cannot know.
+
+### Settled on 11 November 2026, after trying the screens
+
+- **Official logos, from Wikidata.** Wikidata, the open database behind Wikipedia, records each company's SEC number and its official logo, sometimes with a small icon that fits a square. When a company is collected, the tool fetches that picture from Wikimedia Commons and keeps it on this computer, so the repository still holds no logo. It prefers the icon, then the logo marked current, and never one with an end date. The logo sits on a white tile; a company without one keeps the tile with its first letter.
+- **The home picture is the mock's photo,** bundled with the tool and graded into the app's blues. It is under the Unsplash licence, not MIT, and a note beside the file says so. The drawn city looked like a placeholder.
+- **The home has no headline.** The composer is the first thing on it. Under it sit the three companies read most recently, then a link to all ready companies, so the row never grows past one line.
+- **No scrollbar is ever drawn.** What scrolls still scrolls. A side panel taller than the window, such as the timeline's, scrolls with the page until its end shows, rather than scrolling inside itself.
+- **A term explains itself until you have opened it once.** After its card has been opened, a term reads as plain text on every screen, because the underlines help at first and get in the way after. The glossary keeps every term and can underline them all again.
+- **Where the money goes is the flow and the table.** The bars for ten fiscal years are gone; the flow of one year's dollar opens by default, and the table is one click away. On a screen too narrow for the flow, the table shows.
+- **Choosing a glossary section never moves the page,** unless the section would start above the window.
+- **The bottom bar is larger:** 52-pixel buttons and 24-pixel icons.
+
+### Settled on 11 November 2026, from a review of the Overview
+
+A financial adviser, a product manager and a designer reviewed the Overview. What they agreed on:
+
+- **Each figure is said once near the top.** The headline gives revenue and the cents left as net income; the line under it gives only how both changed. The label "in plain words" is gone.
+- **Net income is what is left of each dollar, not what is kept.** Most of it goes back out as dividends, share buybacks and investment, so no screen says "kept" any more. A loss says how much was lost.
+- **One dollar, drawn under the headline.** A bar 28 pixels tall splits a dollar of revenue into its parts in their usual colours, with the cents written inside the parts wide enough to hold them and beside the name of the others. The whole bar opens Where the money goes.
+- **One row of six key figures:** revenue, gross margin, operating margin, net income, free cash flow and earnings per share, each with its last ten fiscal years as a small line. The heading names the year compared against, so each change is just "+10.1%". Cash and debt left the Overview, because without short-term investments they mislead; see the task list.
+- **Growth is measured over ten fiscal years** ending with the one shown, and a loss at either end is said in words rather than hidden.
+- **The company's own words are four lines at most,** with no box, and say "latest" when an older fiscal year is shown.
+- **The Overview ends with what the company did with its cash:** how much free cash flow each dollar of net income became, what it spent on, and three questions that open Where the money goes, the Timeline and the Statements.
+- **The top of every company screen names the company** beside its ticker.
+- **A fiscal year that ends on either side of a month's turn** is "around the end of August", not "late August".
+
+### Settled on 12 November 2026, from the mock of the Companies screen
+
+- **Ready companies sit side by side.** The Companies screen shows them as a table: revenue with its ten fiscal years as bars, growth, operating margin with its ten fiscal years as a line, net income, free cash flow and the as of date, each from the company's newest fiscal year. Every column sorts, and the sort lives in the address bar. This is the first step of comparing companies; peers chosen around one company stay parked.
+- **Net income and free cash flow can be read per $100 of revenue,** so a large and a small company compare fairly. Growth and operating margin are already rates, so the switch leaves them alone.
+- **Growth is measured over the ten fiscal years shown,** as on the Overview. A company without the first of those years shows none rather than a rate from a later year.
+- **The small charts show a trend and nothing more.** No tooltips: each chart is one sentence for a screen reader, and the yearly figures stay on the company's own screens.
+- **Below the width the table needs, each company becomes a card,** decided by the room the table has rather than by the width of the screen.
+- **Only the company's name is a link.** A click elsewhere on its row opens the company too, unless it ends a selection of text, so figures can be copied. A company's other actions sit in a menu at the end of its row.
+- **No explanatory text around the table.** "Last checked" shows on a row only when the companies were checked on different days.
+
 ## Open points
 
 - Settled on 11 November 2026: the look is settled on one real screen, not on a separate mock-up. The first slice's screen, "Where the money goes", is taken to finished quality and later screens reuse its colours, type, spacing and movement. See [Which screens the first version needs](./0002-first-version-site-structure.md).
@@ -56,6 +137,6 @@ The prototype needs readable figures, clear statement tables, labelled charts an
 - Should a company's brand colour also colour its chart lines, or only the background glow?
 - What does a glossary entry look like when opened from a term on screen: a small card beside the term, or a side panel?
 - The result must be our own design. Third-party screens, names, logos and wording are not assets to copy into the tool. Reference screenshots stay local and uncommitted; typefaces and icons need licences that permit distribution.
-- Company logos and brand colours belong to each company. Can the tool show a company's colour as a background glow without shipping its logo, and where would the colour come from?
+- Company logos and brand colours belong to each company. Settled for logos on 11 November 2026: each person's tool fetches them from Wikidata and keeps them locally. Can a company's colour show as a background glow, and where would the colour come from?
 
 ## Outcome
