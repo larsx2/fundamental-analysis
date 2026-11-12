@@ -216,10 +216,10 @@ Rests on: [Collect companies on demand, with no fixed list](./docs/adr/0002-coll
 
 **Depends on:** T11. **Size:** medium.
 
-- [ ] A company is not collected, waiting, collecting, ready or failed, and the state is stored.
-- [ ] Asking for a company puts it in line. Companies are collected one after another in the background and share the SEC's limit.
-- [ ] A failed company keeps its reason and can be tried again.
-- [ ] A ready company has its as of date and its last checked date.
+- [x] A company is not collected, waiting, collecting, ready or failed, and the state is stored.
+- [x] Asking for a company puts it in line. Companies are collected one after another in the background and share the SEC's limit.
+- [x] A failed company keeps its reason and can be tried again.
+- [x] A ready company has its as of date and its last checked date.
 
 **Effect ideas:** queues, work that runs in the background, scopes that clean up after themselves.
 
@@ -229,8 +229,8 @@ Rests on: [Collect companies on demand, with no fixed list](./docs/adr/0002-coll
 
 **Depends on:** T12. **Size:** small.
 
-- [ ] If the tool stops while a company is waiting or collecting, that company continues the next time the tool starts.
-- [ ] Removing a company deletes its collected data and returns it to not collected.
+- [x] If the tool stops while a company is waiting or collecting, that company continues the next time the tool starts.
+- [x] Removing a company deletes its collected data and returns it to not collected. A company that is waiting or collecting cannot be removed until it is ready or has failed.
 
 **Check:** stop the tool in the middle of a collection and start it again. The company becomes ready.
 
@@ -238,8 +238,8 @@ Rests on: [Collect companies on demand, with no fixed list](./docs/adr/0002-coll
 
 **Depends on:** T05. **Size:** small.
 
-- [ ] Before collecting, the tool looks at the industry code the SEC gives the company and at which yearly form it files.
-- [ ] Banks, insurers, property trusts and companies that do not file an annual report (10-K) are answered as not covered, with the reason, and nothing is collected.
+- [x] Before collecting, the tool looks at the industry code the SEC gives the company and at which yearly form it files.
+- [x] Banks, insurers, property trusts and companies that do not file an annual report (10-K) are answered as not covered, with the reason, and nothing is collected.
 
 **Check:** JPMorgan and Toyota are declined, each with its own reason. Costco is accepted.
 

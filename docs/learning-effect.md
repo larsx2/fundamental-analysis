@@ -81,3 +81,13 @@ Read: [`src/server/collect.ts`](../src/server/collect.ts).
 `Command.make("collect", { ticker: Argument.String("ticker") }, handler)` declares a command, its arguments and the Effect it runs. `Command.run(command, { version })` reads the arguments, prints help and errors, and runs the handler. `BunRuntime.runMain` runs the whole program on Bun and turns a failure into an exit code, and `BunServices.layer` supplies the files, terminal and standard input the command module needs.
 
 Read: [`src/cli/collect.ts`](../src/cli/collect.ts).
+
+## Queues, work in the background, and scopes
+
+`Queue.unbounded<number>()` makes a line that any part of the program can add to with `Queue.offer` and take from with `Queue.take`, which waits until something is there. `Effect.forever(Queue.take(line).pipe(Effect.flatMap(collectOne)))` takes companies one at a time, for as long as the program runs.
+
+`Effect.forkScoped(effect)` starts that loop in the background, tied to a scope. When the scope closes, because the server stops or a test ends, the loop is stopped with it, so nothing is left running.
+
+`Effect.catchCause` catches every way an Effect can fail, including a crash, so one failed company is marked failed and the line carries on.
+
+Read: [`src/server/collector.ts`](../src/server/collector.ts).
