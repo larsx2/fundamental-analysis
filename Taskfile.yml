@@ -81,6 +81,11 @@ tasks:
     preconditions: [*needs-bun, *needs-install]
     cmd: bun run build
 
+  collect:
+    desc: Collect one company from the SEC and print where the money goes, such as `task collect -- AAPL`
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun run collect {{.CLI_ARGS}}
+
   ci:
     desc: Run everything that must pass before work is handed over
     cmds:

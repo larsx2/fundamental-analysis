@@ -15,7 +15,7 @@ export default defineConfig({
     viteReact(),
   ],
   fmt: {
-    ignorePatterns: ["src/routeTree.gen.ts"],
+    ignorePatterns: ["src/routeTree.gen.ts", "src/server/testdata/**"],
   },
   lint: {
     ...recommended,

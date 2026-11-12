@@ -46,6 +46,9 @@ export class ReportedNumbers extends Context.Service<
       cik: number,
       tag: string,
     ) => Effect.Effect<ReadonlyArray<StoredNumber>, SqlError | Schema.SchemaError>;
+    readonly yearlyDollarAmounts: (
+      cik: number,
+    ) => Effect.Effect<ReadonlyArray<StoredNumber>, SqlError | Schema.SchemaError>;
   }
 >()("ReportedNumbers") {
   static readonly layer = Layer.effect(
@@ -94,9 +97,22 @@ export class ReportedNumbers extends Context.Service<
         `,
       });
 
+      const yearlyDollarAmounts = SqlSchema.findAll({
+        Request: Schema.Int,
+        Result: StoredNumber,
+        execute: (cik) => sql`
+          SELECT
+            n.accession, f.filed_on AS "filedOn", f.form, n.taxonomy, n.tag, n.unit,
+            n.start_on AS "startOn", n.end_on AS "endOn", n.fiscal_year AS "fiscalYear", n.value
+          FROM reported_number n JOIN filing f USING (accession)
+          WHERE n.cik = ${cik} AND n.unit = 'USD' AND n.start_on IS NOT NULL
+        `,
+      });
+
       return ReportedNumbers.of({
         save,
         forTag: (cik, tag) => forTag({ cik, tag }),
+        yearlyDollarAmounts,
       });
     }),
   );
