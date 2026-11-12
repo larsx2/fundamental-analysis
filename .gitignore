@@ -25,3 +25,6 @@ dist/
 
 # Throwaway screen mocks, kept only until a design is chosen
 mocks/
+
+# Local git worktrees for parallel sessions
+.worktrees/
