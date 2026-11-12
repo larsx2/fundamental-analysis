@@ -22,4 +22,12 @@ describe("the opening of a company's own business description", () => {
       "The Company designs, manufactures and markets smartphones, personal computers, tablets, wearables and accessories, and sells a variety of related services.",
     );
   });
+
+  it("keeps a number that names no character as written, rather than failing", () => {
+    expect(
+      openingOfBusiness(
+        annualReport.replace("Company Background", "Company &#99999999; Background"),
+      ),
+    ).toContain("The Company designs");
+  });
 });

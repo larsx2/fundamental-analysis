@@ -106,7 +106,7 @@ Read: [`src/server/collect.ts`](../src/server/collect.ts).
 
 ## Giving up after a while, and falling back
 
-`Effect.timeout("20 seconds")` fails an Effect that takes longer than that. `Effect.catchCause(() => Effect.succeed(false))` turns any failure into an ordinary answer, so the economic data keeps the months it already holds when the central bank's service cannot be reached. `Effect.ignore` does the same when nothing needs to be known about the failure, as when a company's business description cannot be read.
+`Effect.timeout("20 seconds")` fails an Effect that takes longer than that. `Effect.catchCause(() => Effect.succeed(false))` turns any failure into an ordinary answer, so the economic data keeps the months it already holds when the central bank's service cannot be reached. `Effect.ignoreCause` does the same when nothing needs to be known about the failure, as when a company's business description cannot be read. Unlike `Effect.ignore`, it also swallows a crash, so one malformed document cannot stop the background line that collects every company.
 
 Read: [`src/server/economy.ts`](../src/server/economy.ts), [`src/server/collect.ts`](../src/server/collect.ts).
 

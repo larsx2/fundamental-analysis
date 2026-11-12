@@ -13,12 +13,17 @@ const entities: Record<string, string> = {
   ndash: "–",
 };
 
+// A number in an entity that names no character is kept as written, rather
+// than ending the collection of the whole company.
+const character = (code: number, whole: string) =>
+  Number.isInteger(code) && code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : whole;
+
 const decode = (text: string) =>
   text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, code: string) => {
     if (code.startsWith("#x") || code.startsWith("#X")) {
-      return String.fromCodePoint(Number.parseInt(code.slice(2), 16));
+      return character(Number.parseInt(code.slice(2), 16), whole);
     }
-    if (code.startsWith("#")) return String.fromCodePoint(Number(code.slice(1)));
+    if (code.startsWith("#")) return character(Number(code.slice(1)), whole);
     return entities[code.toLowerCase()] ?? whole;
   });
 

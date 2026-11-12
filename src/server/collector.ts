@@ -123,7 +123,7 @@ export class Collector extends Context.Service<
         Effect.gen(function* () {
           yield* collect.filings(cik);
           yield* collect.businessDescription(cik);
-        }).pipe(Effect.ignore);
+        }).pipe(Effect.ignoreCause);
 
       // A company left waiting or collecting when the tool stopped goes back
       // in line, in the order it was asked for.

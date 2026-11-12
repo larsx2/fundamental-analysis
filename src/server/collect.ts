@@ -158,7 +158,7 @@ export class Collect extends Context.Service<
               description_accession = ${filing.accession}
             WHERE cik = ${cik}
           `;
-        }).pipe(Effect.ignore);
+        }).pipe(Effect.ignoreCause);
 
       return Collect.of({ reportedNumbers, filings, businessDescription });
     }),
