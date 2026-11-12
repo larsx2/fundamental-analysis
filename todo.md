@@ -353,6 +353,19 @@ Coarse on purpose. Each task is broken down when it is reached.
 - [x] Revenue and net income across the fiscal years as the main chart.
 - [x] A strip of key figures for the latest fiscal year.
 - [x] The opening of the company's own description of its business, quoted from its annual report (10-K), with a link.
+- [x] One dollar of revenue split into its parts under the headline, opening Where the money goes.
+- [x] What the company did with its cash: free cash flow against net income, and what it spent on, with three links to look further.
+
+### T23b: What the Overview still lacks
+
+From the review by a financial adviser, a product manager and a designer on 11 November 2026.
+
+- [ ] Collect short-term investments, so cash and net debt count everything a company can turn into money quickly. Until then the Overview shows neither, because Apple and Microsoft would look as if they owe more than they hold.
+- [ ] Mark a year whose net income was moved by a one-off item, such as Tesla's tax gain or Microsoft's charge under the 2017 US tax law, so a beginner does not read it as the business changing.
+- [ ] Collect the share count, and show whether it shrank through share buybacks or grew through dilution.
+- [ ] Work out return on invested capital from operating income, tax, debt and equity.
+- [ ] Say what the company sells: its industry from the SEC, and the revenue lines on its own income statement, such as Apple's products and services or Costco's membership fees.
+- [ ] Decide whether the fiscal year ruler on the Overview can shrink to a label with a picker.
 
 ### T24: What the company did with its money
 

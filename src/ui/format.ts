@@ -146,8 +146,12 @@ export const yearEndInWords = (ends: ReadonlyArray<string>) => {
       (date) =>
         (date.getUTCDate() <= 7 ? date.getUTCDate() : date.getUTCDate() - lastDay(date)) === middle,
     ) ?? first;
-  if (middle > 0) {
-    const before = new Date(Date.UTC(sample.getUTCFullYear(), sample.getUTCMonth(), 0));
+  // Some years ending in early September and others in late August, as with
+  // Costco's Sunday nearest 31 August, read as "around the end of August".
+  const straddles = offsets.some((offset) => offset > 0) && offsets.some((offset) => offset <= 0);
+  if (middle > 0 || straddles) {
+    const end = middle > 0 ? sample : (dates.find((date) => date.getUTCDate() <= 7) ?? sample);
+    const before = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 0));
     return `around the end of ${monthOf(before)}`;
   }
   if (middle >= -10) return `late ${monthOf(sample)}`;

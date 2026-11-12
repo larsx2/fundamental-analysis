@@ -106,6 +106,20 @@ Looked at: financial stats, comparing financial metrics, comparing stock metrics
 - **Choosing a glossary section never moves the page,** unless the section would start above the window.
 - **The bottom bar is larger:** 52-pixel buttons and 24-pixel icons.
 
+### Settled on 11 November 2026, from a review of the Overview
+
+A financial adviser, a product manager and a designer reviewed the Overview. What they agreed on:
+
+- **Each figure is said once near the top.** The headline gives revenue and the cents left as net income; the line under it gives only how both changed. The label "in plain words" is gone.
+- **Net income is what is left of each dollar, not what is kept.** Most of it goes back out as dividends, share buybacks and investment, so no screen says "kept" any more. A loss says how much was lost.
+- **One dollar, drawn under the headline.** A bar 28 pixels tall splits a dollar of revenue into its parts in their usual colours, with the cents written inside the parts wide enough to hold them and beside the name of the others. The whole bar opens Where the money goes.
+- **One row of six key figures:** revenue, gross margin, operating margin, net income, free cash flow and earnings per share, each with its last ten fiscal years as a small line. The heading names the year compared against, so each change is just "+10.1%". Cash and debt left the Overview, because without short-term investments they mislead; see the task list.
+- **Growth is measured over ten fiscal years** ending with the one shown, and a loss at either end is said in words rather than hidden.
+- **The company's own words are four lines at most,** with no box, and say "latest" when an older fiscal year is shown.
+- **The Overview ends with what the company did with its cash:** how much free cash flow each dollar of net income became, what it spent on, and three questions that open Where the money goes, the Timeline and the Statements.
+- **The top of every company screen names the company** beside its ticker.
+- **A fiscal year that ends on either side of a month's turn** is "around the end of August", not "late August".
+
 ## Open points
 
 - Settled on 11 November 2026: the look is settled on one real screen, not on a separate mock-up. The first slice's screen, "Where the money goes", is taken to finished quality and later screens reuse its colours, type, spacing and movement. See [Which screens the first version needs](./0002-first-version-site-structure.md).

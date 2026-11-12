@@ -142,7 +142,7 @@ function Hero({ name, year }: { readonly name: string; readonly year: StatementY
           .{" "}
           {kept.value !== null && kept.value > 0 ? (
             <>
-              It kept <strong>{keptCents}&cent;</strong> as{" "}
+              That left <strong>{keptCents}&cent;</strong> as{" "}
               <Term name="Net income">net income</Term>.
             </>
           ) : kept.value !== null ? (

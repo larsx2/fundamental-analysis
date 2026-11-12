@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { type CSSProperties, useRef } from "react";
 import { longDate, yearEndInWords } from "./format";
-import { LogoTile, plainName } from "./logo-tile";
+import { LogoTile, plainName, shortName } from "./logo-tile";
 import { useOpenPalette } from "./palette";
 import { Term } from "./term";
 
@@ -30,6 +30,7 @@ export function CompanyHeader({
       >
         <LogoTile name={plainName(name)} cik={cik} size={40} />
         <span className="text-xl font-semibold tracking-[0.01em]">{ticker}</span>
+        <span className="text-m text-text-3">{shortName(name)}</span>
       </button>
       {asOf !== null && (
         <span className="text-xs text-text-3">

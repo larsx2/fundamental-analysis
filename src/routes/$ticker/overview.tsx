@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { max, min } from "d3-array";
 import { scalePoint, scaleLinear } from "d3-scale";
 import { curveMonotoneX, line as lineShape } from "d3-shape";
@@ -16,18 +16,21 @@ import {
 import { useChooseYear } from "../../ui/company-header";
 import {
   axisMoney,
+  centsOfDollar,
   filingUrl,
   longDate,
   money,
   moneyParts,
   moneyShort,
   percent,
+  perShare,
   signedPercent,
   signedPoints,
   yearOverYear,
 } from "../../ui/format";
 import { shortName } from "../../ui/logo-tile";
 import { GapMark, Marks } from "../../ui/marks";
+import { yearParts } from "../../ui/money-flow/parts";
 import { glide, useMounted, useStill, useWidth } from "../../ui/motion";
 import { type FigureKey, figureOf } from "../../ui/own-figure";
 import { Segmented } from "../../ui/segmented";
@@ -48,26 +51,19 @@ function Overview() {
   const name = shortName(view.name);
   const [show, setShow] = useState<"chart" | "table">("chart");
   const chooseYear = useChooseYear();
-  const first = years[0]!;
-  const last = years.at(-1)!;
-  const span = last.fiscalYear - first.fiscalYear;
-  const rate = (key: FigureKey) => {
-    const a = valueOf(figureOf(first, key));
-    const b = valueOf(figureOf(last, key));
-    return a !== null && b !== null && a > 0 && b > 0 && span > 0
-      ? percent((b / a) ** (1 / span) - 1)
-      : null;
-  };
-  const revenueRate = rate("revenue");
-  const netRate = rate("netIncome");
+  // Growth is measured over the ten fiscal years that end with the one shown.
+  const decade = years.filter((each) => each.fiscalYear <= year.fiscalYear).slice(-11);
+  const growth = growthLine(decade);
 
   return (
     <CompanyFrame view={view} year={year} active="overview" title="overview">
       <div className="intro">
-        <Plain name={name} years={years} year={year} />
-        <Quote view={view} />
+        <Lead name={name} years={years} year={year} />
+        <Quote view={view} latest={year === years.at(-1)} />
       </div>
-      <section className="panel panel-pad" aria-labelledby="chart-title">
+      <DollarBar ticker={view.ticker} year={year} />
+      <KeyFigures years={years} year={year} />
+      <section className="panel panel-pad mt-10" aria-labelledby="chart-title">
         <div className="panel-title">
           <h2 id="chart-title">
             <Term name="Revenue" /> and <Term name="Net income">net income</Term>
@@ -82,20 +78,14 @@ function Overview() {
             ]}
           />
         </div>
-        {revenueRate !== null && netRate !== null && (
-          <p className="verdict mt-0">
-            From fiscal {first.fiscalYear} to fiscal {last.fiscalYear}, revenue grew at a{" "}
-            <Term name="Compound annual growth rate">compound annual growth rate</Term> of{" "}
-            {revenueRate} and net income at {netRate}.
-          </p>
-        )}
+        {growth !== null && <p className="verdict mt-0">{growth}</p>}
         {show === "chart" ? (
           <Lines name={name} years={years} year={year} onChoose={(fy) => void chooseYear(fy)} />
         ) : (
           <YearsTable years={years} year={year} onChoose={(fy) => void chooseYear(fy)} />
         )}
       </section>
-      <KeyFigures years={years} year={year} />
+      <CashUse ticker={view.ticker} name={name} year={year} />
     </CompanyFrame>
   );
 }
@@ -107,8 +97,57 @@ const grewText = (now: number | null, then: number | null) => {
   return `${delta > 0 ? "grew" : "fell"} ${percent(Math.abs(delta))}`;
 };
 
+// A loss on either side makes a growth rate meaningless, so the sentence
+// says what happened instead.
+const netIncomeMove = (now: number | null, then: number | null) => {
+  if (now === null || then === null) return null;
+  if (now > 0 && then > 0) return grewText(now, then);
+  if (now > 0) return "turned from a loss to a profit";
+  if (then > 0) return "turned to a loss";
+  return "was a loss again";
+};
+
+const growthLine = (range: ReadonlyArray<StatementYear>): ReactNode => {
+  const first = range[0];
+  const last = range.at(-1);
+  if (first === undefined || last === undefined || first === last) return null;
+  const span = last.fiscalYear - first.fiscalYear;
+  const rateOf = (a: number | null, b: number | null) =>
+    a !== null && b !== null && a > 0 && b > 0 ? percent((b / a) ** (1 / span) - 1) : null;
+  const revenueRate = rateOf(valueOf(first.terms.revenue), valueOf(last.terms.revenue));
+  const netThen = valueOf(first.terms.netIncome);
+  const netNow = valueOf(last.terms.netIncome);
+  const netRate = rateOf(netThen, netNow);
+  const net =
+    netRate !== null
+      ? `net income at ${netRate}`
+      : netThen !== null && netNow !== null && netThen <= 0 && netNow > 0
+        ? `net income went from a loss of ${money(-netThen)} to a profit of ${money(netNow)}`
+        : netNow !== null && netNow <= 0
+          ? `net income was a loss of ${money(-netNow)} in fiscal ${last.fiscalYear}`
+          : null;
+  if (revenueRate === null && net === null) return null;
+  return (
+    <>
+      From fiscal {first.fiscalYear} to fiscal {last.fiscalYear},{" "}
+      {revenueRate === null ? (
+        `${net}.`
+      ) : (
+        <>
+          revenue grew at a{" "}
+          <Term name="Compound annual growth rate">compound annual growth rate</Term> of{" "}
+          {revenueRate}
+          {net === null ? "." : `, and ${net}.`}
+        </>
+      )}
+    </>
+  );
+};
+
 // What the company is and whether it is growing, worked out from its numbers.
-function Plain({
+// Net income is what is left of each dollar, not money the company keeps:
+// most of it goes back out as dividends, buybacks and investment.
+function Lead({
   name,
   years,
   year,
@@ -120,63 +159,55 @@ function Plain({
   const before = years.find((each) => each.fiscalYear === year.fiscalYear - 1);
   const revenue = valueOf(year.terms.revenue);
   const net = valueOf(year.terms.netIncome);
+  const left =
+    revenue !== null && net !== null && revenue > 0 && net > 0
+      ? Math.round((net / revenue) * 100)
+      : null;
   const revenueMove =
     before === undefined ? null : grewText(revenue, valueOf(before.terms.revenue));
-  const netMove = before === undefined ? null : grewText(net, valueOf(before.terms.netIncome));
-  const upTo = years.filter((each) => each.fiscalYear <= year.fiscalYear);
-  let rises = 0;
-  for (let index = 1; index < upTo.length; index++) {
-    const now = valueOf(upTo[index]!.terms.revenue);
-    const then = valueOf(upTo[index - 1]!.terms.revenue);
-    if (now !== null && then !== null && now > then) rises += 1;
-  }
-  const spanCount = upTo.length - 1;
-  const kept =
-    revenue !== null && net !== null && revenue > 0 ? Math.round((net / revenue) * 100) : null;
+  const netMove = before === undefined ? null : netIncomeMove(net, valueOf(before.terms.netIncome));
 
+  const whole = (value: number) => money(value).replace(" ", "\u00a0");
   return (
     <section aria-label="In plain words">
-      <div className="eyebrow">{name} in plain words</div>
       <p className="overview-lead">
         {revenue === null
           ? `${name}'s revenue for fiscal ${year.fiscalYear} is a gap.`
-          : kept !== null && kept > 0
-            ? `${name} brought in ${money(revenue)} in fiscal ${year.fiscalYear} and kept ${kept}¢ of each dollar.`
-            : `${name} brought in ${money(revenue)} in fiscal ${year.fiscalYear} and kept nothing: its net income was a loss.`}
+          : net !== null && net < 0
+            ? `${name} brought in ${whole(revenue)} in fiscal ${year.fiscalYear} and lost ${whole(-net)}.`
+            : left !== null
+              ? `${name} brought in ${whole(revenue)} in fiscal ${year.fiscalYear} and had ${left}¢ of each dollar left as net income.`
+              : `${name} brought in ${whole(revenue)} in fiscal ${year.fiscalYear}.`}
       </p>
-      <p className="sentence">
-        {revenueMove !== null && netMove !== null && revenue !== null && net !== null ? (
-          <>
-            In fiscal {year.fiscalYear} its <Term name="Revenue">revenue</Term> {revenueMove} to{" "}
-            <strong>{money(revenue)}</strong>, and its <Term name="Net income">net income</Term>{" "}
-            {netMove} to <strong>{money(net)}</strong>.
-          </>
-        ) : (
-          <>
-            In fiscal {year.fiscalYear} its <Term name="Revenue">revenue</Term> was{" "}
-            <strong>{revenue === null ? "a gap" : money(revenue)}</strong> and its{" "}
-            <Term name="Net income">net income</Term>{" "}
-            <strong>{net === null ? "a gap" : money(net)}</strong>.
-          </>
-        )}
-        {spanCount >= 3 &&
-          ` Since fiscal ${upTo[0]!.fiscalYear}, revenue has grown in ${rises === spanCount ? `all ${spanCount}` : `${rises} of ${spanCount}`} fiscal years.`}
-      </p>
+      {before !== undefined && revenueMove !== null && (
+        <p className="sentence">
+          Since fiscal {before.fiscalYear}, its <Term name="Revenue">revenue</Term> {revenueMove}
+          {netMove === null ? (
+            "."
+          ) : (
+            <>
+              {" "}
+              and its <Term name="Net income">net income</Term> {netMove}.
+            </>
+          )}
+        </p>
+      )}
     </section>
   );
 }
 
-// In its own words: the opening of the business description in its latest annual report.
-function Quote({ view }: { readonly view: ReadyCompany }) {
+// In its own words: the opening of the business description in its latest
+// annual report, kept short so it never outweighs the numbers.
+function Quote({ view, latest }: { readonly view: ReadyCompany; readonly latest: boolean }) {
   const description = view.details.description;
   const name = shortName(view.name);
   if (description === null) {
     return (
-      <section className="panel quote" aria-labelledby="quote-title">
+      <section className="quote" aria-labelledby="quote-title">
         <h2 className="eyebrow m-0 font-normal" id="quote-title">
           In its own words
         </h2>
-        <p className="mt-3 mb-0 text-text-2">
+        <p className="mt-2 mb-0 text-s text-text-3">
           The business description in {name}'s{" "}
           <Term name="Annual report (10-K)">annual report (10-K)</Term> is a <GapMark />: the tool
           could not find its opening yet.
@@ -186,7 +217,7 @@ function Quote({ view }: { readonly view: ReadyCompany }) {
   }
   const url = filingUrl(view.cik, description.accession, description.document);
   return (
-    <section className="panel quote" aria-labelledby="quote-title">
+    <section className="quote" aria-labelledby="quote-title">
       <h2 className="eyebrow m-0 font-normal" id="quote-title">
         In its own words
       </h2>
@@ -194,13 +225,171 @@ function Quote({ view }: { readonly view: ReadyCompany }) {
         <p>{description.text}</p>
       </blockquote>
       <p className="source">
-        The opening of the business description in its{" "}
-        <Term name="Annual report (10-K)">annual report (10-K)</Term> filed on{" "}
+        From its {latest ? "" : "latest "}
+        <Term name="Annual report (10-K)">annual report (10-K)</Term>, filed on{" "}
         {longDate(description.filedOn)}.{" "}
         <a href={url} target="_blank" rel="noreferrer">
           Read it in the filing {"↗"}
         </a>
       </p>
+    </section>
+  );
+}
+
+// One dollar of revenue split into the parts it went to, the picture of the
+// sentence above it. The whole bar opens Where the money goes.
+const labelInside = 7;
+
+function DollarBar({ ticker, year }: { readonly ticker: string; readonly year: StatementYear }) {
+  const revenue = valueOf(year.terms.revenue);
+  const net = valueOf(year.terms.netIncome);
+  if (revenue === null || revenue <= 0 || net === null || net <= 0) return null;
+  const all = yearParts(year);
+  const cents = centsOfDollar(
+    all.map((part) => part.value),
+    revenue,
+  );
+  const blocks = all
+    .map((part, index) => ({ part, cents: cents[index] ?? 0 }))
+    .filter(({ part, cents: share }) => part.value !== null && part.value > 0 && share > 0);
+  const destination = {
+    to: "/$ticker/where-the-money-goes",
+    params: { ticker },
+    search: { year: year.fiscalYear },
+  } as const;
+
+  return (
+    <section className="dollar" aria-labelledby="dollar-title">
+      <div className="dollar-head">
+        <h2 id="dollar-title">
+          Each dollar of <Term name="Revenue">revenue</Term> in fiscal {year.fiscalYear}
+        </h2>
+        <Link {...destination} className="more-link">
+          Where the money goes {"→"}
+        </Link>
+      </div>
+      <Link
+        {...destination}
+        className="dollar-bar"
+        aria-label={`${blocks.map(({ part, cents: share }) => `${part.name} ${share}¢`).join(", ")}. Opens where the money goes.`}
+      >
+        {blocks.map(({ part, cents: share }) => (
+          <span
+            key={part.key}
+            style={{
+              flexGrow: share,
+              background: part.color,
+              color: part.key === "netIncome" ? "#fff" : "var(--color-surface-0)",
+            }}
+          >
+            {share >= labelInside ? `${share}¢` : ""}
+          </span>
+        ))}
+      </Link>
+      <ul className="dollar-legend">
+        {blocks.map(({ part, cents: share }) => (
+          <li key={part.key}>
+            <i style={{ background: part.color }} aria-hidden="true" />
+            <Term name={part.name} />
+            {share < labelInside && <span className="numbers">{share}¢</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// Profit on paper and cash in hand can come apart, and what a company does
+// with its cash says as much as what it earns. Then where to look next.
+function CashUse({
+  ticker,
+  name,
+  year,
+}: {
+  readonly ticker: string;
+  readonly name: string;
+  readonly year: StatementYear;
+}) {
+  const net = valueOf(year.terms.netIncome);
+  const free = valueOf(year.terms.freeCashFlow);
+  const revenue = valueOf(year.terms.revenue);
+  const per =
+    net !== null && free !== null && net > 0 && free > 0
+      ? free / net >= 1
+        ? `$${(free / net).toFixed(2)}`
+        : `${Math.round((free / net) * 100)}¢`
+      : null;
+  const used = (
+    [
+      ["capitalExpenditure", "Capital expenditure", "capital expenditure"],
+      ["dividends", "Dividend", "dividends"],
+      ["shareBuybacks", "Share buyback", "share buybacks"],
+      ["acquisitions", "Acquisition", "acquisitions"],
+    ] as const
+  )
+    .map(([key, term, words]) => ({ key, term, words, value: valueOf(year.terms[key]) }))
+    .filter(
+      (each): each is typeof each & { value: number } => each.value !== null && each.value > 0,
+    );
+  const repaid = valueOf(year.terms.debtRepaid);
+  const left =
+    revenue !== null && net !== null && revenue > 0 && net > 0
+      ? 100 - Math.round((net / revenue) * 100)
+      : null;
+  const fiscal = { year: year.fiscalYear };
+
+  return (
+    <section className="cash-use" aria-labelledby="cash-title">
+      <h2 id="cash-title">
+        What {name} did with its cash in fiscal {year.fiscalYear}
+      </h2>
+      <p className="sentence">
+        {per !== null ? (
+          <>
+            Each dollar of <Term name="Net income">net income</Term> became <strong>{per}</strong>{" "}
+            of <Term name="Free cash flow">free cash flow</Term>.{" "}
+          </>
+        ) : free !== null ? (
+          <>
+            Its <Term name="Free cash flow">free cash flow</Term> was <strong>{money(free)}</strong>
+            .{" "}
+          </>
+        ) : null}
+        {used.length > 0 && (
+          <>
+            It spent{" "}
+            {used.map((each, index) => (
+              <span key={each.key}>
+                {index > 0 && (index === used.length - 1 ? " and " : ", ")}
+                <strong>{money(each.value)}</strong> on <Term name={each.term}>{each.words}</Term>
+              </span>
+            ))}
+            {repaid !== null && repaid > 0 ? (
+              <>
+                , and repaid <strong>{money(repaid)}</strong> of <Term name="Debt">debt</Term>.
+              </>
+            ) : (
+              "."
+            )}
+          </>
+        )}
+      </p>
+      <nav className="next" aria-label="Where to look next">
+        <Link to="/$ticker/where-the-money-goes" params={{ ticker }} search={fiscal}>
+          {left === null
+            ? "Where did each dollar go?"
+            : `Where did the other ${left}¢ of each dollar go?`}
+          <span aria-hidden="true">{"→"}</span>
+        </Link>
+        <Link to="/$ticker/timeline" params={{ ticker }} search={fiscal}>
+          What did it do with its cash over the years?
+          <span aria-hidden="true">{"→"}</span>
+        </Link>
+        <Link to="/$ticker/statements" params={{ ticker }} search={fiscal}>
+          Where does each figure come from?
+          <span aria-hidden="true">{"→"}</span>
+        </Link>
+      </nav>
     </section>
   );
 }
@@ -559,8 +748,24 @@ function KeyFigures({
         before === undefined || delta === null
           ? null
           : Math.abs(delta) < 0.0005
-            ? `unchanged since fiscal ${before.fiscalYear}`
-            : `${signedPercent(delta)} since fiscal ${before.fiscalYear}`,
+            ? "unchanged"
+            : signedPercent(delta),
+      figure,
+      key,
+    };
+  };
+  const perShareTile = (key: FigureKey) => {
+    const figure = figureOf(year, key);
+    const value = valueOf(figure);
+    const delta = before === undefined ? null : yearOverYear(value, valueOf(figureOf(before, key)));
+    return {
+      value: value === null ? <GapMark /> : <>{perShare(value)}</>,
+      change:
+        before === undefined || delta === null
+          ? null
+          : Math.abs(delta) < 0.0005
+            ? "unchanged"
+            : signedPercent(delta),
       figure,
       key,
     };
@@ -575,8 +780,8 @@ function KeyFigures({
         before === undefined || value === null || then === null
           ? null
           : Math.abs(value - then) < 0.0005
-            ? `unchanged since fiscal ${before.fiscalYear}`
-            : `${signedPoints((value - then) * 100)} since fiscal ${before.fiscalYear}`,
+            ? "unchanged"
+            : signedPoints((value - then) * 100),
       figure,
       key,
     };
@@ -607,8 +812,11 @@ function KeyFigures({
       tile: moneyTile("freeCashFlow"),
       marksFrom: "freeCashFlow",
     },
-    { term: "Cash", tile: moneyTile("cash"), marksFrom: "cash" },
-    { term: "Debt", tile: moneyTile("debt"), marksFrom: "debt" },
+    {
+      term: "Earnings per share",
+      tile: perShareTile("earningsPerShare"),
+      marksFrom: "earningsPerShare",
+    },
   ];
   // Each tile draws its last ten fiscal years, up to the one shown.
   const recent = years.filter((each) => each.fiscalYear <= year.fiscalYear).slice(-10);
@@ -625,33 +833,21 @@ function KeyFigures({
       marks={<Marks figure={figureOf(year, marksFrom)} />}
     />
   );
-  const gross = valueOf(year.terms.grossMargin);
-  const grossBefore = before === undefined ? null : valueOf(before.terms.grossMargin);
 
   return (
     <section aria-labelledby="strip-title">
-      <h2 id="strip-title" className="mt-8 mb-3 text-m font-semibold">
+      <h2 id="strip-title" className="mt-10 mb-3 text-m font-semibold">
         Key figures for fiscal {year.fiscalYear}
-      </h2>
-      {/* What the year earned, then the cash and debt it ended with. */}
-      <div className="strip">
-        <div className="strip-row">{tiles.slice(0, 4).map(tile)}</div>
-        <div className="strip-row">{tiles.slice(4).map(tile)}</div>
-      </div>
-      <p className="mt-3 mb-0 text-xs text-text-3">
-        {before === undefined ? (
-          `Fiscal ${year.fiscalYear} is the first fiscal year collected here, so there is no change to show. `
-        ) : (
-          <>
-            Each change is the <Term name="Year-over-year change">year-over-year change</Term>{" "}
-            against fiscal {before.fiscalYear}.{" "}
-            {gross !== null && grossBefore !== null && Math.abs(gross - grossBefore) >= 0.0005
-              ? `A margin moves in points: gross margin went from ${percent(grossBefore)} to ${percent(gross)}, ${signedPoints((gross - grossBefore) * 100)}. `
-              : ""}
-          </>
+        {before !== undefined && (
+          <span className="font-normal text-text-3">
+            , with the <Term name="Year-over-year change">year-over-year change</Term> against
+            fiscal {before.fiscalYear}
+          </span>
         )}
-        Cash and debt are counted on the last day of the fiscal year.
-      </p>
+      </h2>
+      <div className="strip">
+        <div className="strip-row">{tiles.map(tile)}</div>
+      </div>
     </section>
   );
 }

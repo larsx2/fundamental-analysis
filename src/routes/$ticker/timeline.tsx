@@ -216,9 +216,8 @@ function Timeline() {
         <p className="sentence">
           In fiscal {year.fiscalYear} {name} brought in{" "}
           <strong>{money(valueOf(year.terms.revenue) ?? 0)}</strong> of{" "}
-          <Term name="Revenue">revenue</Term> and kept{" "}
-          <strong>{money(valueOf(year.terms.netIncome) ?? 0)}</strong> as{" "}
-          <Term name="Net income">net income</Term>.
+          <Term name="Revenue">revenue</Term>, and its <Term name="Net income">net income</Term> was{" "}
+          <strong>{money(valueOf(year.terms.netIncome) ?? 0)}</strong>.
           {largest !== null && (
             <>
               {" "}
