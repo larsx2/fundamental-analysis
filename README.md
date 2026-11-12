@@ -19,7 +19,9 @@ It is not a course. It teaches through how it is built: clear visuals, numbers y
 
 ## Where it runs
 
-Entirely on your own machine. There is no account and no service to sign up for. The internet is used only to collect a company's filings from the SEC and the economic figures that go with them. Everything already collected works offline.
+Entirely on your own machine. There is no account and no service to sign up for. The internet is used to collect a company's filings from the SEC and the economic figures that go with them, and to answer questions. Everything already collected works offline.
+
+Questions about a company are answered with your own ChatGPT subscription, through the Codex that comes with the tool. Sign in once with `bunx codex login` in the tool's folder. Each question, and the figures the tool looks up for it, goes to OpenAI; the collected data stays on your machine.
 
 ## What it is not
 

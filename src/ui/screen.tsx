@@ -6,7 +6,7 @@ import { Icon, type IconName } from "./icons";
 import { readLastCompany } from "./last-company";
 import { companyScreens, type CompanyScreen, useHere, useOpenPalette } from "./palette";
 
-export type ScreenName = "home" | "companies" | "glossary" | CompanyScreen;
+export type ScreenName = "home" | "companies" | "glossary" | "ask" | CompanyScreen;
 
 const ScreenLink = ({
   to,

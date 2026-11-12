@@ -21,6 +21,7 @@ Part 3  Collecting on demand                     T12 to T14
 Part 4  The slice's screen                       T15 to T20
 Part 5  The rest of the first version            T21 to T30
 Part 6  Before publishing                        T31 to T33
+Part 7  The agent                               T34
 ```
 
 Parts 1 to 4 are the first slice and are broken down in full. Part 5 is deliberately coarser. The slice will teach things that change it, so each of its tasks gets broken down when it is reached.
@@ -442,11 +443,27 @@ From the review by a financial adviser, a product manager and a designer on 11 N
 
 ---
 
+## Part 7: The agent
+
+Rests on: [The agent runs on the reader's own ChatGPT subscription, through Codex](./docs/adr/0008-the-agent-runs-on-the-readers-chatgpt-subscription.md), [An agent that does not invent numbers](./docs/rfc/0007-an-agent-that-does-not-invent.md) and [The twenty questions the agent answers first](./docs/rfc/0009-the-twenty-questions-the-agent-answers-first.md).
+
+### T34: Answer questions about a ready company
+
+- [x] Lookups over the collected data, each giving its figures already written out, the filings they came from and a drawing.
+- [x] Codex runs through the Codex SDK on the reader's own ChatGPT sign-in, with the lookups as its only tools.
+- [x] The Ask screen: the answer, its drawing, what it read, and every number that did not come from a lookup marked.
+- [x] A question about a ready company on the home screen opens the Ask screen.
+- [ ] Ask the twenty questions about Apple, Costco and Microsoft after each change to the agent, with the expected figures taken from the annual reports.
+- [ ] Collect segments and the text of the annual report, for the four questions the agent cannot answer yet.
+
+**Check:** ask "Is Costco growing?" on the home screen. Every figure in the answer lights up the lookup it came from, and no number is marked.
+
+---
+
 ## Parked
 
 Not part of the first version. Each needs its own RFC before any work starts.
 
-- The agent. See [An agent that does not invent numbers](./docs/rfc/0007-an-agent-that-does-not-invent.md).
 - Quarters.
 - Share prices, market capitalization, market context, event studies and valuation. Blocked on a data source anyone may use.
 - Industry context and comparing companies.
