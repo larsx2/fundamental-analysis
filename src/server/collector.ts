@@ -1,11 +1,24 @@
-import { Cause, Clock, Context, Data, Effect, Layer, Option, Queue, Schema } from "effect";
+import {
+  Cause,
+  Clock,
+  Context,
+  Data,
+  Effect,
+  Layer,
+  Option,
+  Queue,
+  Schema,
+  Semaphore,
+} from "effect";
 import { SqlClient } from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
 import * as SqlSchema from "effect/sql/SqlSchema";
+import { isDueForCheck } from "./check-schedule";
 import { Collect } from "./collect";
 import { CompanyState } from "./companies";
 import { Logos } from "./logos";
 import { CoverageCheck, type UnexpectedSubmissions } from "./coverage";
+import { annualReportForms } from "./filings";
 import type { SecError } from "./sec";
 
 const CompanyStatus = Schema.Struct({
@@ -73,6 +86,9 @@ export class Collector extends Context.Service<
       // A company goes in line to be collected in full, or, when it was ready
       // before the tool kept filings, only for its filings and description.
       const line = yield* Queue.unbounded<{ readonly cik: number; readonly full: boolean }>();
+      // Removing a company and checking it for new filings both change its
+      // data, so one waits for the other.
+      const writing = yield* Semaphore.make(1);
 
       const status = SqlSchema.findOneOption({
         Request: Schema.Int,
@@ -128,6 +144,50 @@ export class Collector extends Context.Service<
           yield* collect.businessDescription(cik);
         }).pipe(Effect.ignoreCause);
 
+      // The ready company most overdue for a check, if any is due.
+      const nextDueForCheck = Effect.gen(function* () {
+        const checkedOn = yield* today;
+        const companies = yield* sql<{
+          cik: number;
+          lastCheckedOn: string | null;
+          yearEndOn: string | null;
+        }>`
+          SELECT
+            c.cik, c.last_checked_on AS "lastCheckedOn",
+            (SELECT max(f.report_date) FROM company_filing f
+             WHERE f.cik = c.cik AND f.form IN ('10-K', '10-KT')) AS "yearEndOn"
+          FROM company c WHERE c.state = 'ready'
+          ORDER BY c.last_checked_on
+        `;
+        return companies.find((company) => isDueForCheck({ ...company, today: checkedOn }))?.cik;
+      });
+
+      // Asks the SEC for filings newer than the ones held. A new annual report
+      // brings its numbers, and a full one a fresh business description. The
+      // filings are stored after the numbers, so a check that fails halfway
+      // finds the same filings new next time. The company stays ready
+      // throughout.
+      const checkForNew = (cik: number) =>
+        Effect.gen(function* () {
+          const company = yield* status(cik);
+          if (Option.isNone(company) || company.value.state !== "ready") return;
+          const added = yield* collect.newFilings(cik);
+          if (added.some((filing) => annualReportForms.has(filing.form))) {
+            yield* collect.reportedNumbers(cik);
+          }
+          yield* collect.addFilings(cik, added);
+          if (added.some((filing) => filing.form === "10-K" || filing.form === "10-KT")) {
+            yield* collect.businessDescription(cik);
+          }
+          const checkedOn = yield* today;
+          yield* sql`
+            UPDATE company SET
+              as_of = (SELECT max(filed_on) FROM filing WHERE cik = ${cik}),
+              last_checked_on = ${checkedOn}
+            WHERE cik = ${cik}
+          `;
+        }).pipe(Semaphore.withPermits(writing, 1));
+
       // A company left waiting or collecting when the tool stopped goes back
       // in line, in the order it was asked for.
       const leftOver = yield* sql<{ cik: number }>`
@@ -149,13 +209,28 @@ export class Collector extends Context.Service<
         ),
       );
 
-      yield* Effect.forkScoped(
-        Effect.forever(
-          Queue.take(line).pipe(
-            Effect.flatMap((next) => (next.full ? collectOne(next.cik) : addDetails(next.cik))),
+      const work = (next: { readonly cik: number; readonly full: boolean }) =>
+        next.full ? collectOne(next.cik) : addDetails(next.cik);
+
+      // What the person asked for always goes first. With nothing in line, one
+      // ready company that is due gets checked. With none due, or after a
+      // check that failed, the tool waits for the line and looks again within
+      // the hour.
+      const nextStep = Effect.gen(function* () {
+        const asked = yield* Queue.poll(line);
+        if (Option.isSome(asked)) return yield* work(asked.value);
+        const checked = yield* nextDueForCheck.pipe(
+          Effect.flatMap((cik) =>
+            cik === undefined ? Effect.succeed(false) : checkForNew(cik).pipe(Effect.as(true)),
           ),
-        ),
-      );
+          Effect.catchCause(() => Effect.succeed(false)),
+        );
+        if (checked) return;
+        const waited = yield* Queue.take(line).pipe(Effect.timeoutOption("1 hour"));
+        if (Option.isSome(waited)) yield* work(waited.value);
+      });
+
+      yield* Effect.forkScoped(Effect.forever(nextStep));
 
       const request = (cik: number) =>
         Effect.gen(function* () {
@@ -206,7 +281,7 @@ export class Collector extends Context.Service<
               `;
             }),
           );
-        });
+        }).pipe(Semaphore.withPermits(writing, 1));
 
       return Collector.of({ request, remove, status });
     }),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import { SqlClient } from "effect/sql/SqlClient";
 import { Collect } from "./collect";
 import { databaseLayer } from "./database";
 import { ReportedNumbers } from "./reported-numbers";
@@ -88,6 +89,78 @@ describe("Collect", () => {
     }).pipe(
       Effect.provide(
         collectWith(companyFacts([fact({}), fact({ val: "lots", accn: "0000320193-24-000001" })])),
+      ),
+    ),
+  );
+
+  it.effect("keeps numbers from a corrected annual report, next to the original", () =>
+    Effect.gen(function* () {
+      const collect = yield* Collect;
+      const reported = yield* ReportedNumbers;
+      yield* collect.reportedNumbers(320193);
+
+      const revenue = yield* reported.forTag(320193, "Revenues");
+      expect(revenue.map((number) => [number.form, number.value])).toEqual([
+        ["10-K", 383_285_000_000],
+        ["10-K/A", 383_300_000_000],
+      ]);
+    }).pipe(
+      Effect.provide(
+        collectWith(
+          companyFacts([
+            fact({}),
+            fact({
+              val: 383_300_000_000,
+              accn: "0000320193-24-000002",
+              form: "10-K/A",
+              filed: "2024-01-15",
+            }),
+          ]),
+        ),
+      ),
+    ),
+  );
+
+  it.effect("finds the kept filings that are not stored yet, and stores only when asked", () =>
+    Effect.gen(function* () {
+      const collect = yield* Collect;
+      const sql = yield* SqlClient;
+      yield* collect.addFilings(320193, [
+        {
+          accession: "old",
+          form: "10-K",
+          filedOn: "2024-11-01",
+          reportDate: "2024-09-28",
+          items: "",
+          primaryDocument: "aapl-2024.htm",
+        },
+      ]);
+
+      const added = yield* collect.newFilings(320193);
+      expect(added.map((filing) => [filing.accession, filing.form])).toEqual([
+        ["new", "10-K"],
+        ["fix", "8-K/A"],
+      ]);
+      const stored = yield* sql<{ n: number }>`SELECT count(*) AS n FROM company_filing`;
+      expect(stored[0]?.n).toBe(1);
+
+      yield* collect.addFilings(320193, added);
+      expect(yield* collect.newFilings(320193)).toEqual([]);
+    }).pipe(
+      Effect.provide(
+        collectWith({
+          filings: {
+            recent: {
+              accessionNumber: ["new", "trade", "fix", "old"],
+              filingDate: ["2025-10-31", "2025-10-15", "2025-08-01", "2024-11-01"],
+              reportDate: ["2025-09-27", "", "2025-07-30", "2024-09-28"],
+              form: ["10-K", "4", "8-K/A", "10-K"],
+              items: ["", "", "5.02", ""],
+              primaryDocument: ["aapl-2025.htm", "form4.xml", "fix.htm", "aapl-2024.htm"],
+            },
+            files: [],
+          },
+        }),
       ),
     ),
   );

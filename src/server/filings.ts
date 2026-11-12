@@ -24,9 +24,18 @@ const Submissions = Schema.Struct({
   }),
 });
 
+// Annual reports in every variant: the report itself, a transition report
+// covering a changed fiscal year, and a corrected one of either.
+export const annualReportForms: ReadonlySet<string> = new Set([
+  "10-K",
+  "10-K/A",
+  "10-KT",
+  "10-KT/A",
+]);
+
 // Only the forms a screen uses are kept: annual reports for their business
-// description, and current reports for corporate events.
-const keptForms = new Set(["10-K", "10-K/A", "10-KT", "8-K", "8-K/A"]);
+// description and their numbers, and current reports for corporate events.
+const keptForms = new Set([...annualReportForms, "8-K", "8-K/A"]);
 
 export type CompanyFiling = {
   readonly accession: string;
@@ -79,21 +88,51 @@ export const collectFilings = (cik: number) =>
     yield* sql.withTransaction(
       Effect.gen(function* () {
         yield* sql`DELETE FROM company_filing WHERE cik = ${cik}`;
-        for (const filing of filings) {
-          yield* sql`
-            INSERT INTO company_filing
-              (accession, cik, form, filed_on, report_date, items, primary_document)
-            VALUES (
-              ${filing.accession}, ${cik}, ${filing.form}, ${filing.filedOn},
-              ${filing.reportDate}, ${filing.items}, ${filing.primaryDocument}
-            )
-            ON CONFLICT (accession) DO NOTHING
-          `;
-        }
+        yield* insertFilings(cik, filings);
         yield* sql`UPDATE company SET filings_from = ${from ?? null} WHERE cik = ${cik}`;
       }),
     );
     return filings.length;
+  });
+
+const insertFilings = (cik: number, filings: ReadonlyArray<CompanyFiling>) =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient;
+    for (const filing of filings) {
+      yield* sql`
+        INSERT INTO company_filing
+          (accession, cik, form, filed_on, report_date, items, primary_document)
+        VALUES (
+          ${filing.accession}, ${cik}, ${filing.form}, ${filing.filedOn},
+          ${filing.reportDate}, ${filing.items}, ${filing.primaryDocument}
+        )
+        ON CONFLICT (accession) DO NOTHING
+      `;
+    }
+  });
+
+// A check for new filings reads only the first page of the SEC's record,
+// which holds the most recent thousand filings, and returns the kept ones
+// not stored yet. Nothing is stored here, so a check that fails halfway
+// finds the same filings new the next time.
+export const newFilings = (cik: number) =>
+  Effect.gen(function* () {
+    const sec = yield* Sec;
+    const sql = yield* SqlClient;
+    const recent = yield* Schema.decodeUnknownEffect(Submissions)(
+      yield* sec.getJson(submissionsUrl(cik)),
+    );
+    const stored = yield* sql<{ accession: string }>`
+      SELECT accession FROM company_filing WHERE cik = ${cik}
+    `;
+    const held = new Set(stored.map((row) => row.accession));
+    return rowsOf(recent.filings.recent).filter((filing) => !held.has(filing.accession));
+  });
+
+export const addFilings = (cik: number, filings: ReadonlyArray<CompanyFiling>) =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient;
+    yield* sql.withTransaction(insertFilings(cik, filings));
   });
 
 const StoredFiling = Schema.Struct({

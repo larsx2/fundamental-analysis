@@ -2,15 +2,19 @@ import { Context, Data, Effect, Layer, Option, Result, Schema } from "effect";
 import { SqlClient } from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
 import { openingOfBusiness } from "./business-description";
-import { collectFilings } from "./filings";
+import {
+  addFilings,
+  annualReportForms,
+  collectFilings,
+  type CompanyFiling,
+  newFilings,
+} from "./filings";
 import { fiscalYearOf } from "./fiscal-year";
 import { type Filing, type ReportedNumber, ReportedNumbers } from "./reported-numbers";
 import { Sec, type SecError } from "./sec";
 
 export const companyFactsUrl = (cik: number) =>
   `https://data.sec.gov/api/xbrl/companyfacts/CIK${String(cik).padStart(10, "0")}.json`;
-
-const annualReport = "10-K";
 
 const DateText = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/));
 
@@ -67,6 +71,13 @@ export class Collect extends Context.Service<
     readonly filings: (
       cik: number,
     ) => Effect.Effect<number, SecError | Schema.SchemaError | SqlError>;
+    readonly newFilings: (
+      cik: number,
+    ) => Effect.Effect<ReadonlyArray<CompanyFiling>, SecError | Schema.SchemaError | SqlError>;
+    readonly addFilings: (
+      cik: number,
+      filings: ReadonlyArray<CompanyFiling>,
+    ) => Effect.Effect<void, SqlError>;
     // A description that cannot be read leaves a gap; it never fails a company.
     readonly businessDescription: (cik: number) => Effect.Effect<void>;
   }
@@ -106,7 +117,9 @@ export class Collect extends Context.Service<
                     continue;
                   }
                   const fact = decoded.success;
-                  if (fact.form !== annualReport) continue;
+                  // Corrected and transition annual reports count too. Where a
+                  // number appears in more than one, the latest filed is shown.
+                  if (!annualReportForms.has(fact.form)) continue;
                   const fiscalYear = fiscalYearOf(fact);
                   if (Option.isNone(fiscalYear)) continue;
 
@@ -160,7 +173,18 @@ export class Collect extends Context.Service<
           `;
         }).pipe(Effect.ignoreCause);
 
-      return Collect.of({ reportedNumbers, filings, businessDescription });
+      return Collect.of({
+        reportedNumbers,
+        filings,
+        newFilings: (cik) =>
+          newFilings(cik).pipe(
+            Effect.provideService(Sec, sec),
+            Effect.provideService(SqlClient, sql),
+          ),
+        addFilings: (cik, list) =>
+          addFilings(cik, list).pipe(Effect.provideService(SqlClient, sql)),
+        businessDescription,
+      });
     }),
   );
 }

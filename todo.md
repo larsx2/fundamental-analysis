@@ -410,7 +410,8 @@ From the review by a financial adviser, a product manager and a designer on 11 N
 
 **Depends on:** T12.
 
-- [ ] One action asks the SEC for filings newer than a company's as of date, collects them, and updates last checked.
+- [x] Ready companies are checked for filings newer than their as of date, monthly and weekly around their annual report, behind anything asked for. New ones are collected and last checked moves on.
+- [ ] A button to check one company now, shown first as a mock.
 
 ### Checkpoint D: the first version is done
 
