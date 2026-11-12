@@ -28,10 +28,10 @@ describe("coverageOf", () => {
     ]);
   });
 
-  it("declines a company whose yearly report is not an annual report (10-K), naming its form", () => {
+  it("declines a company that files another form instead of an annual report (10-K), naming it", () => {
     expect(coverageOf(company("Toyota", "3711", ["6-K", "20-F"]))).toMatchObject({
       covered: false,
-      reason: expect.stringContaining("as a 20-F"),
+      reason: expect.stringContaining("files a 20-F each year"),
     });
   });
 });

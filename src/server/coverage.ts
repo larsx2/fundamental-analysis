@@ -53,7 +53,7 @@ export const coverageOf = (company: {
       reason:
         other === undefined
           ? `${company.name} has not filed an annual report (10-K) recently, so it is not covered yet.`
-          : `${company.name} files its yearly report as a ${other}, not an annual report (10-K), and follows different accounting rules, so it is not covered yet.`,
+          : `${company.name} files a ${other} each year instead of an annual report (10-K), and follows different accounting rules, so it is not covered yet.`,
     };
   }
   return { covered: true };
