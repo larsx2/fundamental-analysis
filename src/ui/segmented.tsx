@@ -22,6 +22,7 @@ export function Segmented<Value extends string>({
   readonly onChange: (value: Value) => void;
   readonly className?: string;
 }) {
+  if (options.filter((option) => option.hidden !== true).length < 2) return null;
   return (
     <ToggleGroup
       aria-label={label}

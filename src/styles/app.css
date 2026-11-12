@@ -566,6 +566,31 @@
     .table-scroll .figures {
       min-width: 520px;
     }
+
+    .table-scroll .figures.parts-table {
+      min-width: 0;
+    }
+
+    .table-scroll:has(.parts-table) {
+      mask-image: none;
+    }
+
+    .figures.parts-table :is(th, td):nth-child(2) {
+      width: 84px;
+    }
+
+    .figures.parts-table :is(th, td):nth-child(3),
+    .figures.parts-table :is(th, td):nth-child(4) {
+      width: 64px;
+    }
+
+    .figures.parts-table td {
+      padding-left: 10px;
+    }
+  }
+
+  .figures.parts-table:has(thead th:nth-child(4):empty) :is(th, td):nth-child(4) {
+    display: none;
   }
 
   /* Pop-up cards: the term card and where a number came from. */
@@ -767,7 +792,7 @@
   .dock {
     position: fixed;
     left: 50%;
-    bottom: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
     z-index: 30;
     transform: translateX(-50%);
     display: flex;
@@ -4019,6 +4044,39 @@
   initial-value: 0deg;
 }
 
+    .composer .tools {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .composer .send {
+      align-self: center;
+    }
+
+    .composer .chips,
+    .ask-topics {
+      flex: 1;
+      flex-wrap: nowrap;
+      min-width: 0;
+      margin-left: -4px;
+      padding-left: 4px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      mask-image: linear-gradient(90deg, #000 82%, transparent);
+    }
+
+    .composer .chips::-webkit-scrollbar,
+    .ask-topics::-webkit-scrollbar {
+      display: none;
+    }
+
+    .composer .chip,
+    .ask-topics button {
+      flex: none;
+      white-space: nowrap;
+    }
+
 @keyframes travel {
   to {
     --angle: 360deg;
@@ -4521,6 +4579,9 @@
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
     color: var(--color-text-1);
     font-weight: 500;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
@@ -5674,5 +5735,102 @@
   from {
     opacity: 0;
     translate: 0 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sheet-wrap {
+    --label: 172px;
+    --col: 80px;
+  }
+
+  .ask-dock::before {
+    left: -16px;
+    right: -16px;
+  }
+
+  .ask-turn > .ask-question {
+    max-width: 88%;
+  }
+
+  .ask-dock .ask-topics {
+    flex: 1;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    mask-image: linear-gradient(90deg, #000 82%, transparent);
+  }
+
+  .ask-dock .ask-topics button {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .ask-dock .tools {
+    padding-left: 16px;
+  }
+
+  .ask-dock .mention-editor {
+    padding-inline: 16px;
+  }
+
+  .ask-dock .mention-placeholder {
+    inset: 16px 16px auto;
+  }
+
+  .figures.parts-table :is(th, td):nth-child(2) {
+    width: 74px;
+  }
+
+  .figures.parts-table :is(th, td):nth-child(3),
+  .figures.parts-table :is(th, td):nth-child(4) {
+    width: 54px;
+  }
+
+  .figures.parts-table td {
+    padding-left: 8px;
+  }
+
+  .figures.parts-table thead th {
+    padding-left: 8px;
+  }
+}
+
+@media (pointer: coarse) {
+  .chip,
+  .ask-topics button,
+  .segmented > * {
+    min-height: 40px;
+  }
+
+  .ask-history-delete {
+    width: 40px;
+    height: 40px;
+  }
+
+  .ask-history-list a {
+    padding-right: 44px;
+  }
+
+  .sections a {
+    padding-block: 10px;
+  }
+
+  .ruler {
+    height: 62px;
+  }
+
+  .ruler input[type="range"] {
+    height: 34px;
+  }
+
+  .ruler-labels {
+    top: 34px;
+  }
+
+  .ruler-labels button {
+    min-height: 28px;
   }
 }
