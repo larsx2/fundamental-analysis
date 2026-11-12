@@ -116,13 +116,13 @@ function MoneyFlow() {
               options={[
                 {
                   value: "flow",
-                  label: "Flow: follow this year's dollar",
+                  label: "Flow",
                   content: <Icon name="bands" />,
                   hidden: !flowFits,
                 },
                 {
                   value: "table",
-                  label: "Table: every figure for this year",
+                  label: "Table",
                   content: <Icon name="table" />,
                 },
               ]}

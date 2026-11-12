@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { StatementYear } from "../../functions/company";
 import { findTerm } from "../../glossary/glossary";
-import { useChartTip } from "../chart-tip";
 import { Icon } from "../icons";
 import { useMediaQuery, useStill } from "../motion";
 import { Term } from "../term";
@@ -35,7 +34,6 @@ export function MoneyExplorer({
 }) {
   const still = useStill();
   const canHover = useMediaQuery("(hover: hover)");
-  const tip = useChartTip();
   const [zoom, setZoom] = useState(0);
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<Record<Lens, string>>(home);
@@ -93,17 +91,6 @@ export function MoneyExplorer({
           const before = compareWith.current[each];
           return `<span class="flow-label-name">${escape(nameOf(each, id, values))}</span><span class="flow-label-value">${main}${sub === "" ? "" : `<span>${sub}</span>`}${before === null ? "" : delta(each, id, values, before)}</span>`;
         },
-        tip: (id, values, link) => {
-          const key = link === null ? id : `${link.source}>${link.target}`;
-          const amount = values[key] ?? values[id] ?? 0;
-          const name = nameOf(each, id, values);
-          if (each === "cash") return { title: name, line: amountOf(each, id, values).main };
-          const dollars = ((id === "revenue" ? 100 : amount) / 100) * (values.revenueDollars ?? 0);
-          return {
-            title: name,
-            line: `${amountOf("cash", "x", { x: dollars }).main}, ${cents(id === "revenue" ? 100 : amount)} of each dollar`,
-          };
-        },
         describe: (values) =>
           partsOf(each)
             .filter((part) => (values[part.id] ?? 0) > 0)
@@ -118,17 +105,6 @@ export function MoneyExplorer({
         current[each] ?? empty(each),
         {
           onPick: (id) => pick.current(id),
-          onTip: (event, content) =>
-            event === null || content === null
-              ? tip.hide()
-              : tip.show(
-                  event,
-                  <>
-                    <strong>{content.title}</strong>
-                    <br />
-                    {content.line}
-                  </>,
-                ),
         },
         { still, canHover },
       );
@@ -238,7 +214,7 @@ export function MoneyExplorer({
             <button
               type="button"
               aria-label="Zoom out to each dollar of revenue"
-              data-tip="Each dollar  −"
+              data-tip="Zoom out"
               disabled={zoom === 0}
               onClick={() => setZoom(0)}
             >
@@ -247,7 +223,7 @@ export function MoneyExplorer({
             <button
               type="button"
               aria-label="Zoom in to gross profit"
-              data-tip="Zoom in  +"
+              data-tip="Zoom in"
               disabled={zoom === 1}
               onClick={() => setZoom(1)}
             >
@@ -295,7 +271,6 @@ export function MoneyExplorer({
           )}
         </div>
       </aside>
-      {tip.element}
     </div>
   );
 }

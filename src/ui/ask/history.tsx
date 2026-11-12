@@ -4,9 +4,6 @@ import { Icon } from "../icons";
 import { LogoTile, plainName } from "../logo-tile";
 import { clearThreads, companiesOf, deleteThread, type Thread } from "./conversations";
 
-const askedOn = (time: number) =>
-  new Date(time).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-
 export function History({
   threads,
   current,
@@ -47,11 +44,6 @@ export function History({
                 to="/ask"
                 search={{ t: thread.id }}
                 aria-current={thread.id === current ? "page" : undefined}
-                title={`${thread.turns[0]?.question ?? ""}\n${
-                  thread.turns.length === 1
-                    ? askedOn(thread.updatedAt)
-                    : `${thread.turns.length} questions, ${askedOn(thread.updatedAt)}`
-                }`}
               >
                 <Logos thread={thread} />
                 <span className="ask-history-text">

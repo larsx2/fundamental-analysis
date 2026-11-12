@@ -23,15 +23,11 @@ export type FlowSpec = {
   readonly links: ReadonlyArray<FlowLink>;
   readonly layouts: readonly [Layout, Layout];
   readonly label: (id: string, values: FlowValues) => string;
-  readonly tip: (id: string, values: FlowValues, link: FlowLink | null) => FlowTip;
   readonly describe: (values: FlowValues) => string;
 };
 
-export type FlowTip = { readonly title: string; readonly line: string };
-
 export type FlowHandlers = {
   readonly onPick: (id: string | null) => void;
-  readonly onTip: (event: PointerEvent | null, tip: FlowTip | null) => void;
 };
 
 const ns = "http://www.w3.org/2000/svg";
@@ -175,16 +171,10 @@ export function createFlow(
     });
   };
 
-  const hoverable = (element: Element, id: string, link: FlowLink | null) => {
+  const hoverable = (element: Element, id: string) => {
     if (!options.canHover) return;
     element.addEventListener("pointerenter", () => light(lineage(id)));
-    element.addEventListener("pointerleave", () => {
-      light(pinned);
-      handlers.onTip(null, null);
-    });
-    element.addEventListener("pointermove", (event) =>
-      handlers.onTip(event as PointerEvent, spec.tip(id, values, link)),
-    );
+    element.addEventListener("pointerleave", () => light(pinned));
   };
 
   const pick = (id: string) => (event: Event) => {
@@ -217,8 +207,8 @@ export function createFlow(
         handlers.onPick(node.id);
       }
     });
-    hoverable(block, node.id, null);
-    hoverable(label, node.id, null);
+    hoverable(block, node.id);
+    hoverable(label, node.id);
   }
 
   const bands = spec.links.map((link, index) => {
@@ -233,7 +223,7 @@ export function createFlow(
     path.classList.add("flow-band");
     bandLayer.append(path);
     path.addEventListener("click", pick(link.target));
-    hoverable(path, link.target, link);
+    hoverable(path, link.target);
     return path;
   });
 
