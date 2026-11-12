@@ -270,6 +270,7 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 - [x] Choosing a company that is not collected says what will happen and asks first. The first time, it also asks for the contact details the SEC requires.
 - [x] A company being collected shows progress. A quiet notice appears when it is ready, and the current screen stays in place.
 - [x] Ready companies are listed with their as of date.
+- [x] Ready companies sit side by side in a table that sorts, with ten fiscal years of revenue and operating margin, and become cards when the table does not fit.
 
 **Check:** from an empty database, search for Costco, agree, and watch it become ready without leaving the screen.
 

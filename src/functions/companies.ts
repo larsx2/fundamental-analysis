@@ -6,6 +6,10 @@ import { Companies } from "../server/companies";
 import { askedFor, knownCompanies, latestFiscalYear } from "../server/company-view";
 import { runtime } from "../server/runtime";
 import { Settings, secContactKey } from "../server/settings";
+import { statementsFor } from "../server/terms/terms";
+import { summarise } from "../shared/company-summary";
+
+export type { CompanySummary } from "../shared/company-summary";
 
 const contactOf = (text: string | null) => {
   if (text === null) return null;
@@ -61,6 +65,26 @@ export const companiesQuery = queryOptions({
   queryKey: ["companies"],
   queryFn: () => getCompanies(),
 });
+
+const Ciks = Schema.Struct({ ciks: Schema.Array(Schema.Int) });
+
+const getSummaries = createServerFn({ method: "GET" })
+  .validator(Schema.decodeUnknownSync(Ciks))
+  .handler(({ data }) =>
+    runtime.runPromise(
+      Effect.forEach(data.ciks, (cik) =>
+        statementsFor(cik).pipe(Effect.map((years) => ({ cik, summary: summarise(years) }))),
+      ),
+    ),
+  );
+
+// Apart from the list of companies, which is asked for every second while one
+// is collected, and keyed by the ready companies so a newly ready one is fetched.
+export const summariesQuery = (ciks: ReadonlyArray<number>) =>
+  queryOptions({
+    queryKey: ["companies", "summaries", [...ciks].sort((a, b) => a - b).join(",")],
+    queryFn: () => getSummaries({ data: { ciks: [...ciks] } }),
+  });
 
 export type CompanyMatch = {
   readonly cik: number;

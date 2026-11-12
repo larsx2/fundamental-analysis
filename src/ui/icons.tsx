@@ -73,6 +73,13 @@ const paths = {
   ),
   filter: <path d="M4 6h16M7 12h10M10 18h4" />,
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  more: (
+    <>
+      <circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none" />
+    </>
+  ),
   external: <path d="M8 16 16 8M10 8h6v6" />,
   left: <path d="m15 6-6 6 6 6" />,
   right: <path d="m9 6 6 6-6 6" />,

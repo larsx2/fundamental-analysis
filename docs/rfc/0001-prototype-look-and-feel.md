@@ -120,6 +120,16 @@ A financial adviser, a product manager and a designer reviewed the Overview. Wha
 - **The top of every company screen names the company** beside its ticker.
 - **A fiscal year that ends on either side of a month's turn** is "around the end of August", not "late August".
 
+### Settled on 12 November 2026, from the mock of the Companies screen
+
+- **Ready companies sit side by side.** The Companies screen shows them as a table: revenue with its ten fiscal years as bars, growth, operating margin with its ten fiscal years as a line, net income, free cash flow and the as of date, each from the company's newest fiscal year. Every column sorts, and the sort lives in the address bar. This is the first step of comparing companies; peers chosen around one company stay parked.
+- **Net income and free cash flow can be read per $100 of revenue,** so a large and a small company compare fairly. Growth and operating margin are already rates, so the switch leaves them alone.
+- **Growth is measured over the ten fiscal years shown,** as on the Overview. A company without the first of those years shows none rather than a rate from a later year.
+- **The small charts show a trend and nothing more.** No tooltips: each chart is one sentence for a screen reader, and the yearly figures stay on the company's own screens.
+- **Below the width the table needs, each company becomes a card,** decided by the room the table has rather than by the width of the screen.
+- **Only the company's name is a link.** A click elsewhere on its row opens the company too, unless it ends a selection of text, so figures can be copied. A company's other actions sit in a menu at the end of its row.
+- **No explanatory text around the table.** "Last checked" shows on a row only when the companies were checked on different days.
+
 ## Open points
 
 - Settled on 11 November 2026: the look is settled on one real screen, not on a separate mock-up. The first slice's screen, "Where the money goes", is taken to finished quality and later screens reuse its colours, type, spacing and movement. See [Which screens the first version needs](./0002-first-version-site-structure.md).

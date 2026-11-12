@@ -1,11 +1,10 @@
-import { Dialog } from "@base-ui/react/dialog";
 import {
   keepPreviousData,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   type CompanyMatch,
@@ -13,23 +12,69 @@ import {
   companiesQuery,
   fetchCompanyList,
   type ListedCompany,
-  removeCompany,
   saveContact,
   searchQuery,
+  summariesQuery,
 } from "../functions/companies";
 import { useAskToCollect } from "../ui/collect-dialog";
 import { CollectProgress } from "../ui/collect-progress";
-import { longDate } from "../ui/format";
 import { Icon } from "../ui/icons";
 import { LogoTile, plainName } from "../ui/logo-tile";
-import { useNotice } from "../ui/notices";
+import {
+  type Order,
+  ReadyTable,
+  type SortKey,
+  type TableView,
+  defaultView,
+  firstOrder,
+  sortKeys,
+} from "../ui/ready-table";
+import { RemoveButton } from "../ui/remove-company";
 import { Screen } from "../ui/screen";
 import { OwnFigures, Term } from "../ui/term";
 
+type CompaniesSearch = {
+  readonly find?: string;
+  readonly sort?: SortKey;
+  readonly order?: Order;
+  readonly per?: 100;
+};
+
+const isSortKey = (value: unknown): value is SortKey =>
+  typeof value === "string" && (sortKeys as ReadonlyArray<string>).includes(value);
+
+const readyCiks = (companies: ReadonlyArray<ListedCompany>) =>
+  companies.filter((company) => company.state === "ready").map((company) => company.cik);
+
+// How the ready companies are sorted and shown lives in the address bar, and
+// is left out of it while it is the default.
+const viewOf = (search: CompaniesSearch): TableView => {
+  const sort = search.sort ?? defaultView.sort;
+  return {
+    sort,
+    order: search.order ?? firstOrder(sort),
+    units: search.per === 100 ? "per100" : "dollars",
+  };
+};
+
+const searchOf = (find: string | undefined, view: TableView): CompaniesSearch => ({
+  ...(find === undefined ? {} : { find }),
+  ...(view.sort === defaultView.sort ? {} : { sort: view.sort }),
+  ...(view.order === firstOrder(view.sort) ? {} : { order: view.order }),
+  ...(view.units === "per100" ? { per: 100 as const } : {}),
+});
+
 export const Route = createFileRoute("/companies")({
-  validateSearch: (search: Record<string, unknown>): { find?: string } =>
-    typeof search.find === "string" && search.find !== "" ? { find: search.find } : {},
-  loader: ({ context }) => context.queryClient.ensureQueryData(companiesQuery),
+  validateSearch: (search: Record<string, unknown>): CompaniesSearch => ({
+    ...(typeof search.find === "string" && search.find !== "" ? { find: search.find } : {}),
+    ...(isSortKey(search.sort) ? { sort: search.sort } : {}),
+    ...(search.order === "asc" || search.order === "desc" ? { order: search.order } : {}),
+    ...(Number(search.per) === 100 ? { per: 100 as const } : {}),
+  }),
+  loader: async ({ context }) => {
+    const data = await context.queryClient.ensureQueryData(companiesQuery);
+    await context.queryClient.ensureQueryData(summariesQuery(readyCiks(data.companies)));
+  },
   component: CompaniesPage,
 });
 
@@ -37,6 +82,8 @@ const noFigures = () => null;
 
 function CompaniesPage() {
   const { data } = useSuspenseQuery(companiesQuery);
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/companies" });
   const ready = data.companies
     .filter((company) => company.state === "ready")
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -96,7 +143,19 @@ function CompaniesPage() {
           </section>
         )}
         {failed.length > 0 && <Failed companies={failed} />}
-        {ready.length > 0 && <Ready companies={ready} />}
+        {ready.length > 0 && (
+          <ReadyTable
+            companies={ready}
+            view={viewOf(search)}
+            onView={(view) =>
+              void navigate({
+                search: (previous) => searchOf(previous.find, view),
+                replace: true,
+                resetScroll: false,
+              })
+            }
+          />
+        )}
       </Screen>
     </OwnFigures>
   );
@@ -445,85 +504,5 @@ function Failed({ companies }: { readonly companies: ReadonlyArray<ListedCompany
         ))}
       </ul>
     </section>
-  );
-}
-
-function Ready({ companies }: { readonly companies: ReadonlyArray<ListedCompany> }) {
-  return (
-    <section className="mt-12" aria-labelledby="ready-title">
-      <h2 id="ready-title" className="m-0 mb-3 text-m font-semibold">
-        <Term name="Ready" /> companies
-        <span className="ml-1.5 font-normal text-text-3">{companies.length}</span>
-      </h2>
-      <p className="m-0 mb-3 max-w-[66ch] text-xs text-text-3">
-        <Term name="As of" /> is the date of the newest filing included.{" "}
-        <Term name="Last checked" /> is the day the SEC was last asked for newer ones.
-      </p>
-      <ul className="rows">
-        {companies.map((company) => (
-          <li key={company.cik} className="ready-row" data-cik={company.cik} tabIndex={-1}>
-            <LogoTile name={plainName(company.name)} cik={company.cik} size={44} />
-            <div className="row-main">
-              <div className="row-title">
-                <Link
-                  className="ready-name"
-                  to="/$ticker/where-the-money-goes"
-                  params={{ ticker: company.ticker }}
-                >
-                  {plainName(company.name)}
-                </Link>
-                <span className="ticker">{company.ticker}</span>
-              </div>
-              <div className="dates">
-                {company.asOf !== null && <span>As of {longDate(company.asOf)}</span>}
-                {company.lastCheckedOn !== null && (
-                  <span>Last checked {longDate(company.lastCheckedOn)}</span>
-                )}
-              </div>
-            </div>
-            <RemoveButton company={company} />
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function RemoveButton({ company }: { readonly company: ListedCompany }) {
-  const queryClient = useQueryClient();
-  const notice = useNotice();
-  const name = plainName(company.name);
-  return (
-    <Dialog.Root>
-      <Dialog.Trigger className="quiet-button" aria-label={`Remove ${name}`}>
-        Remove
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Backdrop className="sheet-backdrop" />
-        <Dialog.Popup className="sheet" initialFocus={true}>
-          <Dialog.Title render={<h2 />}>Remove {name}?</Dialog.Title>
-          <Dialog.Description>
-            This deletes the filings and numbers collected for {name} from this computer. It goes
-            back to not collected, and you can collect it again at any time.
-          </Dialog.Description>
-          <div className="actions">
-            <Dialog.Close className="button">Keep it</Dialog.Close>
-            <Dialog.Close
-              className="button primary"
-              onClick={async () => {
-                await removeCompany({ data: { cik: company.cik } });
-                await queryClient.invalidateQueries({
-                  queryKey: ["companies"],
-                });
-                await queryClient.invalidateQueries({ queryKey: ["company"] });
-                notice({ company, text: `${name} was removed.`, link: null });
-              }}
-            >
-              Remove {name}
-            </Dialog.Close>
-          </div>
-        </Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
   );
 }
