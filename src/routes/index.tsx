@@ -78,6 +78,11 @@ const screenFor = (text: string, term: GlossaryTerm | null): Destination => {
   return { screen: "overview", label: "the overview" };
 };
 
+const isQuestion = (text: string) =>
+  /\?\s*$|^(is|are|does|do|did|has|have|how|why|where|what|which|when|can|should|could|will)\b/i.test(
+    text,
+  );
+
 type Understood =
   | { kind: "term"; term: GlossaryTerm; say: ReactNode }
   | {
@@ -87,6 +92,7 @@ type Understood =
       year: number | null;
       say: ReactNode;
     }
+  | { kind: "ask"; company: NamedCompany; say: ReactNode }
   | { kind: "collect"; company: NamedCompany; say: ReactNode }
   | { kind: "nothing"; say: ReactNode };
 
@@ -140,40 +146,50 @@ function Home() {
               </>
             ),
           }
-        : company !== null && company.state === "ready"
-          ? (() => {
-              const destination = screenFor(trimmed, term);
-              const year = yearMatch === null ? null : Number(yearMatch[1]);
-              return {
-                kind: "screen" as const,
-                company,
-                destination,
-                year,
-                say: (
-                  <>
-                    Opens <strong>{shortName(company.name)}</strong>, {destination.label}
-                    {year === null ? "" : `, fiscal ${year}`}
-                  </>
-                ),
-              };
-            })()
-          : company !== null
-            ? {
-                kind: "collect",
-                company,
-                say: (
-                  <>
-                    <strong>{plainName(company.name)}</strong> is not collected yet. Opens Companies
-                    to collect it
-                  </>
-                ),
-              }
-            : isFetching
-              ? null
-              : {
-                  kind: "nothing",
-                  say: "Try a company, a ticker or a word from the glossary",
+        : company !== null && company.state === "ready" && isQuestion(trimmed)
+          ? {
+              kind: "ask",
+              company,
+              say: (
+                <>
+                  Asks ChatGPT about <strong>{shortName(company.name)}</strong>
+                </>
+              ),
+            }
+          : company !== null && company.state === "ready"
+            ? (() => {
+                const destination = screenFor(trimmed, term);
+                const year = yearMatch === null ? null : Number(yearMatch[1]);
+                return {
+                  kind: "screen" as const,
+                  company,
+                  destination,
+                  year,
+                  say: (
+                    <>
+                      Opens <strong>{shortName(company.name)}</strong>, {destination.label}
+                      {year === null ? "" : `, fiscal ${year}`}
+                    </>
+                  ),
                 };
+              })()
+            : company !== null
+              ? {
+                  kind: "collect",
+                  company,
+                  say: (
+                    <>
+                      <strong>{plainName(company.name)}</strong> is not collected yet. Opens
+                      Companies to collect it
+                    </>
+                  ),
+                }
+              : isFetching
+                ? null
+                : {
+                    kind: "nothing",
+                    say: "Try a company, a ticker or a word from the glossary",
+                  };
 
   const go = () => {
     if (understood === null) return;
@@ -186,6 +202,13 @@ function Home() {
           ...(understood.year === null ? {} : { year: understood.year }),
           ...(understood.destination.tab === undefined ? {} : { tab: understood.destination.tab }),
         },
+      });
+    } else if (understood.kind === "ask") {
+      void navigate({
+        to: "/$ticker/ask",
+        params: { ticker: understood.company.ticker },
+        search: { q: trimmed },
+        state: { asked: true },
       });
     } else if (understood.kind === "collect") {
       void navigate({

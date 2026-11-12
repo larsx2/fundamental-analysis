@@ -127,3 +127,9 @@ Read: [`src/server/logos.ts`](../src/server/logos.ts).
 `Effect.forEach(items, work, { discard: true })` runs `work` for each item, one after another, and keeps no results. When the tool starts, it fetches the logos of ready companies that have none yet this way, in the background with `Effect.forkScoped`, so the screens never wait for Wikidata. Without `discard`, it keeps each result, in the same order as the items: the Companies screen gets each ready company's figures this way, one company after another.
 
 Read: [`src/server/collector.ts`](../src/server/collector.ts).
+
+## Turning code that throws into a named error
+
+`Effect.try({ try, catch })` runs plain code that may throw, and `catch` turns what was thrown into an error the Effect names in its type. The agent's lookups are plain functions that throw a `LookupProblem` when a question cannot be answered as asked; `Effect.try` turns that into a failure, and `Effect.catch` turns the failure into a reply the model can read and act on.
+
+Read: [`src/server/agent/look-up.ts`](../src/server/agent/look-up.ts).
