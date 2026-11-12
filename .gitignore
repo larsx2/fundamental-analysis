@@ -22,3 +22,6 @@ dist/
 
 # Operating system
 .DS_Store
+
+# Throwaway screen mocks, kept only until a design is chosen
+mocks/
