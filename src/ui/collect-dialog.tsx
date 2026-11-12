@@ -33,18 +33,29 @@ type Open =
 const emailShape = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function CollectProvider({ children }: { readonly children: ReactNode }) {
+  // What the sheet shows stays until it has finished closing. Emptying it at
+  // once leaves the closing backdrop over the page, and nothing can be clicked.
   const [open, setOpen] = useState<Open | null>(null);
-  const ask = useCallback<Ask>((company) => setOpen({ kind: "collect", company }), []);
+  const [showing, setShowing] = useState(false);
+  const ask = useCallback<Ask>((company) => {
+    setOpen({ kind: "collect", company });
+    setShowing(true);
+  }, []);
+  const close = () => setShowing(false);
   return (
     <CollectContext.Provider value={ask}>
       {children}
-      <Dialog.Root open={open !== null} onOpenChange={(next) => !next && setOpen(null)}>
+      <Dialog.Root
+        open={showing}
+        onOpenChange={(next) => !next && close()}
+        onOpenChangeComplete={(next) => !next && setOpen(null)}
+      >
         <Dialog.Portal>
           <Dialog.Backdrop className="sheet-backdrop" />
           {open?.kind === "collect" && (
             <CollectSheet
               company={open.company}
-              close={() => setOpen(null)}
+              close={close}
               notCovered={(reason) =>
                 setOpen({ kind: "not covered", company: open.company, reason })
               }

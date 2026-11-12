@@ -1,17 +1,49 @@
-// Company logos are trademarks, so the tool shows the first letter of the
-// company's name in a tile of its own.
-export function LogoTile({ name, size = 40 }: { readonly name: string; readonly size?: number }) {
+import { useEffect, useRef, useState } from "react";
+
+// The company's official logo, fetched from Wikidata when it was collected
+// and kept on this computer. Until it loads, and for a company without one,
+// the tile shows the first letter of the company's name.
+export function LogoTile({
+  name,
+  cik,
+  size = 40,
+}: {
+  readonly name: string;
+  readonly cik?: number | undefined;
+  readonly size?: number;
+}) {
   const letter = name
     .replace(/[^A-Za-z0-9]/g, "")
     .charAt(0)
     .toUpperCase();
+  const image = useRef<HTMLImageElement>(null);
+  const [loaded, setLoaded] = useState<number | null>(null);
+
+  // A picture already loaded before the screen came alive fires no event.
+  useEffect(() => {
+    const element = image.current;
+    if (element !== null && cik !== undefined && element.complete && element.naturalWidth > 0)
+      setLoaded(cik);
+  }, [cik]);
+
+  const shown = cik !== undefined && loaded === cik;
   return (
     <span
-      className="logo-tile"
+      className={`logo-tile ${shown ? "has-logo" : ""}`}
       style={{ width: size, height: size, fontSize: Math.round(size * 0.42) }}
       aria-hidden="true"
     >
-      {letter}
+      {!shown && letter}
+      {cik !== undefined && (
+        <img
+          ref={image}
+          src={`/logos/${cik}`}
+          alt=""
+          draggable={false}
+          onLoad={() => setLoaded(cik)}
+          onError={() => setLoaded(null)}
+        />
+      )}
     </span>
   );
 }

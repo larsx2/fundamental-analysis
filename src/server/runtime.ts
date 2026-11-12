@@ -6,12 +6,13 @@ import { Companies } from "./companies";
 import { CoverageCheck } from "./coverage";
 import { databaseLayer } from "./database";
 import { Economy } from "./economy";
+import { Logos } from "./logos";
 import { ReportedNumbers } from "./reported-numbers";
 import { Sec } from "./sec";
 import { Settings } from "./settings";
 
 const live = Layer.mergeAll(Collector.layer, Companies.layer, Economy.layer).pipe(
-  Layer.provideMerge(Layer.mergeAll(Collect.layer, CoverageCheck.layer)),
+  Layer.provideMerge(Layer.mergeAll(Collect.layer, CoverageCheck.layer, Logos.layer)),
   Layer.provideMerge(ReportedNumbers.layer),
   Layer.provideMerge(Sec.layer),
   Layer.provideMerge(Settings.layer),

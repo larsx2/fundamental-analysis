@@ -58,6 +58,10 @@ const program = Effect.gen(function* () {
       INSERT INTO company_ticker (ticker, cik, list_position)
       VALUES (${company.ticker}, ${company.cik}, ${position})
     `;
+    // No logo, so the pictures never depend on Wikidata.
+    yield* sql`
+      INSERT INTO company_logo (cik, fetched_on) VALUES (${company.cik}, '2026-11-11')
+    `;
     yield* collect.reportedNumbers(company.cik);
   }
 });

@@ -115,3 +115,15 @@ Read: [`src/server/economy.ts`](../src/server/economy.ts), [`src/server/collect.
 A server function's `.validator(Schema.decodeUnknownSync(schema))` checks the data a screen sends before the function runs, with the same schema tool used for the SEC's data. A wrong shape throws there, so the Effect inside never sees it.
 
 Read: [`src/functions/companies.ts`](../src/functions/companies.ts).
+
+## Failing when a value is not the one wanted
+
+`Effect.filterOrFail(check, otherwise)` passes a value on when `check` holds and fails with `otherwise` when it does not. Fetching a logo uses it to turn any answer other than 200 into a failure, so the rest of the work only sees good answers.
+
+Read: [`src/server/logos.ts`](../src/server/logos.ts).
+
+## Doing the same work for each item in a list
+
+`Effect.forEach(items, work, { discard: true })` runs `work` for each item, one after another, and keeps no results. When the tool starts, it fetches the logos of ready companies that have none yet this way, in the background with `Effect.forkScoped`, so the screens never wait for Wikidata.
+
+Read: [`src/server/collector.ts`](../src/server/collector.ts).

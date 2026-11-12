@@ -32,10 +32,12 @@ function CompanyLayout() {
 
 function StateFrame({
   name,
+  cik,
   ticker,
   children,
 }: {
   readonly name: string;
+  readonly cik: number;
   readonly ticker: string;
   readonly children: React.ReactNode;
 }) {
@@ -43,7 +45,7 @@ function StateFrame({
   return (
     <Screen active={here.screen ?? "overview"}>
       <div className="mb-8 flex items-center gap-3">
-        <LogoTile name={name} size={40} />
+        <LogoTile name={name} cik={cik} size={40} />
         <span className="text-xl font-semibold tracking-[0.01em]">{ticker}</span>
         <h1 className="visually-hidden">{name}</h1>
       </div>
@@ -79,7 +81,7 @@ function NotReady({ view }: { readonly view: CompanyView }) {
 
   if (view.state === "waiting" || view.state === "collecting") {
     return (
-      <StateFrame name={name} ticker={view.ticker}>
+      <StateFrame name={name} cik={view.cik} ticker={view.ticker}>
         <h2 className="m-0 mb-2 text-l font-semibold">
           {view.state === "waiting" ? `${name} is waiting to be collected` : `Collecting ${name}`}
         </h2>
@@ -94,7 +96,7 @@ function NotReady({ view }: { readonly view: CompanyView }) {
 
   if (view.state === "failed") {
     return (
-      <StateFrame name={name} ticker={view.ticker}>
+      <StateFrame name={name} cik={view.cik} ticker={view.ticker}>
         <h2 className="m-0 mb-2 text-l font-semibold">{name} could not be collected</h2>
         <p className="m-0 mb-2 text-text-2">{view.failureReason}</p>
         <p className="m-0 text-text-2">Nothing was kept from the attempt. You can try again.</p>
@@ -120,7 +122,7 @@ function NotReady({ view }: { readonly view: CompanyView }) {
 
   if (view.notCoveredReason !== null) {
     return (
-      <StateFrame name={name} ticker={view.ticker}>
+      <StateFrame name={name} cik={view.cik} ticker={view.ticker}>
         <h2 className="m-0 mb-2 text-l font-semibold">
           {name} is <Term name="Not covered">not covered</Term>
         </h2>
@@ -139,7 +141,7 @@ function NotReady({ view }: { readonly view: CompanyView }) {
   }
 
   return (
-    <StateFrame name={name} ticker={view.ticker}>
+    <StateFrame name={name} cik={view.cik} ticker={view.ticker}>
       <h2 className="m-0 mb-2 text-l font-semibold">
         {name} is <Term name="Not collected">not collected</Term> yet
       </h2>

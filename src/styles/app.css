@@ -72,6 +72,15 @@
 }
 
 @layer base {
+  /* No scrollbar is ever drawn. Whatever scrolls still scrolls. */
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
   *,
   *::before,
   *::after {
@@ -396,6 +405,22 @@
     letter-spacing: -0.01em;
   }
 
+  .logo-tile img {
+    display: none;
+  }
+
+  /* A logo sits on white, as companies draw them for a light page. */
+  .logo-tile.has-logo {
+    background: #fff;
+  }
+
+  .logo-tile.has-logo img {
+    display: block;
+    width: 72%;
+    height: 72%;
+    object-fit: contain;
+  }
+
   /* A figures table: dollars, share of revenue and change, digit under digit. */
   .figures {
     width: 100%;
@@ -621,14 +646,14 @@
   .dock {
     position: fixed;
     left: 50%;
-    bottom: 18px;
+    bottom: 20px;
     z-index: 30;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px;
-    border-radius: 14px;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 20px;
     background: color-mix(in oklab, var(--color-surface-1) 80%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -647,11 +672,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 40px;
-    min-width: 40px;
-    padding: 0 10px;
+    height: 52px;
+    min-width: 52px;
+    padding: 0 14px;
     border: 0;
-    border-radius: 10px;
+    border-radius: 13px;
     background: transparent;
     color: var(--color-text-3);
     text-decoration: none;
@@ -673,8 +698,8 @@
 
   .dock svg {
     flex: none;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
@@ -723,7 +748,8 @@
 
     .dock a,
     .dock button {
-      min-width: 34px;
+      height: 44px;
+      min-width: 36px;
       padding: 0 7px;
     }
   }
@@ -1833,8 +1859,6 @@
     overflow-x: auto;
     scroll-padding-left: var(--label);
     overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-surface-3) transparent;
   }
 
   .sheet-grid {
@@ -2661,15 +2685,12 @@
 
   .tl-side {
     position: sticky;
-    top: 16px;
-    max-height: calc(100vh - 32px);
-    overflow-y: auto;
+    top: var(--sticky-top, 16px);
   }
 
   @media (max-width: 1180px) {
     .tl-side {
       position: static;
-      max-height: none;
     }
   }
 
@@ -2772,11 +2793,20 @@
     margin-top: 32px;
   }
 
+  /* Changing sections swaps what is on the right. The browser would move the
+     page to keep something in view, and a short section would make the page
+     shorter than the window; neither may move the page. */
+  .glossary {
+    overflow-anchor: none;
+  }
+
+  .glossary .terms {
+    min-height: calc(100dvh - 48px);
+  }
+
   .glossary .side {
     position: sticky;
-    top: 24px;
-    max-height: calc(100vh - 48px);
-    overflow-y: auto;
+    top: var(--sticky-top, 24px);
     padding: 2px;
   }
 
@@ -3093,7 +3123,10 @@
     inset: -4%;
     z-index: 0;
     pointer-events: none;
-    filter: saturate(0.85) contrast(1.05);
+    background-position: center 64%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: saturate(0.8) contrast(1.08) brightness(0.82) hue-rotate(-6deg);
     will-change: transform;
   }
 
@@ -3335,6 +3368,12 @@
   .ready-list a span:last-child {
     color: var(--color-text-3);
     font-weight: 400;
+  }
+
+  .ready-list a.all-companies {
+    padding: 0 14px;
+    color: var(--color-text-2);
+    font-weight: 500;
   }
 
   @media (hover: hover) {

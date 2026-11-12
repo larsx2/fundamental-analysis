@@ -24,9 +24,29 @@ export const readLastCompany = (): LastCompany | null => {
   }
 };
 
+// The tickers of the companies shown most recently, newest first, so the
+// home screen can offer the few you were reading.
+const recentKey = "recent-companies";
+
+export const readRecentTickers = (): ReadonlyArray<string> => {
+  try {
+    const value: unknown = JSON.parse(globalThis.localStorage?.getItem(recentKey) ?? "[]");
+    return Array.isArray(value)
+      ? value.filter((each): each is string => typeof each === "string")
+      : [];
+  } catch {
+    return [];
+  }
+};
+
 export const writeLastCompany = (company: LastCompany) => {
   try {
     globalThis.localStorage?.setItem(key, JSON.stringify(company));
+    const recent = [
+      company.ticker,
+      ...readRecentTickers().filter((ticker) => ticker !== company.ticker),
+    ].slice(0, 12);
+    globalThis.localStorage?.setItem(recentKey, JSON.stringify(recent));
   } catch {
     // Private windows and blocked storage simply forget.
   }

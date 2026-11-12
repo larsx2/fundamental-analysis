@@ -4,6 +4,7 @@ import { SqlClient } from "effect/sql/SqlClient";
 import { Collect } from "./collect";
 import { Collector } from "./collector";
 import type { CompanyState } from "./companies";
+import { Logos } from "./logos";
 import { CoverageCheck } from "./coverage";
 import { databaseLayer } from "./database";
 
@@ -58,7 +59,17 @@ const services = (events: Array<Event>, failFirstTry: ReadonlySet<number> = new 
         ),
     }),
   );
-  return Layer.mergeAll(collect, coverage).pipe(Layer.provideMerge(databaseLayer(":memory:")));
+  const logos = Layer.succeed(
+    Logos,
+    Logos.of({
+      fetch: () => Effect.void,
+      logo: () => Effect.succeedNone,
+      missing: Effect.succeed([]),
+    }),
+  );
+  return Layer.mergeAll(collect, coverage, logos).pipe(
+    Layer.provideMerge(databaseLayer(":memory:")),
+  );
 };
 
 const seed = (companies: ReadonlyArray<[number, CompanyState?]>) =>

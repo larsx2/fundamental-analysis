@@ -1,8 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { allTerms, type GlossaryTerm, glossary } from "../glossary/glossary";
 import { Icon } from "../ui/icons";
+import { forgetLearnedTerms, useLearnedTerms } from "../ui/learned-terms";
 import { Screen } from "../ui/screen";
+import { useStickyTop } from "../ui/sticky";
 
 export const Route = createFileRoute("/glossary")({ component: GlossaryPage });
 
@@ -71,12 +73,16 @@ const linked = (
 };
 
 function GlossaryPage() {
+  const navigate = useNavigate();
   const [current, setCurrent] = useState(glossary.sections[0]!.number);
   const [jumped, setJumped] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
   const [arrival, setArrival] = useState(0);
   const filterInput = useRef<HTMLInputElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const side = useRef<HTMLElement>(null);
+  useStickyTop(side, 24);
+  const learned = useLearnedTerms();
   const query = filter.trim().toLowerCase();
   const total = allTerms.length;
 
@@ -100,7 +106,9 @@ function GlossaryPage() {
   const show = (slug: string, { focus = true, push = true } = {}) => {
     const sectionNumber = sectionSlugs.get(slug) ?? sectionOf.get(slug);
     if (sectionNumber === undefined) return;
-    if (push && location.hash !== `#${slug}`) history.pushState(null, "", `#${slug}`);
+    // The router would scroll the page to the section; it stays where it is.
+    if (push && location.hash !== `#${slug}`)
+      void navigate({ to: "/glossary", hash: slug, hashScrollIntoView: false, resetScroll: false });
     setFilter("");
     setCurrent(sectionNumber);
     setArrival((count) => count + 1);
@@ -112,8 +120,9 @@ function GlossaryPage() {
         entry?.scrollIntoView({ block: "center" });
         if (focus) entry?.querySelector<HTMLElement>("h3 a")?.focus({ preventScroll: true });
       } else {
-        const top = (panel.current?.getBoundingClientRect().top ?? 0) + window.scrollY - 24;
-        if (window.scrollY > top) window.scrollTo({ top: Math.max(0, top) });
+        // The page stays where it is unless the section starts above the window.
+        const shownTop = panel.current?.getBoundingClientRect().top ?? 0;
+        if (shownTop < 0) window.scrollTo({ top: Math.max(0, shownTop + window.scrollY - 24) });
         if (focus) document.getElementById(`${slug}-title`)?.focus({ preventScroll: true });
       }
     });
@@ -158,9 +167,20 @@ function GlossaryPage() {
       <div>
         <h1 className="m-0 mb-2 text-xl font-semibold tracking-[-0.01em]">Glossary</h1>
         <p className="m-0 max-w-[64ch] text-text-2">{glossary.intro}</p>
+        {learned.size > 0 && (
+          <p className="m-0 mt-2 max-w-[64ch] text-s text-text-3">
+            {learned.size === 1
+              ? "1 term you have opened is"
+              : `${learned.size} terms you have opened are`}{" "}
+            no longer underlined on the company screens.{" "}
+            <button type="button" className="link-button" onClick={forgetLearnedTerms}>
+              Underline them again
+            </button>
+          </p>
+        )}
       </div>
       <div className="shape">
-        <aside className="side" aria-label="Filter and sections">
+        <aside className="side" aria-label="Filter and sections" ref={side}>
           <div className="filter-box">
             <Icon name="filter" />
             <input

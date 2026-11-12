@@ -90,7 +90,7 @@ export function CompanyFrame({
     <OwnFigures figure={ownFigure}>
       <Screen active={active}>
         <div className="mb-8">
-          <CompanyHeader name={view.name} ticker={view.ticker} asOf={view.asOf} />
+          <CompanyHeader cik={view.cik} name={view.name} ticker={view.ticker} asOf={view.asOf} />
           <FiscalYearRuler
             years={years}
             value={year.fiscalYear}

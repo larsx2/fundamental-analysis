@@ -4,6 +4,7 @@ import type { SqlError } from "effect/sql/SqlError";
 import * as SqlSchema from "effect/sql/SqlSchema";
 import { Collect } from "./collect";
 import { CompanyState } from "./companies";
+import { Logos } from "./logos";
 import { CoverageCheck, type UnexpectedSubmissions } from "./coverage";
 import type { SecError } from "./sec";
 
@@ -68,6 +69,7 @@ export class Collector extends Context.Service<
       const sql = yield* SqlClient;
       const collect = yield* Collect;
       const coverage = yield* CoverageCheck;
+      const logos = yield* Logos;
       // A company goes in line to be collected in full, or, when it was ready
       // before the tool kept filings, only for its filings and description.
       const line = yield* Queue.unbounded<{ readonly cik: number; readonly full: boolean }>();
@@ -99,6 +101,7 @@ export class Collector extends Context.Service<
           yield* collect.reportedNumbers(cik);
           yield* step(cik, 3);
           yield* collect.businessDescription(cik);
+          yield* logos.fetch(cik);
           const checkedOn = yield* today;
           yield* sql`
             UPDATE company SET
@@ -136,6 +139,15 @@ export class Collector extends Context.Service<
         SELECT cik FROM company WHERE state = 'ready' AND filings_from IS NULL ORDER BY cik
       `;
       for (const { cik } of withoutFilings) yield* Queue.offer(line, { cik, full: false });
+
+      // Companies collected before the tool fetched logos get theirs in the
+      // background, apart from the line, since Wikidata is not the SEC.
+      yield* Effect.forkScoped(
+        logos.missing.pipe(
+          Effect.flatMap((ciks) => Effect.forEach(ciks, logos.fetch, { discard: true })),
+          Effect.ignoreCause,
+        ),
+      );
 
       yield* Effect.forkScoped(
         Effect.forever(
@@ -184,6 +196,7 @@ export class Collector extends Context.Service<
               yield* sql`DELETE FROM reported_number WHERE cik = ${cik}`;
               yield* sql`DELETE FROM filing WHERE cik = ${cik}`;
               yield* sql`DELETE FROM company_filing WHERE cik = ${cik}`;
+              yield* sql`DELETE FROM company_logo WHERE cik = ${cik}`;
               yield* sql`
                 UPDATE company SET
                   state = 'not_collected', failure_reason = NULL, as_of = NULL,

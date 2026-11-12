@@ -34,6 +34,7 @@ import { shortName } from "../../ui/logo-tile";
 import { GapMark } from "../../ui/marks";
 import { useMounted, useWidth } from "../../ui/motion";
 import { type FigureKey, figureOf } from "../../ui/own-figure";
+import { useStickyTop } from "../../ui/sticky";
 import { Term } from "../../ui/term";
 
 export const Route = createFileRoute("/$ticker/timeline")({
@@ -1166,6 +1167,8 @@ function Side({
     readonly recession: string;
   } | null;
 }) {
+  const side = useRef<HTMLElement>(null);
+  useStickyTop(side, 16);
   const revenue = valueOf(span.terms.revenue);
   const net = valueOf(span.terms.netIncome);
   const revenueSource = span.terms.revenue.kind === "reported" ? span.terms.revenue.latest : null;
@@ -1183,7 +1186,7 @@ function Side({
     .find((figure) => figure.kind === "reported");
 
   return (
-    <aside className="panel panel-pad tl-side" aria-label="What was true then">
+    <aside className="panel panel-pad tl-side" aria-label="What was true then" ref={side}>
       <div aria-live="polite">
         <div className="eyebrow">What was true in</div>
         <h2>{monthName(month)}</h2>

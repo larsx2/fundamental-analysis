@@ -18,6 +18,7 @@ import { Route as TickerOverviewRouteImport } from './routes/$ticker/overview'
 import { Route as TickerStatementsRouteImport } from './routes/$ticker/statements'
 import { Route as TickerTimelineRouteImport } from './routes/$ticker/timeline'
 import { Route as TickerWhereTheMoneyGoesRouteImport } from './routes/$ticker/where-the-money-goes'
+import { Route as LogosCikRouteImport } from './routes/logos/$cik'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const TickerWhereTheMoneyGoesRoute = TickerWhereTheMoneyGoesRouteImport.update({
   path: '/where-the-money-goes',
   getParentRoute: () => TickerRoute,
 } as any)
+const LogosCikRoute = LogosCikRouteImport.update({
+  id: '/logos/$cik',
+  path: '/logos/$cik',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/$ticker/statements': typeof TickerStatementsRoute
   '/$ticker/timeline': typeof TickerTimelineRoute
   '/$ticker/where-the-money-goes': typeof TickerWhereTheMoneyGoesRoute
+  '/logos/$cik': typeof LogosCikRoute
   '/$ticker/': typeof TickerIndexRoute
 }
 export interface FileRoutesByTo {
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/$ticker/statements': typeof TickerStatementsRoute
   '/$ticker/timeline': typeof TickerTimelineRoute
   '/$ticker/where-the-money-goes': typeof TickerWhereTheMoneyGoesRoute
+  '/logos/$cik': typeof LogosCikRoute
   '/$ticker': typeof TickerIndexRoute
 }
 export interface FileRoutesById {
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/$ticker/statements': typeof TickerStatementsRoute
   '/$ticker/timeline': typeof TickerTimelineRoute
   '/$ticker/where-the-money-goes': typeof TickerWhereTheMoneyGoesRoute
+  '/logos/$cik': typeof LogosCikRoute
   '/$ticker/': typeof TickerIndexRoute
 }
 export interface FileRouteTypes {
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/$ticker/statements'
     | '/$ticker/timeline'
     | '/$ticker/where-the-money-goes'
+    | '/logos/$cik'
     | '/$ticker/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/$ticker/statements'
     | '/$ticker/timeline'
     | '/$ticker/where-the-money-goes'
+    | '/logos/$cik'
     | '/$ticker'
   id:
     | '__root__'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/$ticker/statements'
     | '/$ticker/timeline'
     | '/$ticker/where-the-money-goes'
+    | '/logos/$cik'
     | '/$ticker/'
   fileRoutesById: FileRoutesById
 }
@@ -138,6 +150,7 @@ export interface RootRouteChildren {
   TickerRoute: typeof TickerRouteWithChildren
   CompaniesRoute: typeof CompaniesRoute
   GlossaryRoute: typeof GlossaryRoute
+  LogosCikRoute: typeof LogosCikRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TickerWhereTheMoneyGoesRouteImport
       parentRoute: typeof TickerRoute
     }
+    '/logos/$cik': {
+      id: '/logos/$cik'
+      path: '/logos/$cik'
+      fullPath: '/logos/$cik'
+      preLoaderRoute: typeof LogosCikRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -232,6 +252,7 @@ const rootRouteChildren: RootRouteChildren = {
   TickerRoute: TickerRouteWithChildren,
   CompaniesRoute: CompaniesRoute,
   GlossaryRoute: GlossaryRoute,
+  LogosCikRoute: LogosCikRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

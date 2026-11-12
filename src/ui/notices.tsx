@@ -15,7 +15,7 @@ import { LogoTile, plainName } from "./logo-tile";
 
 type Notice = {
   readonly id: number;
-  readonly company: { readonly name: string; readonly ticker: string };
+  readonly company: { readonly cik: number; readonly name: string; readonly ticker: string };
   readonly text: string;
   readonly link: "open" | "why" | null;
 };
@@ -111,7 +111,7 @@ function NoticeCard({
       onFocus={hold(true)}
       onBlur={hold(false)}
     >
-      <LogoTile name={plainName(notice.company.name)} size={32} />
+      <LogoTile name={plainName(notice.company.name)} cik={notice.company.cik} size={32} />
       <p>{notice.text}</p>
       {notice.link === "open" && (
         <Link

@@ -76,7 +76,7 @@ function CompaniesPage() {
             <ul className="rows">
               {line.map((company, index) => (
                 <li key={company.cik} className="progress-row" data-cik={company.cik} tabIndex={-1}>
-                  <LogoTile name={plainName(company.name)} size={44} />
+                  <LogoTile name={plainName(company.name)} cik={company.cik} size={44} />
                   <div className="row-main">
                     <div className="row-title">
                       <strong>{plainName(company.name)}</strong>
@@ -139,7 +139,7 @@ function Welcome() {
       <div className="suggest" role="group" aria-labelledby="suggest-label">
         {suggestions.map((company) => (
           <button key={company.cik} type="button" onClick={() => askToCollect(company)}>
-            <LogoTile name={company.name} size={32} />
+            <LogoTile name={company.name} cik={company.cik} size={32} />
             <span>{company.name}</span>
             <span className="ticker">{company.ticker}</span>
           </button>
@@ -364,7 +364,7 @@ function Finder({ line }: { readonly line: ReadonlyArray<ListedCompany> }) {
                     onMouseMove={() => index !== at && setActive(index)}
                     onClick={() => choose(company)}
                   >
-                    <LogoTile name={plainName(company.name)} size={36} />
+                    <LogoTile name={plainName(company.name)} cik={company.cik} size={36} />
                     <span className="result-main">
                       <span className="result-name">
                         {highlight(plainName(company.name), text)}
@@ -418,7 +418,7 @@ function Failed({ companies }: { readonly companies: ReadonlyArray<ListedCompany
       <ul className="rows">
         {companies.map((company) => (
           <li key={company.cik} data-cik={company.cik} tabIndex={-1}>
-            <LogoTile name={plainName(company.name)} size={44} />
+            <LogoTile name={plainName(company.name)} cik={company.cik} size={44} />
             <div className="row-main">
               <div className="row-title">
                 <strong>{plainName(company.name)}</strong>
@@ -462,7 +462,7 @@ function Ready({ companies }: { readonly companies: ReadonlyArray<ListedCompany>
       <ul className="rows">
         {companies.map((company) => (
           <li key={company.cik} className="ready-row" data-cik={company.cik} tabIndex={-1}>
-            <LogoTile name={plainName(company.name)} size={44} />
+            <LogoTile name={plainName(company.name)} cik={company.cik} size={44} />
             <div className="row-main">
               <div className="row-title">
                 <Link

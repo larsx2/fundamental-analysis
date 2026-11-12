@@ -8,10 +8,12 @@ import { Term } from "./term";
 // The top of every company screen: only the company's tile and ticker, which
 // open the search, and the date of the newest filing held.
 export function CompanyHeader({
+  cik,
   name,
   ticker,
   asOf,
 }: {
+  readonly cik: number;
   readonly name: string;
   readonly ticker: string;
   readonly asOf: string | null;
@@ -26,7 +28,7 @@ export function CompanyHeader({
         onClick={openPalette}
         aria-label={`${plainName(name)}. Switch company`}
       >
-        <LogoTile name={plainName(name)} size={40} />
+        <LogoTile name={plainName(name)} cik={cik} size={40} />
         <span className="text-xl font-semibold tracking-[0.01em]">{ticker}</span>
       </button>
       {asOf !== null && (

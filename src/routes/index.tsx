@@ -4,8 +4,9 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { companiesQuery, findCompanyIn, type NamedCompany } from "../functions/companies";
 import { allTerms, type GlossaryTerm } from "../glossary/glossary";
 import { LogoTile, plainName, shortName } from "../ui/logo-tile";
-import { useStill } from "../ui/motion";
-import { NightCity } from "../ui/night-city";
+import { useMounted, useStill } from "../ui/motion";
+import { CityPhoto } from "../ui/city-photo";
+import { readRecentTickers } from "../ui/last-company";
 import type { CompanyScreen } from "../ui/palette";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -18,6 +19,10 @@ const examples = [
   "Apple's balance sheet in 2020",
 ];
 const resting = "Ask about a company, a number or a word";
+
+// The home screen offers only a few ready companies: the ones read most
+// recently, then the rest in the order of the list. Companies has them all.
+const offered = 3;
 
 const termWords = [
   ...new Set(allTerms.flatMap((term) => term.name.toLowerCase().split(/[^a-z]+/))),
@@ -92,7 +97,18 @@ function Home() {
   const [placeholder, setPlaceholder] = useState(resting);
   const ask = useRef<HTMLTextAreaElement>(null);
   const { data: companies } = useQuery(companiesQuery);
+  const mounted = useMounted();
   const ready = (companies?.companies ?? []).filter((company) => company.state === "ready");
+  const recent = mounted ? readRecentTickers() : [];
+  const rank = (ticker: string) => {
+    const at = recent.indexOf(ticker);
+    return at === -1 ? recent.length : at;
+  };
+  const shownCompanies = ready
+    .map((company, position) => ({ company, position }))
+    .sort((a, b) => rank(a.company.ticker) - rank(b.company.ticker) || a.position - b.position)
+    .slice(0, offered)
+    .map(({ company }) => company);
   const trimmed = text.trim();
   const term = findTerm(trimmed);
   const asksMeaning =
@@ -254,13 +270,10 @@ function Home() {
 
   return (
     <div className="home-root">
-      <NightCity />
+      <CityPhoto />
       <main className="home">
         <div className="home-hero">
-          <h1 aria-label="Follow the money.">
-            <span className="word">Follow</span> <span className="word">the</span>{" "}
-            <span className="word">money.</span>
-          </h1>
+          <h1 className="visually-hidden">Follow the money</h1>
           <form
             className="composer"
             autoComplete="off"
@@ -323,18 +336,23 @@ function Home() {
           </p>
           {ready.length > 0 && (
             <div className="ready-list" aria-label="Ready companies">
-              {ready.map((each) => (
+              {shownCompanies.map((each) => (
                 <Link
                   key={each.cik}
                   to="/$ticker/overview"
                   params={{ ticker: each.ticker }}
                   search={each.latestFiscalYear === null ? {} : { year: each.latestFiscalYear }}
                 >
-                  <LogoTile name={plainName(each.name)} size={32} />
+                  <LogoTile name={plainName(each.name)} cik={each.cik} size={32} />
                   {each.ticker}
                   <span>{shortName(each.name)}</span>
                 </Link>
               ))}
+              {ready.length > offered && (
+                <Link to="/companies" className="all-companies">
+                  All {ready.length} companies
+                </Link>
+              )}
             </div>
           )}
         </div>

@@ -1,7 +1,8 @@
 import { Popover } from "@base-ui/react/popover";
-import { createContext, type ReactNode, useContext } from "react";
+import { createContext, type ReactNode, useContext, useRef } from "react";
 import { findTerm } from "../glossary/glossary";
 import { Icon } from "./icons";
+import { learnTerm, useLearnedTerms } from "./learned-terms";
 
 type Payload = { readonly name: string; readonly own: ReactNode };
 
@@ -24,10 +25,12 @@ export function OwnFigures({
 }
 
 // A term the glossary does not hold opens nothing, rather than the wrong card.
+// A term whose card was opened before reads as plain text.
 export function Term({ name, children }: { readonly name: string; readonly children?: ReactNode }) {
   const own = useContext(OwnFigureContext);
+  const learned = useLearnedTerms();
   const entry = findTerm(name);
-  if (entry === undefined) return <>{children ?? name}</>;
+  if (entry === undefined || learned.has(entry.name)) return <>{children ?? name}</>;
   return (
     <Popover.Trigger
       handle={termCard}
@@ -40,9 +43,16 @@ export function Term({ name, children }: { readonly name: string; readonly child
 }
 
 export function TermCard() {
+  const shown = useRef<string | null>(null);
   return (
-    <Popover.Root handle={termCard}>
+    <Popover.Root
+      handle={termCard}
+      onOpenChangeComplete={(open) => {
+        if (!open && shown.current !== null) learnTerm(shown.current);
+      }}
+    >
       {({ payload }) => {
+        shown.current = payload?.name ?? null;
         const entry = payload === undefined ? undefined : findTerm(payload.name);
         return (
           <Popover.Portal>

@@ -1,30 +1,27 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import type { StatementYear } from "../../functions/company";
 import { valueOf } from "../../shared/figures";
 import { CompanyFrame, searchYear, useReadyCompany } from "../../ui/company-frame";
-import { useChooseYear } from "../../ui/company-header";
 import { centsOfDollar, lowerFirst, money, percent } from "../../ui/format";
 import { Icon } from "../../ui/icons";
 import { shortName } from "../../ui/logo-tile";
 import { GapMark } from "../../ui/marks";
 import { Bands } from "../../ui/money-flow/bands";
-import { Bars, type Scale } from "../../ui/money-flow/bars";
 import { FiguresTable } from "../../ui/money-flow/figures-table";
-import { keptShare, parts, tenYears, yearParts } from "../../ui/money-flow/parts";
+import { yearParts } from "../../ui/money-flow/parts";
 import { RollingNumber, useWidth } from "../../ui/motion";
 import { Segmented } from "../../ui/segmented";
 import { Term } from "../../ui/term";
 
-type Drawing = "bars" | "bands" | "table";
+type Drawing = "flow" | "table";
 
 export const Route = createFileRoute("/$ticker/where-the-money-goes")({
   validateSearch: (
     search: Record<string, unknown>,
   ): { year?: number | undefined; drawing?: Drawing | undefined } => {
     const year = searchYear(search);
-    const drawing =
-      search.drawing === "bands" || search.drawing === "table" ? search.drawing : undefined;
+    const drawing = search.drawing === "table" ? search.drawing : undefined;
     return {
       ...(year === undefined ? {} : { year }),
       ...(drawing === undefined ? {} : { drawing }),
@@ -33,25 +30,21 @@ export const Route = createFileRoute("/$ticker/where-the-money-goes")({
   component: MoneyFlow,
 });
 
-// The bands need room for four columns of labels. On a narrower screen the
-// bars and the table remain.
-const bandsNeed = 680;
+// The flow needs room for four columns of labels. On a narrower screen the
+// table remains.
+const flowNeeds = 680;
 
 function MoneyFlow() {
   const { ticker } = Route.useParams();
   const search = Route.useSearch();
   const { view, years, year } = useReadyCompany(ticker, search.year);
   const navigate = useNavigate({ from: Route.fullPath });
-  const chooseYear = useChooseYear();
   const panel = useRef<HTMLElement>(null);
   const panelWidth = useWidth(panel, 1200);
-  const [scale, setScale] = useState<Scale>("share");
-  const bandsFit = panelWidth >= bandsNeed;
-  const asked = search.drawing ?? "bars";
-  const drawing: Drawing = asked === "bands" && !bandsFit ? "bars" : asked;
+  const flowFits = panelWidth >= flowNeeds;
+  const drawing: Drawing = search.drawing === "table" || !flowFits ? "table" : "flow";
   const name = shortName(view.name);
   const previous = years.find((each) => each.fiscalYear === year.fiscalYear - 1);
-  const ten = tenYears(years, year.fiscalYear);
 
   return (
     <CompanyFrame
@@ -63,23 +56,8 @@ function MoneyFlow() {
       <Hero name={name} year={year} />
       <section ref={panel} className="panel panel-pad" aria-labelledby="chart-title">
         <div className="panel-title">
-          <h2 id="chart-title">
-            {drawing === "bars"
-              ? "Where each dollar went, ten fiscal years"
-              : `Where each dollar went in fiscal ${year.fiscalYear}`}
-          </h2>
+          <h2 id="chart-title">Where each dollar went in fiscal {year.fiscalYear}</h2>
           <div className="flex flex-wrap items-center gap-2">
-            {drawing === "bars" && (
-              <Segmented
-                label="Scale"
-                value={scale}
-                onChange={setScale}
-                options={[
-                  { value: "share", label: "Share of revenue" },
-                  { value: "dollars", label: "Dollars" },
-                ]}
-              />
-            )}
             <Segmented
               label="Drawing"
               className="chart-switch"
@@ -88,22 +66,17 @@ function MoneyFlow() {
                 void navigate({
                   search: (previous) => ({
                     ...previous,
-                    drawing: next === "bars" ? undefined : next,
+                    drawing: next === "flow" ? undefined : next,
                   }),
                   resetScroll: false,
                 })
               }
               options={[
                 {
-                  value: "bars",
-                  label: "Bars: compare ten fiscal years",
-                  content: <Icon name="bars" />,
-                },
-                {
-                  value: "bands",
-                  label: "Bands: follow this year's dollar",
+                  value: "flow",
+                  label: "Flow: follow this year's dollar",
                   content: <Icon name="bands" />,
-                  hidden: !bandsFit,
+                  hidden: !flowFits,
                 },
                 {
                   value: "table",
@@ -114,39 +87,15 @@ function MoneyFlow() {
             />
           </div>
         </div>
-        <p className="verdict">{verdict(name, drawing, year, ten)}</p>
-        {drawing === "bars" && (
-          <>
-            <Bars
-              years={ten}
-              chosen={year.fiscalYear}
-              scale={scale}
-              onChoose={(fiscalYear) => void chooseYear(fiscalYear)}
-            />
-            <Legend year={year} />
-          </>
-        )}
-        {drawing === "bands" && <Bands year={year} company={view.ticker} />}
+        <p className="verdict">{verdict(year)}</p>
+        {drawing === "flow" && <Bands year={year} company={view.ticker} />}
         {drawing === "table" && <FiguresTable year={year} previous={previous} />}
       </section>
     </CompanyFrame>
   );
 }
 
-const verdict = (
-  name: string,
-  drawing: Drawing,
-  year: StatementYear,
-  ten: ReadonlyArray<StatementYear>,
-) => {
-  if (drawing === "bars") {
-    const first = ten[0];
-    const last = ten.at(-1);
-    const a = first === undefined ? null : keptShare(first);
-    const b = last === undefined ? null : keptShare(last);
-    if (first === undefined || last === undefined || a === null || b === null) return "";
-    return `${name} kept ${Math.round(a * 100)}¢ of each dollar in fiscal ${first.fiscalYear} and ${Math.round(b * 100)}¢ in fiscal ${last.fiscalYear}.`;
-  }
+const verdict = (year: StatementYear) => {
   const revenue = valueOf(year.terms.revenue);
   const largest = yearParts(year)
     .filter((part) => part.value !== null && part.value > 0)
@@ -206,24 +155,6 @@ function Hero({ name, year }: { readonly name: string; readonly year: StatementY
             ` ${name} reports no ${gaps.map((part) => part.name.toLowerCase()).join(" or ")}.`}
         </p>
       )}
-    </div>
-  );
-}
-
-function Legend({ year }: { readonly year: StatementYear }) {
-  const all = yearParts(year);
-  return (
-    <div className="legend mt-4">
-      {parts.map((part) => {
-        const gap = all.find((each) => each.key === part.key)?.figure.kind === "gap";
-        return (
-          <span key={part.key}>
-            <i className={gap ? "gap" : undefined} style={{ background: part.color }} />
-            {part.name}
-            {gap ? " (gap)" : ""}
-          </span>
-        );
-      })}
     </div>
   );
 }

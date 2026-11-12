@@ -54,6 +54,7 @@ export const useHere = () =>
 type Item =
   | {
       readonly kind: "company";
+      readonly cik: number;
       readonly ticker: string;
       readonly name: string;
       readonly asOf: string | null;
@@ -117,6 +118,7 @@ function Palette({ close }: { readonly close: () => void }) {
   const items: ReadonlyArray<Item> = [
     ...companies.map((company): Item => ({
       kind: "company",
+      cik: company.cik,
       ticker: company.ticker,
       name: plainName(company.name),
       asOf: company.asOf,
@@ -248,7 +250,7 @@ function Palette({ close }: { readonly close: () => void }) {
                 ? option(
                     item,
                     <>
-                      <LogoTile name={item.name} size={36} />
+                      <LogoTile name={item.name} cik={item.cik} size={36} />
                       <span className="palette-main">
                         <strong>{item.name}</strong>
                         <span className="ticker">{item.ticker}</span>

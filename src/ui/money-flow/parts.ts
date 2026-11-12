@@ -51,17 +51,3 @@ export const yearParts = (year: StatementYear): ReadonlyArray<YearPart> =>
   });
 
 export const revenueOf = (year: StatementYear) => valueOf(year.terms.revenue);
-
-export const keptShare = (year: StatementYear) => {
-  const revenue = revenueOf(year);
-  const net = valueOf(year.terms.netIncome);
-  return revenue === null || net === null || revenue === 0 ? null : net / revenue;
-};
-
-// Ten fiscal years for the bars: the last ten, or the ten that end with the
-// chosen year when it is older.
-export const tenYears = (years: ReadonlyArray<StatementYear>, chosen: number) => {
-  const at = years.findIndex((year) => year.fiscalYear === chosen);
-  const last = at >= years.length - 10 ? years.length : at + 1;
-  return years.slice(Math.max(0, last - 10), last);
-};
