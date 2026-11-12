@@ -88,6 +88,8 @@ export const cashFlowTags: Record<Exclude<CashFlowKey, "freeCashFlow">, Readonly
   debtRepaid: ["RepaymentsOfLongTermDebt", "RepaymentsOfDebtMaturingInMoreThanThreeMonths"],
 };
 
+export const incomeTaxTags = ["IncomeTaxExpenseBenefit"];
+
 export const earningsPerShareTags = [
   "EarningsPerShareDiluted",
   "EarningsPerShareBasicAndDiluted",
@@ -101,4 +103,5 @@ export const statementTags: ReadonlyArray<string> = [
   ...liabilitiesAndEquityTags,
   ...Object.values(cashFlowTags).flat(),
   ...earningsPerShareTags,
+  ...incomeTaxTags,
 ];

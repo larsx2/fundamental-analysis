@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter/opsz.css";
 @import "@fontsource-variable/newsreader/opsz.css";
+@import "./money-flow.css";
 
 /* Every colour, size, space and radius is named once here and used through
    Tailwind's utilities or these variables. The tool is dark only. */
@@ -25,6 +26,10 @@
   --color-part-other: #c98500;
   --color-part-below: #d55181;
   --color-part-kept: #008300;
+  --color-part-interest: #a08ae6;
+
+  --color-delta-up: #6fd39b;
+  --color-delta-down: #f08a6c;
 
   /* Text set inside a part of a dollar: near-black on the five lighter
      parts, white on net income's darker green. */
