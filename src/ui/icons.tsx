@@ -10,9 +10,10 @@ const paths = {
   ),
   companies: (
     <>
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-      <path d="M16 4h5M16 9h5M18 14h3" />
+      <path d="M3 20h18" />
+      <path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h5A1.5 1.5 0 0 1 13 5.5V20" />
+      <path d="M13 10h4.5a1.5 1.5 0 0 1 1.5 1.5V20" />
+      <path d="M8 8h2M8 12h2M8 16h2" />
     </>
   ),
   overview: (
@@ -25,9 +26,9 @@ const paths = {
   ),
   money: (
     <>
-      <path d="M4 6h6c3 0 4 2 5 4s2 4 5 4" />
-      <path d="M4 6h16" />
-      <path d="M4 18h6c3 0 4-2 5-4" />
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6.5 12h.01M17.5 12h.01" />
     </>
   ),
   statements: (
@@ -38,17 +39,17 @@ const paths = {
   ),
   timeline: (
     <>
-      <path d="M3 12h18" />
-      <circle cx="7" cy="12" r="2" />
-      <circle cx="14" cy="12" r="2" />
-      <path d="M7 5v3M14 16v3M19 5v3" />
+      <path d="M3 19h18" />
+      <path d="M6 19v-9M12 19v-4M18 19v-11" />
+      <circle cx="6" cy="8" r="2" />
+      <circle cx="12" cy="13" r="2" />
+      <circle cx="18" cy="6" r="2" />
     </>
   ),
   glossary: (
     <>
-      <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" />
-      <path d="M4 19V5" />
-      <path d="M9 7h6" />
+      <path d="M12 6.5C10.2 5.2 7.5 4.5 3.5 4.5V18c4 0 6.7.7 8.5 2 1.8-1.3 4.5-2 8.5-2V4.5c-4 0-6.7.7-8.5 2z" />
+      <path d="M12 6.5V20" />
     </>
   ),
   search: (

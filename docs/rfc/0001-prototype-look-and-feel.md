@@ -130,6 +130,11 @@ A financial adviser, a product manager and a designer reviewed the Overview. Wha
 - **Only the company's name is a link.** A click elsewhere on its row opens the company too, unless it ends a selection of text, so figures can be copied. A company's other actions sit in a menu at the end of its row.
 - **No explanatory text around the table.** "Last checked" shows on a row only when the companies were checked on different days.
 
+### Settled on 12 November 2026, from the editorial mock of the Home
+
+- **The Home became an editorial page.** "Follow the money." in a serif (Newsreader), a one-line lede, the composer, and under it the revenue of five fixed companies (Apple, Microsoft, Costco, Tesla and NVIDIA) across all their fiscal years, drawn as thin lines that each end in a label linking to the company. The city photo, and with it the one file not under MIT, was removed. Behind the page, two soft lights drift and a few hairlines cross it slowly; with reduced motion all of it is still.
+- **Companies typed in the box become chips.** When only one company can be meant, the word turns into a chip with its logo on the next space; when one company is likely, the rest of its name shows faintly and Tab completes it; when several match, a list offers them, ready companies first. Backspace right after an automatic chip turns it back into the typed word. The example questions under the box follow the company that is set.
+
 ## Open points
 
 - Settled on 11 November 2026: the look is settled on one real screen, not on a separate mock-up. The first slice's screen, "Where the money goes", is taken to finished quality and later screens reuse its colours, type, spacing and movement. See [Which screens the first version needs](./0002-first-version-site-structure.md).

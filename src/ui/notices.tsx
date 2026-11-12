@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   createContext,
   type ReactNode,
@@ -26,14 +26,25 @@ const NoticeContext = createContext<Push>(() => {});
 
 export const useNotice = () => useContext(NoticeContext);
 
+let awaited: { readonly cik: number; readonly path: string } | null = null;
+
+export const openWhenReady = (cik: number) => {
+  awaited = { cik, path: globalThis.location?.pathname ?? "" };
+};
+
 const working = (company: ListedCompany) =>
   company.state === "waiting" || company.state === "collecting";
 
 // While anything is being collected the list is asked for again every
-// second. When a company becomes ready a quiet notice says so, and whatever
-// screen is open stays as it is. Notices never take focus.
+// second. When the company the reader just asked for becomes ready and they
+// are still where they asked, it opens; otherwise a quiet notice says so.
+// Notices never take focus.
 export function Notices({ children }: { readonly children: ReactNode }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const path = useRouterState({ select: (state) => state.location.pathname });
+  const here = useRef(path);
+  here.current = path;
   const { data } = useQuery({
     ...companiesQuery,
     refetchInterval: (query) => (query.state.data?.companies.some(working) ? 1000 : false),
@@ -58,7 +69,13 @@ export function Notices({ children }: { readonly children: ReactNode }) {
       if (previous !== "waiting" && previous !== "collecting") continue;
       if (company.state === "ready") {
         changed = true;
-        push({ company, text: `${plainName(company.name)} is ready.`, link: "open" });
+        const asked = awaited?.cik === company.cik ? awaited : null;
+        if (asked !== null) awaited = null;
+        if (asked !== null && here.current === asked.path) {
+          void navigate({ to: "/$ticker/overview", params: { ticker: company.ticker } });
+        } else {
+          push({ company, text: `${plainName(company.name)} is ready.`, link: "open" });
+        }
       } else if (company.state === "failed") {
         changed = true;
         push({ company, text: `${plainName(company.name)} could not be collected.`, link: "why" });
@@ -68,7 +85,7 @@ export function Notices({ children }: { readonly children: ReactNode }) {
       void queryClient.invalidateQueries({ queryKey: ["company"] });
       void queryClient.invalidateQueries({ queryKey: ["companies", "search"] });
     }
-  }, [data, queryClient, push]);
+  }, [data, queryClient, push, navigate]);
 
   const dismiss = (id: number) => setNotices((list) => list.filter((notice) => notice.id !== id));
 

@@ -8,6 +8,8 @@ import { runtime } from "../server/runtime";
 import { Settings, secContactKey } from "../server/settings";
 import { statementsFor } from "../server/terms/terms";
 import { summarise } from "../shared/company-summary";
+import { valueOf } from "../shared/figures";
+import { homeCompanies } from "../shared/home-companies";
 
 export type { CompanySummary } from "../shared/company-summary";
 
@@ -86,6 +88,56 @@ export const summariesQuery = (ciks: ReadonlyArray<number>) =>
     queryFn: () => getSummaries({ data: { ciks: [...ciks] } }),
   });
 
+const collectHomeCompanies = Effect.gen(function* () {
+  const collector = yield* Collector;
+  yield* Effect.forEach(
+    homeCompanies,
+    (cik) =>
+      collector.status(cik).pipe(
+        Effect.flatMap((company) =>
+          Option.isSome(company) && company.value.state === "not_collected"
+            ? collector.request(cik)
+            : Effect.void,
+        ),
+        Effect.ignore,
+      ),
+    { discard: true },
+  );
+});
+
+const getRevenueHistory = createServerFn({ method: "GET" }).handler(() => {
+  runtime.runFork(collectHomeCompanies);
+  return runtime.runPromise(
+    Effect.gen(function* () {
+      const rows = yield* askedFor;
+      const ready = homeCompanies.flatMap((cik) =>
+        rows.filter((row) => row.cik === cik && row.state === "ready"),
+      );
+      return yield* Effect.forEach(ready, (row) =>
+        statementsFor(row.cik).pipe(
+          Effect.map((years) => ({
+            cik: row.cik,
+            name: row.name,
+            ticker: row.ticker ?? "",
+            points: years.flatMap((year) => {
+              const value = valueOf(year.terms.revenue);
+              return value === null ? [] : [{ fiscalYear: year.fiscalYear, value }];
+            }),
+          })),
+        ),
+      );
+    }),
+  );
+});
+
+export type RevenueHistory = Awaited<ReturnType<typeof getRevenueHistory>>[number];
+
+export const revenueHistoryQuery = queryOptions({
+  queryKey: ["companies", "revenue-history"],
+  queryFn: () => getRevenueHistory(),
+  staleTime: 60_000,
+});
+
 export type CompanyMatch = {
   readonly cik: number;
   readonly name: string;
@@ -135,6 +187,7 @@ export const fetchCompanyList = createServerFn({ method: "POST" }).handler(() =>
     Effect.gen(function* () {
       const companies = yield* Companies;
       return yield* companies.refreshList.pipe(
+        Effect.tap(() => collectHomeCompanies),
         Effect.map((count) => ({ ok: true as const, count })),
         Effect.catch((error) => Effect.succeed({ ok: false as const, reason: error.message })),
       );

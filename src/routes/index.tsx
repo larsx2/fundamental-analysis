@@ -1,12 +1,16 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useEffect, useRef, useState } from "react";
-import { companiesQuery, findCompanyIn, type NamedCompany } from "../functions/companies";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import { companiesQuery, type NamedCompany } from "../functions/companies";
+import { namedCompanyQuery } from "../ui/ask/named-company";
 import { allTerms, type GlossaryTerm } from "../glossary/glossary";
-import { LogoTile, plainName, shortName } from "../ui/logo-tile";
-import { useMounted, useStill } from "../ui/motion";
-import { CityPhoto } from "../ui/city-photo";
-import { readRecentTickers } from "../ui/last-company";
+import { RevenueExhibit } from "../ui/home/revenue-exhibit";
+import { HomeBackdrop } from "../ui/home/backdrop";
+import { plainName, shortName } from "../ui/logo-tile";
+import { Clears } from "../ui/ask/composer";
+import { type Mention, MentionInput } from "../ui/mention-input";
+import { usePrefill } from "../ui/prefill";
+import { useStill } from "../ui/motion";
 import type { CompanyScreen } from "../ui/palette";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -19,14 +23,8 @@ const examples = [
   "Apple's balance sheet in 2020",
 ];
 const resting = "Ask about a company, a number or a word";
+const headline = "Follow the money.";
 
-// The home screen offers only a few ready companies: the ones read most
-// recently, then the rest in the order of the list. Companies has them all.
-const offered = 3;
-
-const termWords = [
-  ...new Set(allTerms.flatMap((term) => term.name.toLowerCase().split(/[^a-z]+/))),
-].filter((word) => word.length >= 3);
 const byLength = [...allTerms].sort((a, b) => b.name.length - a.name.length);
 
 const findTerm = (text: string) => {
@@ -100,33 +98,37 @@ function Home() {
   const navigate = useNavigate();
   const still = useStill();
   const [text, setText] = useState("");
+  const [mentions, setMentions] = useState<ReadonlyArray<Mention>>([]);
   const [placeholder, setPlaceholder] = useState(resting);
-  const ask = useRef<HTMLTextAreaElement>(null);
-  const { data: companies } = useQuery(companiesQuery);
-  const mounted = useMounted();
-  const ready = (companies?.companies ?? []).filter((company) => company.state === "ready");
-  const recent = mounted ? readRecentTickers() : [];
-  const rank = (ticker: string) => {
-    const at = recent.indexOf(ticker);
-    return at === -1 ? recent.length : at;
-  };
-  const shownCompanies = ready
-    .map((company, position) => ({ company, position }))
-    .sort((a, b) => rank(a.company.ticker) - rank(b.company.ticker) || a.position - b.position)
-    .slice(0, offered)
-    .map(({ company }) => company);
+  const ask = useRef<HTMLDivElement>(null);
+  const { data: listed } = useQuery(companiesQuery);
+  const ready = (listed?.companies ?? [])
+    .filter((each) => each.state === "ready")
+    .map((each) => ({ cik: each.cik, ticker: each.ticker, name: each.name }));
+  const prefill = usePrefill({ text, mentions }, (next, nextMentions) => {
+    setText(next);
+    setMentions(nextMentions);
+  });
+  const mentioned = mentions[0];
   const trimmed = text.trim();
   const term = findTerm(trimmed);
   const asksMeaning =
     /^(what('s| is| are| does)|define|meaning of|explain)\b/i.test(trimmed) && term !== null;
   const { data: named, isFetching } = useQuery({
-    queryKey: ["home", "company", trimmed],
-    queryFn: () => findCompanyIn({ data: { text: trimmed, skip: termWords } }),
-    enabled: trimmed.length >= 2 && !asksMeaning,
+    ...namedCompanyQuery(trimmed),
+    enabled: trimmed.length >= 2 && !asksMeaning && mentioned === undefined,
     placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
-  const company = asksMeaning || trimmed === "" ? null : (named ?? null);
+  const company: NamedCompany | null =
+    mentioned !== undefined
+      ? {
+          ...mentioned,
+          state: ready.some((each) => each.cik === mentioned.cik) ? "ready" : "not_collected",
+        }
+      : asksMeaning || trimmed === ""
+        ? null
+        : (named ?? null);
 
   useEffect(() => {
     document.title = "Follow the money";
@@ -136,7 +138,7 @@ function Home() {
   const understood: Understood | null =
     trimmed === ""
       ? null
-      : term !== null && (company === null || asksMeaning)
+      : term !== null && mentioned === undefined && (company === null || asksMeaning)
         ? {
             kind: "term",
             term,
@@ -152,7 +154,7 @@ function Home() {
               company,
               say: (
                 <>
-                  Asks ChatGPT about <strong>{shortName(company.name)}</strong>
+                  Asks about <strong>{shortName(company.name)}</strong>
                 </>
               ),
             }
@@ -218,14 +220,6 @@ function Home() {
     }
   };
 
-  // Grows with what is typed, up to a few lines.
-  useEffect(() => {
-    const element = ask.current;
-    if (element === null) return;
-    element.style.height = "auto";
-    element.style.height = `${element.scrollHeight}px`;
-  }, [text]);
-
   // The placeholder types real examples, one after another, until you type.
   useEffect(() => {
     if (still) {
@@ -237,7 +231,7 @@ function Home() {
     let typing = true;
     let timer: ReturnType<typeof setTimeout>;
     const step = () => {
-      if (ask.current?.value) {
+      if (ask.current?.textContent) {
         setPlaceholder(resting);
         timer = setTimeout(step, 600);
         return;
@@ -276,7 +270,7 @@ function Home() {
       if (
         event.key === "/" &&
         document.activeElement !== ask.current &&
-        !(event.target as Element | null)?.closest("input, textarea")
+        !(event.target as Element | null)?.closest("input, textarea, [contenteditable]")
       ) {
         event.preventDefault();
         ask.current?.focus();
@@ -291,12 +285,58 @@ function Home() {
 
   const canGo = understood !== null && understood.kind !== "nothing";
 
+  // Example questions name ready companies as chips, so a click gives the same
+  // field as typing. With a company set, they are about it; one not collected
+  // yet has none.
+  const asked = (template: (name: string) => string, about: Mention) => ({
+    question: template(shortName(about.name)),
+    mentions: [about],
+  });
+  const preferred = [...ready].sort(
+    (a, b) =>
+      Number(b.ticker === "COST") - Number(a.ticker === "COST") ||
+      Number(b.ticker === "AAPL") - Number(a.ticker === "AAPL"),
+  );
+  const [firstReady, secondReady] = preferred;
+  const suggestions =
+    company === null
+      ? [
+          firstReady === undefined
+            ? { question: examples[0]!, mentions: [] }
+            : asked((name) => `Where does ${name}'s money go?`, firstReady),
+          secondReady === undefined
+            ? { question: examples[1]!, mentions: [] }
+            : asked((name) => `Is ${name} growing?`, secondReady),
+          { question: examples[3]!, mentions: [] },
+        ]
+      : company.state === "ready"
+        ? [
+            (name: string) => `Where does ${name}'s money go?`,
+            (name: string) => `Is ${name} growing?`,
+            (name: string) => `What did ${name} do with its cash?`,
+          ].map((template) =>
+            asked(template, { cik: company.cik, ticker: company.ticker, name: company.name }),
+          )
+        : [];
+
   return (
     <div className="home-root">
-      <CityPhoto />
+      <HomeBackdrop />
       <main className="home">
-        <div className="home-hero">
-          <h1 className="visually-hidden">Follow the money</h1>
+        <section className="home-intro">
+          <h1 className="home-title">
+            {headline.split(" ").map((word, index) => (
+              <Fragment key={word}>
+                {index > 0 && " "}
+                <span className="word" style={{ animationDelay: `${0.08 + index * 0.09}s` }}>
+                  {word}
+                </span>
+              </Fragment>
+            ))}
+          </h1>
+          <p className="home-lede">
+            Ask about any public company. Every number comes from its own filings.
+          </p>
           <form
             className="composer"
             autoComplete="off"
@@ -304,41 +344,37 @@ function Home() {
               event.preventDefault();
               go();
             }}
+            onKeyDown={prefill.onKeyDown}
           >
-            <label className="visually-hidden" htmlFor="ask">
-              What do you want to understand?
-            </label>
-            <textarea
+            <MentionInput
               id="ask"
               ref={ask}
-              rows={1}
+              label="What do you want to understand?"
               placeholder={placeholder}
-              spellCheck={false}
               value={text}
-              onChange={(event) => setText(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  go();
-                }
+              mentions={mentions}
+              companies={ready}
+              onChange={(next, nextMentions) => {
+                setText(next);
+                setMentions(nextMentions);
               }}
+              onSubmit={go}
             />
             <div className="tools">
               <div className="chips" role="group" aria-label="Examples">
-                {examples
-                  .slice(0, 2)
-                  .concat(examples[3]!)
-                  .map((example) => (
+                {suggestions
+                  .filter((suggestion) => suggestion.question !== trimmed)
+                  .map((suggestion) => (
                     <button
-                      key={example}
+                      key={suggestion.question}
                       type="button"
                       className="chip"
                       onClick={() => {
-                        setText(example);
+                        prefill.fill(suggestion.question, suggestion.mentions);
                         ask.current?.focus();
                       }}
                     >
-                      {example}
+                      {suggestion.question}
                     </button>
                   ))}
               </div>
@@ -354,31 +390,12 @@ function Home() {
               <>
                 {canGo && <kbd>{"↵"}</kbd>}
                 <span>{understood.say}</span>
+                {prefill.pending && <Clears />}
               </>
             )}
           </p>
-          {ready.length > 0 && (
-            <div className="ready-list" aria-label="Ready companies">
-              {shownCompanies.map((each) => (
-                <Link
-                  key={each.cik}
-                  to="/$ticker/overview"
-                  params={{ ticker: each.ticker }}
-                  search={each.latestFiscalYear === null ? {} : { year: each.latestFiscalYear }}
-                >
-                  <LogoTile name={plainName(each.name)} cik={each.cik} size={32} />
-                  {each.ticker}
-                  <span>{shortName(each.name)}</span>
-                </Link>
-              ))}
-              {ready.length > offered && (
-                <Link to="/companies" className="all-companies">
-                  All {ready.length} companies
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
+        </section>
+        <RevenueExhibit />
       </main>
     </div>
   );

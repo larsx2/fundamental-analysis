@@ -108,7 +108,13 @@ export type Answer = {
 };
 
 export type AskEvent =
-  | { readonly type: "reading"; readonly id: string; readonly lookup: string }
+  | {
+      readonly type: "reading";
+      readonly id: string;
+      readonly lookup: string;
+      readonly input: unknown;
+    }
+  | { readonly type: "thinking"; readonly id: string; readonly text: string }
   | {
       readonly type: "read";
       readonly id: string;

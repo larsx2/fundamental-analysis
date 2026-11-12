@@ -7,7 +7,7 @@ import { type MouseEvent, useRef, useState } from "react";
 import { type CompanySummary, type ListedCompany, summariesQuery } from "../functions/companies";
 import { longDate, money, moneyShort, percent } from "./format";
 import { Icon } from "./icons";
-import { LogoTile, plainName } from "./logo-tile";
+import { LogoTile, plainName, shortName } from "./logo-tile";
 import { glide, useStill } from "./motion";
 import { RemoveDialog } from "./remove-company";
 import { Segmented } from "./segmented";
@@ -298,10 +298,11 @@ function ReadyRow({
             <div className="ready-line1">
               <Link
                 className="ready-name"
+                title={name}
                 to="/$ticker/where-the-money-goes"
                 params={{ ticker: company.ticker }}
               >
-                {name}
+                {shortName(company.name)}
               </Link>
               <span className="ticker">{company.ticker}</span>
             </div>

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TickerRouteImport } from './routes/$ticker'
+import { Route as AskRouteImport } from './routes/ask'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as GlossaryRouteImport } from './routes/glossary'
 import { Route as TickerIndexRouteImport } from './routes/$ticker/index'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 const TickerRoute = TickerRouteImport.update({
   id: '/$ticker',
   path: '/$ticker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AskRoute = AskRouteImport.update({
+  id: '/ask',
+  path: '/ask',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompaniesRoute = CompaniesRouteImport.update({
@@ -92,6 +98,7 @@ const LogosCikRoute = LogosCikRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$ticker': typeof TickerRouteWithChildren
+  '/ask': typeof AskRoute
   '/companies': typeof CompaniesRoute
   '/glossary': typeof GlossaryRoute
   '/$ticker/ask': typeof TickerAskRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ask': typeof AskRoute
   '/companies': typeof CompaniesRoute
   '/glossary': typeof GlossaryRoute
   '/$ticker/ask': typeof TickerAskRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$ticker': typeof TickerRouteWithChildren
+  '/ask': typeof AskRoute
   '/companies': typeof CompaniesRoute
   '/glossary': typeof GlossaryRoute
   '/$ticker/ask': typeof TickerAskRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$ticker'
+    | '/ask'
     | '/companies'
     | '/glossary'
     | '/$ticker/ask'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ask'
     | '/companies'
     | '/glossary'
     | '/$ticker/ask'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$ticker'
+    | '/ask'
     | '/companies'
     | '/glossary'
     | '/$ticker/ask'
@@ -184,6 +196,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   TickerRoute: typeof TickerRouteWithChildren
+  AskRoute: typeof AskRoute
   CompaniesRoute: typeof CompaniesRoute
   GlossaryRoute: typeof GlossaryRoute
   ApiAskRoute: typeof ApiAskRoute
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       path: '/$ticker'
       fullPath: '/$ticker'
       preLoaderRoute: typeof TickerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ask': {
+      id: '/ask'
+      path: '/ask'
+      fullPath: '/ask'
+      preLoaderRoute: typeof AskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/companies': {
@@ -311,6 +331,7 @@ const TickerRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   TickerRoute: TickerRouteWithChildren,
+  AskRoute: AskRoute,
   CompaniesRoute: CompaniesRoute,
   GlossaryRoute: GlossaryRoute,
   ApiAskRoute: ApiAskRoute,
