@@ -273,9 +273,20 @@ function Timeline() {
             economyState={economy.isPending ? "loading" : economy.isError ? "failed" : "ready"}
           />
           <p className="tl-hint">
-            Click anywhere on the timeline to choose a month. On the line of fiscal years,{" "}
-            <kbd>{"←"}</kbd> <kbd>{"→"}</kbd> move one month and <kbd>Page Up</kbd>{" "}
-            <kbd>Page Down</kbd> one year.
+            Click or tap anywhere on the timeline to choose a month. With the line of years under
+            the chart selected, <kbd>{"←"}</kbd> <kbd>{"→"}</kbd> move one month and{" "}
+            <kbd>Page Up</kbd> <kbd>Page Down</kbd> one year.
+          </p>
+          {/* Under the chart on a narrow screen, the side panel is far below. */}
+          <p className="tl-summary">
+            {monthName(month)}
+            {monthData !== null &&
+              monthData.interestRate !== null &&
+              `: interest rate ${rate(monthData.interestRate)}`}
+            {monthData !== null &&
+              monthData.inflation !== null &&
+              `, inflation ${inflationText(monthData.inflation)}`}
+            . <a href="#what-was-true">What was true in {monthName(month)}</a>
           </p>
         </section>
         <Side
@@ -479,7 +490,7 @@ function Rows({
     .range([incomeHeight - 2, 14]);
 
   // Capital allocation, all on one dollar scale
-  const stripHeight = 34;
+  const stripHeight = 64;
   const most =
     max(spans.flatMap((each) => kinds.map((kind) => valueOf(figureOf(each, kind.key)) ?? 0))) ?? 1;
   const yStrip = scaleLinear()
@@ -529,19 +540,25 @@ function Rows({
   const events = view.details.events;
   const eventsFrom = view.details.eventsFrom;
   const covered = eventsFrom === null ? null : day(eventsFrom);
-  const eventsHeight = 44;
-  let lastX = -100;
-  let lift = 0;
-  const placedEvents = events
+  // Events filed close together stack upwards, each on the lowest level
+  // with room, so every one can be seen and pointed at.
+  const levels: Array<number> = [];
+  const stacked = events
     .filter(
       (event) => day(event.filedOn) >= spans[0]!.start && day(event.filedOn) <= spans.at(-1)!.end,
     )
     .map((event) => {
       const px = x(day(event.filedOn));
-      lift = px - lastX < 10 ? (lift === 0 ? -9 : 0) : 0;
-      lastX = px;
-      return { event, px, cy: eventsHeight / 2 + lift };
+      let level = levels.findIndex((lastX) => px - lastX >= 12);
+      if (level === -1) {
+        level = levels.length;
+        levels.push(px);
+      } else levels[level] = px;
+      return { event, px, level };
     });
+  const eventsHeight = 44 + 12 * Math.max(0, levels.length - 1);
+  const eventsLine = eventsHeight - 22;
+  const placedEvents = stacked.map((each) => ({ ...each, cy: eventsLine - 12 * each.level }));
 
   // Where years are too narrow for every label, every other one is named,
   // and always the chosen one.
@@ -688,70 +705,82 @@ function Rows({
                   <svg viewBox="0 0 14 14">
                     <rect x="1" y="1" width="12" height="12" rx="3" fill={colors.barChosen} />
                   </svg>
-                  Revenue
+                  <span>Revenue</span>
                 </span>
                 <span>
                   <svg viewBox="0 0 14 14">
-                    <rect x="1" y="1" width="12" height="12" rx="3" fill={colors.keptChosen} />
+                    <rect
+                      x="1"
+                      y="1"
+                      width="12"
+                      height="12"
+                      rx="3"
+                      fill={colors.keptChosen}
+                      stroke="var(--color-surface-1)"
+                      strokeWidth="2"
+                    />
                   </svg>
-                  Net income, inside revenue
+                  <span>Net income, inside revenue</span>
                 </span>
               </span>
             </TimelineHead>
-            <svg
-              width={W}
-              height={incomeHeight}
-              role="img"
-              aria-label={`Revenue and net income for each fiscal year from ${spans[0]!.fiscalYear} to ${spans.at(-1)!.fiscalYear}`}
-            >
-              {yIncome.ticks(2).map((tick) =>
-                tick === 0 ? null : (
-                  <g key={tick}>
-                    <line
-                      className="grid-line"
-                      x1={pad.left}
-                      x2={W - pad.right}
-                      y1={yIncome(tick)}
-                      y2={yIncome(tick)}
-                    />
-                    <text
-                      className="tl-text"
-                      x={pad.left - 8}
-                      y={yIncome(tick) + 4}
-                      textAnchor="end"
-                    >
-                      {axisMoney(tick)}
-                    </text>
-                  </g>
-                ),
-              )}
-              {spans.map((each) => {
-                const { left, width } = barBox(each);
-                const revenue = valueOf(each.terms.revenue) ?? 0;
-                const net = Math.max(0, valueOf(each.terms.netIncome) ?? 0);
-                const tipText = `Fiscal ${each.fiscalYear}: revenue ${money(revenue)}, net income ${money(valueOf(each.terms.netIncome) ?? 0)}`;
-                return (
-                  <g key={each.fiscalYear} data-tip={tipText} data-month={each.endOn.slice(0, 7)}>
-                    <rect
-                      x={left}
-                      width={width}
-                      y={yIncome(revenue)}
-                      height={yIncome(0) - yIncome(revenue)}
-                      rx={3}
-                      fill={isChosen(each) ? colors.barChosen : colors.bar}
-                    />
-                    <rect
-                      x={left + 3}
-                      width={Math.max(0, width - 6)}
-                      y={yIncome(net)}
-                      height={yIncome(0) - yIncome(net)}
-                      rx={2}
-                      fill={isChosen(each) ? colors.keptChosen : colors.kept}
-                    />
-                  </g>
-                );
-              })}
-            </svg>
+            <div className="tl-plot">
+              <Ticks
+                height={incomeHeight}
+                ticks={yIncome
+                  .ticks(3)
+                  .map((tick) => ({ y: yIncome(tick), text: axisMoney(tick) }))}
+              />
+              <svg
+                width={W}
+                height={incomeHeight}
+                role="img"
+                aria-label={`Revenue and net income for each fiscal year from ${spans[0]!.fiscalYear} to ${spans.at(-1)!.fiscalYear}`}
+              >
+                {yIncome
+                  .ticks(3)
+                  .map((tick) =>
+                    tick === 0 ? null : (
+                      <line
+                        key={tick}
+                        className="grid-line"
+                        x1={pad.left}
+                        x2={W - pad.right}
+                        y1={yIncome(tick)}
+                        y2={yIncome(tick)}
+                      />
+                    ),
+                  )}
+                {spans.map((each) => {
+                  const { left, width } = barBox(each);
+                  const revenue = valueOf(each.terms.revenue) ?? 0;
+                  const net = Math.max(0, valueOf(each.terms.netIncome) ?? 0);
+                  const tipText = `Fiscal ${each.fiscalYear}: revenue ${money(revenue)}, net income ${money(valueOf(each.terms.netIncome) ?? 0)}`;
+                  return (
+                    <g key={each.fiscalYear} data-tip={tipText} data-month={each.endOn.slice(0, 7)}>
+                      <rect
+                        x={left}
+                        width={width}
+                        y={yIncome(revenue)}
+                        height={yIncome(0) - yIncome(revenue)}
+                        rx={3}
+                        fill={isChosen(each) ? colors.barChosen : colors.bar}
+                      />
+                      <rect
+                        x={left + 3}
+                        width={Math.max(0, width - 6)}
+                        y={yIncome(net)}
+                        height={yIncome(0) - yIncome(net)}
+                        rx={2}
+                        fill={isChosen(each) ? colors.keptChosen : colors.kept}
+                        stroke="var(--color-surface-1)"
+                        strokeWidth={2}
+                      />
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
           </div>
 
           <div className="tl-row">
@@ -765,7 +794,9 @@ function Rows({
               return (
                 <div className="tl-sub" key={kind.key}>
                   <div className="tl-sub-head">
-                    <span>{kind.label}</span>
+                    <span>
+                      {kind.label}, fiscal {span.fiscalYear}:
+                    </span>
                     {figure.kind === "gap" ? (
                       <GapMark />
                     ) : (
@@ -796,9 +827,9 @@ function Rows({
                             data-tip={label}
                             data-month={each.endOn.slice(0, 7)}
                             x={left + 0.5}
-                            y={4.5}
+                            y={stripHeight - 9.5}
                             width={width - 1}
-                            height={stripHeight - 6}
+                            height={8}
                             rx={3}
                             fill="transparent"
                             stroke="var(--color-text-3)"
@@ -845,10 +876,15 @@ function Rows({
                 <Term name="Current report (8-K)">current reports (8-K)</Term>
               </span>
               <span className="tl-legend">
-                <span>{officerIcon("var(--color-text-1)")}Change among directors or officers</span>
+                <span>
+                  {officerIcon("var(--color-text-1)")}
+                  <span>Change among directors or officers</span>
+                </span>
                 <span>
                   {businessIcon("var(--color-text-1)")}
-                  <Term name="Acquisition" /> or sale of a business
+                  <span>
+                    <Term name="Acquisition" /> or sale of a business
+                  </span>
                 </span>
               </span>
             </TimelineHead>
@@ -861,8 +897,8 @@ function Rows({
               <line
                 x1={pad.left}
                 x2={W - pad.right}
-                y1={eventsHeight / 2}
-                y2={eventsHeight / 2}
+                y1={eventsLine}
+                y2={eventsLine}
                 stroke="var(--color-hairline)"
               />
               {covered !== null && covered > spans[0]!.start && (
@@ -901,7 +937,7 @@ function Rows({
                     data-month={event.filedOn.slice(0, 7)}
                     className="cursor-pointer"
                   >
-                    <circle cx={px} cy={cy} r={10} fill="transparent" />
+                    <circle cx={px} cy={cy} r={8} fill="transparent" />
                     {event.kind === "business" ? (
                       <path
                         d={`M${px},${cy - 6.5}L${px + 6.5},${cy}L${px},${cy + 6.5}L${px - 6.5},${cy}Z`}
@@ -940,7 +976,9 @@ function Rows({
                       strokeLinecap="round"
                     />
                   </svg>
-                  <Term name="Interest rate" />
+                  <span>
+                    <Term name="Interest rate" />
+                  </span>
                 </span>
                 <span>
                   <svg viewBox="0 0 14 14">
@@ -951,7 +989,9 @@ function Rows({
                       strokeDasharray="3 2.5"
                     />
                   </svg>
-                  <Term name="Inflation" />, dashed
+                  <span>
+                    <Term name="Inflation" />, dashed
+                  </span>
                 </span>
                 <span>
                   <svg viewBox="0 0 14 14">
@@ -965,7 +1005,9 @@ function Rows({
                       stroke="var(--color-hairline-strong)"
                     />
                   </svg>
-                  <Term name="Recession" />, across every row
+                  <span>
+                    <Term name="Recession" />, across every row
+                  </span>
                 </span>
               </span>
             </TimelineHead>
@@ -975,76 +1017,73 @@ function Rows({
                 style={{ paddingLeft: pad.left }}
               >
                 {economyState === "loading"
-                  ? "Fetching the US central bank's public data."
-                  : "The US central bank's public data could not be fetched. It is a gap here until it can be."}
+                  ? "Fetching interest rate, inflation and recessions from FRED."
+                  : "Interest rate, inflation and recessions could not be fetched from FRED. They are a gap here until they can be."}
               </p>
             ) : (
-              <svg
-                width={W}
-                height={economyHeight}
-                role="img"
-                aria-label="Interest rate and inflation for each month, with recessions shaded"
-              >
-                {yEconomy.ticks(3).map((tick) => (
-                  <g key={tick}>
+              <div className="tl-plot">
+                <Ticks
+                  height={economyHeight}
+                  ticks={yEconomy.ticks(3).map((tick) => ({ y: yEconomy(tick), text: `${tick}%` }))}
+                />
+                <svg
+                  width={W}
+                  height={economyHeight}
+                  role="img"
+                  aria-label="Interest rate and inflation for each month, with recessions shaded"
+                >
+                  {yEconomy.ticks(3).map((tick) => (
                     <line
+                      key={tick}
                       className={tick === 0 ? "baseline" : "grid-line"}
                       x1={pad.left}
                       x2={W - pad.right}
                       y1={yEconomy(tick)}
                       y2={yEconomy(tick)}
                     />
-                    <text
-                      className="tl-text"
-                      x={pad.left - 8}
-                      y={yEconomy(tick) + 4}
-                      textAnchor="end"
-                    >
-                      {tick}%
-                    </text>
-                  </g>
-                ))}
-                {(["interestRate", "inflation"] as const).map((key) => {
-                  const path = lineShape<EconomyMonth>()
-                    .defined((each) => each[key] !== null)
-                    .x((each) => x(middle(each.month)))
-                    .y((each) => yEconomy(each[key] ?? 0))
-                    .curve(curveMonotoneX)(months);
-                  return (
-                    <path
-                      key={key}
-                      d={path ?? ""}
-                      fill="none"
-                      stroke={
-                        key === "interestRate"
-                          ? "var(--color-line-rate)"
-                          : "var(--color-line-inflation)"
-                      }
-                      strokeWidth={2}
-                      strokeDasharray={key === "inflation" ? "5 3" : undefined}
-                      strokeLinejoin="round"
-                    />
-                  );
-                })}
-                {lastMonth !== undefined &&
-                  endLabels.map((label) => (
-                    <g key={label.key}>
-                      <circle
-                        cx={x(middle(lastMonth.month))}
-                        cy={yEconomy(lastMonth[label.key]!)}
-                        r={3}
-                        fill={label.color}
-                      />
-                      <text
-                        className="tl-text tl-end"
-                        x={x(middle(lastMonth.month)) + 8}
-                        y={label.y + 4.5}
-                      >
-                        {label.text}
-                      </text>
-                    </g>
                   ))}
-              </svg>
+                  {(["interestRate", "inflation"] as const).map((key) => {
+                    const path = lineShape<EconomyMonth>()
+                      .defined((each) => each[key] !== null)
+                      .x((each) => x(middle(each.month)))
+                      .y((each) => yEconomy(each[key] ?? 0))
+                      .curve(curveMonotoneX)(months);
+                    return (
+                      <path
+                        key={key}
+                        d={path ?? ""}
+                        fill="none"
+                        stroke={
+                          key === "interestRate"
+                            ? "var(--color-line-rate)"
+                            : "var(--color-line-inflation)"
+                        }
+                        strokeWidth={2}
+                        strokeDasharray={key === "inflation" ? "5 3" : undefined}
+                        strokeLinejoin="round"
+                      />
+                    );
+                  })}
+                  {lastMonth !== undefined &&
+                    endLabels.map((label) => (
+                      <g key={label.key}>
+                        <circle
+                          cx={x(middle(lastMonth.month))}
+                          cy={yEconomy(lastMonth[label.key]!)}
+                          r={3}
+                          fill={label.color}
+                        />
+                        <text
+                          className="tl-text tl-end"
+                          x={x(middle(lastMonth.month)) + 8}
+                          y={label.y + 4.5}
+                        >
+                          {label.text}
+                        </text>
+                      </g>
+                    ))}
+                </svg>
+              </div>
             )}
           </div>
 
@@ -1052,7 +1091,7 @@ function Rows({
             className="tl-axis"
             role="slider"
             tabIndex={0}
-            aria-label="Point in time"
+            aria-label="Month on the timeline"
             aria-valuemin={0}
             aria-valuemax={Math.max(0, months.length - 1)}
             aria-valuenow={Math.max(0, monthIndex)}
@@ -1115,6 +1154,26 @@ function Rows({
         </div>
       </div>
       {tip.element}
+    </div>
+  );
+}
+
+// The scale of a chart stays in view while the timeline scrolls sideways,
+// in a margin the bars never enter.
+function Ticks({
+  height,
+  ticks,
+}: {
+  readonly height: number;
+  readonly ticks: ReadonlyArray<{ readonly y: number; readonly text: string }>;
+}) {
+  return (
+    <div className="tl-ticks" style={{ width: pad.left, height }} aria-hidden="true">
+      {ticks.map((tick) => (
+        <span key={tick.text} style={{ top: tick.y }}>
+          {tick.text}
+        </span>
+      ))}
     </div>
   );
 }
@@ -1186,8 +1245,13 @@ function Side({
     .find((figure) => figure.kind === "reported");
 
   return (
-    <aside className="panel panel-pad tl-side" aria-label="What was true then" ref={side}>
-      <div aria-live="polite">
+    <aside
+      className="panel panel-pad tl-side"
+      id="what-was-true"
+      aria-label="What was true then"
+      ref={side}
+    >
+      <div>
         <div className="eyebrow">What was true in</div>
         <h2>{monthName(month)}</h2>
         <div className="eyebrow mt-1">
@@ -1220,7 +1284,7 @@ function Side({
                 target="_blank"
                 rel="noreferrer"
               >
-                Open the filing
+                Open the annual report (10-K)
               </a>
             </>
           )}
@@ -1255,7 +1319,7 @@ function Side({
                 target="_blank"
                 rel="noreferrer"
               >
-                Open the filing
+                Open the annual report (10-K)
               </a>
             </>
           )}
@@ -1288,16 +1352,13 @@ function Side({
                   </span>
                 </span>
                 <p>
-                  {event.kind === "business"
-                    ? "Filed under item 2.01: the company completed buying or selling a business or large assets. The item does not say which, or what changed hands."
-                    : "Filed under item 5.02, which covers a director or senior officer arriving or leaving, and changes to their pay. The item does not say who, so it cannot tell whether the chief executive or the finance chief changed."}
-                  {event.amendedOn !== null && ` Amended on ${longDate(event.amendedOn)}.`}{" "}
+                  {event.amendedOn !== null && `Amended on ${longDate(event.amendedOn)}. `}
                   <a
                     href={filingUrl(view.cik, event.accession, event.document)}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Open the {event.form}
+                    Open the {event.form} filed on {longDate(event.filedOn)}
                   </a>
                 </p>
               </li>
@@ -1307,6 +1368,19 @@ function Side({
           <p className="side-note mt-0">
             No <Term name="Current report (8-K)">current report (8-K)</Term> with item 5.02 or 2.01
             in fiscal {span.fiscalYear}.
+          </p>
+        )}
+        {inYear.some((event) => event.kind === "officers") && (
+          <p className="side-note">
+            A change among directors or officers is filed under item 5.02, which covers a director
+            or senior officer arriving or leaving, and changes to their pay. The item does not say
+            who, so it cannot tell whether the chief executive or the finance chief changed.
+          </p>
+        )}
+        {inYear.some((event) => event.kind === "business") && (
+          <p className="side-note">
+            An acquisition or sale is filed under item 2.01: the company completed buying or selling
+            a business or large assets. The item does not say which, or what changed hands.
           </p>
         )}
         {covered !== null && covered > span.startOn && (
@@ -1321,7 +1395,7 @@ function Side({
         </h3>
         {monthData === null ? (
           <p className="side-note mt-0">
-            <GapMark /> The US central bank's data for this month is not held yet.
+            <GapMark /> FRED has no figures for this month yet.
           </p>
         ) : (
           <>
@@ -1355,13 +1429,13 @@ function Side({
         )}
         {sources !== null && (
           <p className="side-note">
-            From the Federal Reserve's public data, through FRED:{" "}
+            From FRED, the Federal Reserve's public database:{" "}
             <a href={sources.interestRate} target="_blank" rel="noreferrer">
               interest rate
             </a>
             ,{" "}
             <a href={sources.inflation} target="_blank" rel="noreferrer">
-              prices
+              inflation
             </a>
             ,{" "}
             <a href={sources.recession} target="_blank" rel="noreferrer">

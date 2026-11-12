@@ -72,6 +72,11 @@
 }
 
 @layer base {
+  /* Whatever gets focus scrolls clear of the bottom bar and its fade. */
+  html {
+    scroll-padding-block-end: 200px;
+  }
+
   /* No scrollbar is ever drawn. Whatever scrolls still scrolls. */
   * {
     scrollbar-width: none;
@@ -2568,8 +2573,9 @@
     transition: opacity 160ms var(--ease-out-soft);
   }
 
+  /* The fade starts after the scale, which stays in view. */
   .tl-wrap::before {
-    left: 0;
+    left: 52px;
     background: linear-gradient(to left, transparent, var(--color-surface-1));
   }
 
@@ -2655,7 +2661,7 @@
     color: var(--color-text-2);
   }
 
-  .tl-legend span {
+  .tl-legend > span {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -2681,6 +2687,33 @@
 
   .tl-sub-head .numbers {
     color: var(--color-text-1);
+  }
+
+  .tl-plot {
+    display: grid;
+  }
+
+  .tl-plot > * {
+    grid-area: 1 / 1;
+  }
+
+  .tl-ticks {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    justify-self: start;
+    background: var(--color-surface-1);
+    pointer-events: none;
+  }
+
+  .tl-ticks span {
+    position: absolute;
+    right: 8px;
+    transform: translateY(-50%);
+    color: var(--color-text-3);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
   .tl-text {
@@ -2738,6 +2771,23 @@
     margin: 8px 0 0;
     font-size: var(--text-xs);
     color: var(--color-text-3);
+  }
+
+  .tl-summary {
+    display: none;
+    margin: 8px 0 0;
+    font-size: var(--text-s);
+    color: var(--color-text-2);
+  }
+
+  .tl-summary a {
+    color: var(--color-text-1);
+  }
+
+  @media (max-width: 1180px) {
+    .tl-summary {
+      display: block;
+    }
   }
 
   .tl-side {
