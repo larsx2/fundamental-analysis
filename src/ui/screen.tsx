@@ -114,14 +114,16 @@ export function Screen({
   active,
   children,
   className = "",
+  settle = true,
 }: {
   readonly active: ScreenName;
   readonly children: ReactNode;
   readonly className?: string;
+  readonly settle?: boolean;
 }) {
   return (
     <>
-      <main className={`page settle ${className}`}>{children}</main>
+      <main className={`page ${settle ? "settle" : ""} ${className}`}>{children}</main>
       <BottomBar active={active} />
     </>
   );

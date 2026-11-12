@@ -38,7 +38,7 @@ export const useHere = () =>
   useRouterState({
     select: (state) => {
       const [first = "", second = ""] = state.location.pathname.split("/").filter(Boolean);
-      const reserved = new Set(["companies", "glossary"]);
+      const reserved = new Set(["companies", "glossary", "ask", "api", "logos"]);
       const ticker = first !== "" && !reserved.has(first) ? decodeURIComponent(first) : null;
       const screen = companyScreens.find((each) => each.path === second)?.path ?? null;
       const search = state.location.search as { year?: unknown };

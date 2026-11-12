@@ -11,10 +11,11 @@ import {
 } from "react";
 import { collectCompany, companiesQuery, saveContact } from "../functions/companies";
 import { plainName } from "./logo-tile";
+import { openWhenReady } from "./notices";
 
 export type Collectable = { readonly cik: number; readonly name: string };
 
-type Ask = (company: Collectable) => void;
+type Ask = (company: Collectable, options?: { readonly open?: boolean }) => void;
 
 const CollectContext = createContext<Ask>(() => {});
 
@@ -23,7 +24,7 @@ const CollectContext = createContext<Ask>(() => {});
 export const useAskToCollect = () => useContext(CollectContext);
 
 type Open =
-  | { readonly kind: "collect"; readonly company: Collectable }
+  | { readonly kind: "collect"; readonly company: Collectable; readonly open: boolean }
   | {
       readonly kind: "not covered";
       readonly company: Collectable;
@@ -37,8 +38,8 @@ export function CollectProvider({ children }: { readonly children: ReactNode }) 
   // once leaves the closing backdrop over the page, and nothing can be clicked.
   const [open, setOpen] = useState<Open | null>(null);
   const [showing, setShowing] = useState(false);
-  const ask = useCallback<Ask>((company) => {
-    setOpen({ kind: "collect", company });
+  const ask = useCallback<Ask>((company, options) => {
+    setOpen({ kind: "collect", company, open: options?.open === true });
     setShowing(true);
   }, []);
   const close = () => setShowing(false);
@@ -55,6 +56,7 @@ export function CollectProvider({ children }: { readonly children: ReactNode }) 
           {open?.kind === "collect" && (
             <CollectSheet
               company={open.company}
+              openOnReady={open.open}
               close={close}
               notCovered={(reason) =>
                 setOpen({ kind: "not covered", company: open.company, reason })
@@ -86,10 +88,12 @@ export function CollectProvider({ children }: { readonly children: ReactNode }) 
 
 function CollectSheet({
   company,
+  openOnReady,
   close,
   notCovered,
 }: {
   readonly company: Collectable;
+  readonly openOnReady: boolean;
   readonly close: () => void;
   readonly notCovered: (reason: string) => void;
 }) {
@@ -131,6 +135,7 @@ function CollectSheet({
     setSending(true);
     try {
       if (asking) await saveContact({ data: { name: name.trim(), email: email.trim() } });
+      if (openOnReady) openWhenReady(company.cik);
       const answer = await collectCompany({ data: { cik: company.cik } });
       await queryClient.invalidateQueries({ queryKey: ["companies"] });
       await queryClient.invalidateQueries({ queryKey: ["company"] });

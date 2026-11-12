@@ -197,7 +197,11 @@ function Welcome() {
       </p>
       <div className="suggest" role="group" aria-labelledby="suggest-label">
         {suggestions.map((company) => (
-          <button key={company.cik} type="button" onClick={() => askToCollect(company)}>
+          <button
+            key={company.cik}
+            type="button"
+            onClick={() => askToCollect(company, { open: true })}
+          >
             <LogoTile name={company.name} cik={company.cik} size={32} />
             <span>{company.name}</span>
             <span className="ticker">{company.ticker}</span>
@@ -358,7 +362,7 @@ function Finder({ line }: { readonly line: ReadonlyArray<ListedCompany> }) {
       row?.scrollIntoView({ block: "center", behavior: "smooth" });
       row?.focus({ preventScroll: true });
     } else {
-      askToCollect({ cik: company.cik, name: company.name });
+      askToCollect({ cik: company.cik, name: company.name }, { open: true });
     }
   };
 
@@ -423,7 +427,12 @@ function Finder({ line }: { readonly line: ReadonlyArray<ListedCompany> }) {
                     onMouseMove={() => index !== at && setActive(index)}
                     onClick={() => choose(company)}
                   >
-                    <LogoTile name={plainName(company.name)} cik={company.cik} size={36} />
+                    <LogoTile
+                      key={company.state}
+                      name={plainName(company.name)}
+                      cik={company.cik}
+                      size={36}
+                    />
                     <span className="result-main">
                       <span className="result-name">
                         {highlight(plainName(company.name), text)}

@@ -22,10 +22,43 @@ const answerSchema = {
   additionalProperties: false,
 } as const;
 
-export const promptFor = (question: string, company: { name: string; ticker: string }) =>
-  `You answer one question about ${company.name} (ticker ${company.ticker}), a US public company, for someone new to finance. You work inside a learning tool that holds the company's figures from its annual reports (10-K).
+const general = (
+  question: string,
+  earlier: ReadonlyArray<{ readonly question: string; readonly answer: string }>,
+) =>
+  `You answer one general question about company finances for someone new to finance. You work inside a learning tool that explains how US public companies' annual reports (10-K) work, and holds a glossary of their terms.
 
-Use only the tools of the "lookups" server. Do not run commands, read files or search the web.
+Use only the tools of the "lookups" server. Do not run commands, read files or search the web. Call the glossary lookup for the words the question is about, each at most once, and answer from what it says. If the question is about one company's figures but names no company, say so in the lead and ask the reader to name the company. Never answer from memory, give no advice on buying or selling, and make no forecasts.
+
+Answer
+Reply with JSON that matches the schema:
+- lead: one short sentence that answers the question.
+- sentences: one to three short sentences that explain it, in the glossary's words.
+- drawing: "" .
+- next: three short questions a beginner might ask next, about words or ideas, or about a company such as "Is Apple growing?".
+
+${
+  earlier.length === 0
+    ? ""
+    : `Earlier in this conversation:\n${earlier
+        .map((turn) => `Question: ${turn.question}\nAnswer: ${turn.answer}`)
+        .join("\n\n")}\n\nAnswer the new question in that context.\n\n`
+}The question: ${question}`;
+
+export const promptFor = (
+  question: string,
+  companies: ReadonlyArray<{ readonly name: string; readonly ticker: string }>,
+  fiscalYear: number | null = null,
+  earlier: ReadonlyArray<{ readonly question: string; readonly answer: string }> = [],
+): string => {
+  if (companies.length === 0) return general(question, earlier);
+  const named = companies.map((company) => `${company.name} (ticker ${company.ticker})`);
+  const about =
+    named.length === 1 ? named[0]! : `${named.slice(0, -1).join(", ")} and ${named.at(-1)}`;
+  const several = companies.length > 1;
+  return `You answer one question about ${about}, ${several ? "US public companies" : "a US public company"}, for someone new to finance. You work inside a learning tool that holds ${several ? "each company's" : "the company's"} figures from its annual reports (10-K).${several ? " Read the same lookups for each company, passing its ticker, so the answer compares like with like." : ""}
+
+Use only the tools of the "lookups" server. Do not run commands, read files or search the web. Call as few lookups as the answer needs, each at most once. Call the glossary lookup only when the question asks what a word means: the screen already explains every term.
 
 Figures
 - Copy every number in your answer character for character from the "figures" of a lookup result, with its dollar sign, unit, sign and rounding. Never calculate, round, convert, subtract or write a number that is not there. If you need a figure that is not there, call the lookup that gives it, or say the tool does not hold it.
@@ -41,9 +74,18 @@ Reply with JSON that matches the schema:
 - lead: one short sentence that answers the question.
 - sentences: one to three short sentences with the figures behind it.
 - drawing: the name of the one lookup whose drawing shows the answer best (trend, dollar, cash, balance, uses_of_cash, returns, context, marks or company), or "" for none.
-- next: three short questions about ${company.name} that these lookups can answer.
+- next: three short questions about ${several ? "these companies" : companies[0]!.name} that these lookups can answer.
 
-The question: ${question}`;
+${fiscalYear === null ? "When the question names no year, answer for the latest fiscal year, unless the conversation so far is about another year.\n\n" : `The reader has fiscal ${fiscalYear} chosen. When the question names no fiscal year, answer for fiscal ${fiscalYear}, and pass fiscalYear ${fiscalYear} to every lookup that takes one.\n\n`}${
+    earlier.length === 0
+      ? ""
+      : `Earlier in this conversation (it may have been about other companies; this question is about ${about}):\n${earlier
+          .map((turn) => `Question: ${turn.question}\nAnswer: ${turn.answer}`)
+          .join(
+            "\n\n",
+          )}\n\nAnswer the new question in that context: words like "it", "that" or "the year before" refer to what was discussed. Still take every figure from a lookup, even one given earlier.\n\n`
+  }The question: ${question}`;
+};
 
 const isLookupResult = (value: unknown): value is LookupResult =>
   typeof value === "object" &&
@@ -80,7 +122,9 @@ const toEvent = (event: ThreadEvent): AskEvent | null => {
   if (event.type !== "item.started" && event.type !== "item.completed") return null;
   const item = event.item;
   if (item.type === "mcp_tool_call") {
-    if (event.type === "item.started") return { type: "reading", id: item.id, lookup: item.tool };
+    if (event.type === "item.started") {
+      return { type: "reading", id: item.id, lookup: item.tool, input: item.arguments ?? null };
+    }
     const structured = item.result?.structured_content;
     const text = item.result?.content.find((block) => block.type === "text");
     return {
@@ -94,16 +138,29 @@ const toEvent = (event: ThreadEvent): AskEvent | null => {
           (text !== undefined && "text" in text ? text.text : "The lookup gave nothing back.")),
     };
   }
-  if (item.type === "agent_message" && event.type === "item.completed") {
+  if (event.type !== "item.completed") return null;
+  if (item.type === "agent_message") {
     const answer = readAnswer(item.text);
-    return answer === null ? null : { type: "answer", answer };
+    return answer === null
+      ? { type: "thinking", id: item.id, text: item.text.trim() }
+      : { type: "answer", answer };
+  }
+  if (item.type === "reasoning") {
+    const text = item.text
+      .split("\n")
+      .map((line) => line.replaceAll("**", "").trim())
+      .filter((line) => line !== "")
+      .join(". ");
+    return text === "" ? null : { type: "thinking", id: item.id, text };
   }
   return null;
 };
 
 export async function* ask(input: {
   readonly question: string;
-  readonly company: { readonly name: string; readonly ticker: string };
+  readonly companies: ReadonlyArray<{ readonly name: string; readonly ticker: string }>;
+  readonly fiscalYear: number | null;
+  readonly earlier: ReadonlyArray<{ readonly question: string; readonly answer: string }>;
   readonly lookupsUrl: string;
   readonly signal: AbortSignal;
 }): AsyncGenerator<AskEvent> {
@@ -111,6 +168,7 @@ export async function* ask(input: {
   if (input.signal.aborted) return;
   const codex = new Codex({
     config: {
+      model_reasoning_summary: "concise",
       mcp_servers: {
         lookups: {
           command: process.execPath,
@@ -128,7 +186,7 @@ export async function* ask(input: {
     approvalPolicy: "never",
     networkAccessEnabled: false,
     webSearchMode: "disabled",
-    modelReasoningEffort: "low",
+    modelReasoningEffort: "medium",
   });
   // Stopping Codex before it has read the question breaks its input pipe, which ends the whole app.
   const stop = new AbortController();
@@ -138,10 +196,13 @@ export async function* ask(input: {
   };
   input.signal.addEventListener("abort", onAbort, { once: true });
   try {
-    const { events } = await thread.runStreamed(promptFor(input.question, input.company), {
-      outputSchema: answerSchema,
-      signal: stop.signal,
-    });
+    const { events } = await thread.runStreamed(
+      promptFor(input.question, input.companies, input.fiscalYear, input.earlier),
+      {
+        outputSchema: answerSchema,
+        signal: stop.signal,
+      },
+    );
     let answered = false;
     for await (const event of events) {
       if (!started) {
