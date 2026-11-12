@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { chooseTerms, type NumberRow } from "./choose-terms";
+import {
+  chooseTerms,
+  grossProfitCheck,
+  type NumberRow,
+  operatingIncomeCheck,
+} from "./choose-terms";
 
 const row = (tag: string, fiscalYear: number, value: number, filedOn = `${fiscalYear}-10-30`) => ({
   tag,
@@ -64,6 +69,7 @@ describe("chooseTerms", () => {
         { name: "Revenue", value: 242_290 },
         { name: "Cost of revenue", value: -212_586 },
       ],
+      setAside: null,
       doubtful: null,
     });
   });
@@ -91,7 +97,7 @@ describe("chooseTerms", () => {
     });
   });
 
-  it("marks a reported gross profit that does not add up as doubtful, with its check", () => {
+  it("uses revenue minus cost of revenue when a filed gross profit disagrees, keeping the filed one as doubtful", () => {
     const terms = yearOf(
       [
         row("Revenues", 2019, 152_703),
@@ -101,23 +107,39 @@ describe("chooseTerms", () => {
       2019,
     );
     expect(terms.grossProfit).toMatchObject({
-      value: 16_465,
-      doubtful: "Gross profit should equal revenue minus cost of revenue.",
+      kind: "calculated",
+      value: 19_817,
+      setAside: { value: 16_465, doubtful: grossProfitCheck },
     });
   });
 
-  it("marks an operating income that does not add up as doubtful, within a rounding allowance", () => {
+  it("shows what lies between the named expenses and operating income as other operating expenses", () => {
+    const terms = yearOf(
+      [
+        row("Revenues", 2015, 93_580),
+        row("CostOfRevenue", 2015, 33_038),
+        row("GrossProfit", 2015, 60_542),
+        row("ResearchAndDevelopmentExpense", 2015, 12_046),
+        row("SellingGeneralAndAdministrativeExpense", 2015, 20_324),
+        row("OperatingIncomeLoss", 2015, 18_161),
+      ],
+      2015,
+    );
+    expect(terms.otherOperatingExpenses).toMatchObject({ kind: "calculated", value: 10_011 });
+    expect(terms.operatingIncome.doubtful).toBeNull();
+  });
+
+  it("checks operating income against the reported total operating expenses, within a rounding allowance", () => {
     const base = [
-      row("Revenues", 2023, 383_285),
-      row("CostOfGoodsAndServicesSold", 2023, 214_137),
-      row("GrossProfit", 2023, 169_148),
-      row("ResearchAndDevelopmentExpense", 2023, 29_915),
-      row("SellingGeneralAndAdministrativeExpense", 2023, 24_932),
+      row("Revenues", 2015, 93_580),
+      row("CostOfRevenue", 2015, 33_038),
+      row("GrossProfit", 2015, 60_542),
+      row("OperatingExpenses", 2015, 42_381),
     ];
-    const roundedOff = yearOf([...base, row("OperatingIncomeLoss", 2023, 114_302)], 2023);
-    const wrong = yearOf([...base, row("OperatingIncomeLoss", 2023, 104_301)], 2023);
+    const roundedOff = yearOf([...base, row("OperatingIncomeLoss", 2015, 18_162)], 2015);
+    const wrong = yearOf([...base, row("OperatingIncomeLoss", 2015, 28_161)], 2015);
     expect(roundedOff.operatingIncome.doubtful).toBeNull();
-    expect(wrong.operatingIncome.doubtful).toMatch(/^Operating income should equal/);
+    expect(wrong.operatingIncome.doubtful).toBe(operatingIncomeCheck);
   });
 
   it("reports related tags that are on no list", () => {

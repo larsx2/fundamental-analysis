@@ -18,6 +18,8 @@ export type NumberRow = {
 
 export type Source = Pick<NumberRow, "tag" | "value" | "accession" | "filedOn">;
 
+export type SetAside = Source & { readonly doubtful: string };
+
 export type Figure =
   | {
       readonly kind: "reported";
@@ -32,6 +34,7 @@ export type Figure =
         readonly name: string;
         readonly value: number;
       }>;
+      readonly setAside: SetAside | null;
     }
   | { readonly kind: "gap" };
 
@@ -57,6 +60,10 @@ export type TermTable = {
 // drift by a few of those. A tenth of a percent of revenue covers that.
 export const roundingAllowanceShareOfRevenue = 0.001;
 
+export const grossProfitCheck = "Gross profit should equal revenue minus cost of revenue.";
+export const operatingIncomeCheck =
+  "Operating income should equal what the company reports as its total operating expenses taken from gross profit, or its total costs and expenses taken from revenue.";
+
 const toSource = (row: NumberRow): Source => ({
   tag: row.tag,
   value: row.value,
@@ -64,11 +71,13 @@ const toSource = (row: NumberRow): Source => ({
   filedOn: row.filedOn,
 });
 
+type Reported = Extract<Figure, { kind: "reported" }>;
+
 const reported = (
   byTagAndYear: Map<string, ReadonlyArray<NumberRow>>,
   tags: ReadonlyArray<string>,
   fiscalYear: number,
-): Figure | null => {
+): Reported | null => {
   for (const tag of tags) {
     const rows = byTagAndYear.get(`${tag}/${fiscalYear}`);
     if (rows === undefined || rows.length === 0) continue;
@@ -87,35 +96,46 @@ const reported = (
 
 const valueOf = (figure: Figure) => (figure.kind === "gap" ? null : figure.value);
 
-const chooseYear = (
+const gap: Figure = { kind: "gap" };
+
+const termsForYear = (
   byTagAndYear: Map<string, ReadonlyArray<NumberRow>>,
   fiscalYear: number,
-): Record<TermKey, Figure> => {
-  const gap: Figure = { kind: "gap" };
-  const pick = (term: TermKey) => reported(byTagAndYear, termTags[term], fiscalYear) ?? gap;
+): Record<TermKey, CheckedFigure> => {
+  const pick = (term: TermKey): Figure => reported(byTagAndYear, termTags[term], fiscalYear) ?? gap;
 
   const revenue = pick("revenue");
   const costOfRevenue = pick("costOfRevenue");
   const revenueValue = valueOf(revenue);
   const costValue = valueOf(costOfRevenue);
+  const allowance =
+    revenueValue === null ? 0 : Math.abs(revenueValue) * roundingAllowanceShareOfRevenue;
+  const differs = (a: number, b: number) => Math.abs(a - b) > allowance;
 
+  // Gross profit is defined as revenue minus cost of revenue, so a filed
+  // figure that disagrees is set aside, still visible, and the definition
+  // is used. That keeps every fiscal year comparable with the others.
   let grossProfit = pick("grossProfit");
-  if (grossProfit.kind === "gap" && revenueValue !== null && costValue !== null) {
-    grossProfit = {
-      kind: "calculated",
-      value: revenueValue - costValue,
-      from: [
-        { name: termNames.revenue, value: revenueValue },
-        { name: termNames.costOfRevenue, value: -costValue },
-      ],
-    };
+  if (revenueValue !== null && costValue !== null) {
+    const filed = grossProfit.kind === "reported" ? grossProfit : null;
+    if (filed === null || differs(filed.value, revenueValue - costValue)) {
+      grossProfit = {
+        kind: "calculated",
+        value: revenueValue - costValue,
+        from: [
+          { name: termNames.revenue, value: revenueValue },
+          { name: termNames.costOfRevenue, value: -costValue },
+        ],
+        setAside: filed === null ? null : { ...filed.latest, doubtful: grossProfitCheck },
+      };
+    }
   }
 
   let sellingGeneralAndAdministrative = pick("sellingGeneralAndAdministrative");
   if (sellingGeneralAndAdministrative.kind === "gap") {
     const selling = reported(byTagAndYear, partTags.sellingAndMarketing, fiscalYear);
     const general = reported(byTagAndYear, partTags.generalAndAdministrative, fiscalYear);
-    if (selling?.kind === "reported" && general?.kind === "reported") {
+    if (selling !== null && general !== null) {
       sellingGeneralAndAdministrative = {
         kind: "calculated",
         value: selling.value + general.value,
@@ -123,55 +143,70 @@ const chooseYear = (
           { name: "Selling and marketing", value: selling.value },
           { name: "General and administrative", value: general.value },
         ],
+        setAside: null,
       };
     }
   }
 
-  return {
+  const researchAndDevelopment = pick("researchAndDevelopment");
+  const operatingIncome = pick("operatingIncome");
+  const grossProfitValue = valueOf(grossProfit);
+  const operatingIncomeValue = valueOf(operatingIncome);
+
+  // Operating income is the audited line. Whatever lies between it and the
+  // named expenses, such as impairments and restructuring, is shown as
+  // other operating expenses, so every year adds up to operating income.
+  let otherOperatingExpenses: Figure = gap;
+  if (grossProfitValue !== null && operatingIncomeValue !== null) {
+    const research = valueOf(researchAndDevelopment) ?? 0;
+    const selling = valueOf(sellingGeneralAndAdministrative) ?? 0;
+    otherOperatingExpenses = {
+      kind: "calculated",
+      value: grossProfitValue - research - selling - operatingIncomeValue,
+      from: [
+        { name: termNames.grossProfit, value: grossProfitValue },
+        { name: termNames.researchAndDevelopment, value: -research },
+        { name: termNames.sellingGeneralAndAdministrative, value: -selling },
+        { name: termNames.operatingIncome, value: -operatingIncomeValue },
+      ],
+      setAside: null,
+    };
+  }
+
+  const totalOperatingExpenses = reported(
+    byTagAndYear,
+    partTags.operatingExpensesTotal,
+    fiscalYear,
+  );
+  const totalCostsAndExpenses = reported(byTagAndYear, partTags.costsAndExpensesTotal, fiscalYear);
+  const expectedOperatingIncome =
+    totalOperatingExpenses !== null && grossProfitValue !== null
+      ? grossProfitValue - totalOperatingExpenses.value
+      : totalCostsAndExpenses !== null && revenueValue !== null
+        ? revenueValue - totalCostsAndExpenses.value
+        : null;
+  const operatingIncomeDoubtful =
+    expectedOperatingIncome !== null &&
+    operatingIncomeValue !== null &&
+    differs(operatingIncomeValue, expectedOperatingIncome)
+      ? operatingIncomeCheck
+      : null;
+
+  const terms: Record<TermKey, Figure> = {
     revenue,
     costOfRevenue,
     grossProfit,
-    researchAndDevelopment: pick("researchAndDevelopment"),
+    researchAndDevelopment,
     sellingGeneralAndAdministrative,
-    operatingIncome: pick("operatingIncome"),
+    otherOperatingExpenses,
+    operatingIncome,
     netIncome: pick("netIncome"),
   };
-};
-
-const checkYear = (terms: Record<TermKey, Figure>): Record<TermKey, CheckedFigure> => {
-  const doubtful = Object.fromEntries(termKeys.map((term) => [term, null])) as Record<
-    TermKey,
-    string | null
-  >;
-  const revenue = valueOf(terms.revenue);
-  const allowance = revenue === null ? 0 : Math.abs(revenue) * roundingAllowanceShareOfRevenue;
-  const differs = (a: number, b: number) => Math.abs(a - b) > allowance;
-
-  const cost = valueOf(terms.costOfRevenue);
-  const grossProfit = valueOf(terms.grossProfit);
-  if (
-    terms.grossProfit.kind === "reported" &&
-    revenue !== null &&
-    cost !== null &&
-    grossProfit !== null &&
-    differs(grossProfit, revenue - cost)
-  ) {
-    doubtful.grossProfit = "Gross profit should equal revenue minus cost of revenue.";
-  }
-
-  const operatingIncome = valueOf(terms.operatingIncome);
-  if (operatingIncome !== null && grossProfit !== null && revenue !== null) {
-    const expenses =
-      (valueOf(terms.researchAndDevelopment) ?? 0) +
-      (valueOf(terms.sellingGeneralAndAdministrative) ?? 0);
-    if (differs(operatingIncome, grossProfit - expenses)) {
-      doubtful.operatingIncome =
-        "Operating income should equal gross profit minus research and development and selling, general and administrative.";
-    }
-  }
-
   return Object.fromEntries(
-    termKeys.map((term) => [term, { ...terms[term], doubtful: doubtful[term] }]),
+    termKeys.map((term) => [
+      term,
+      { ...terms[term], doubtful: term === "operatingIncome" ? operatingIncomeDoubtful : null },
+    ]),
   ) as Record<TermKey, CheckedFigure>;
 };
 
@@ -218,7 +253,7 @@ export const chooseTerms = (rows: ReadonlyArray<NumberRow>): TermTable => {
   return {
     fiscalYears: fiscalYears.map((fiscalYear) => ({
       fiscalYear,
-      terms: checkYear(chooseYear(byTagAndYear, fiscalYear)),
+      terms: termsForYear(byTagAndYear, fiscalYear),
     })),
     unlisted: findUnlisted(rows),
   };

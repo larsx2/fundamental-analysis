@@ -52,6 +52,7 @@ describe("the three slice companies, from trimmed SEC data", () => {
         grossProfit: 169_148,
         researchAndDevelopment: 29_915,
         sellingGeneralAndAdministrative: 24_932,
+        otherOperatingExpenses: 0,
         operatingIncome: 114_301,
         netIncome: 96_995,
       });
@@ -94,5 +95,44 @@ describe("the three slice companies, from trimmed SEC data", () => {
         expect(years, company).toEqual(Array.from({ length: 19 }, (_, n) => 2008 + n));
       }),
     ),
+  );
+});
+
+describe("what an investment adviser would expect of the three", () => {
+  it.effect("no operating income is doubtful once other operating expenses are shown", () =>
+    Effect.forEach(Object.keys(companies) as Array<Company>, (company) =>
+      Effect.gen(function* () {
+        const { table } = yield* fiscalYear(company, 2023);
+        const doubtful = table.fiscalYears
+          .filter((each) => each.terms.operatingIncome.doubtful !== null)
+          .map((each) => each.fiscalYear);
+        expect(doubtful, company).toEqual([]);
+      }),
+    ),
+  );
+
+  it.effect(
+    "Microsoft's fiscal 2015 impairment and restructuring appear as other operating expenses",
+    () =>
+      Effect.gen(function* () {
+        const { year } = yield* fiscalYear("microsoft", 2015);
+        expect(year.otherOperatingExpenses).toMatchObject({
+          kind: "calculated",
+          value: 10_011_000_000,
+        });
+      }),
+  );
+
+  it.effect(
+    "Costco's fiscal 2019 gross profit follows its definition and keeps the filed figure",
+    () =>
+      Effect.gen(function* () {
+        const { year } = yield* fiscalYear("costco", 2019);
+        expect(year.grossProfit).toMatchObject({
+          kind: "calculated",
+          value: 19_817_000_000,
+          setAside: { value: 16_465_000_000 },
+        });
+      }),
   );
 });

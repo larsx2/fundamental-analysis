@@ -4,6 +4,7 @@ export const termKeys = [
   "grossProfit",
   "researchAndDevelopment",
   "sellingGeneralAndAdministrative",
+  "otherOperatingExpenses",
   "operatingIncome",
   "netIncome",
 ] as const;
@@ -15,6 +16,7 @@ export const termNames: Record<TermKey, string> = {
   grossProfit: "Gross profit",
   researchAndDevelopment: "Research and development",
   sellingGeneralAndAdministrative: "Selling, general and administrative",
+  otherOperatingExpenses: "Other operating expenses",
   operatingIncome: "Operating income",
   netIncome: "Net income",
 };
@@ -30,6 +32,7 @@ export const termTags: Record<TermKey, ReadonlyArray<string>> = {
   grossProfit: ["GrossProfit"],
   researchAndDevelopment: ["ResearchAndDevelopmentExpense"],
   sellingGeneralAndAdministrative: ["SellingGeneralAndAdministrativeExpense"],
+  otherOperatingExpenses: [],
   operatingIncome: ["OperatingIncomeLoss"],
   netIncome: ["NetIncomeLoss"],
 };
@@ -37,6 +40,8 @@ export const termTags: Record<TermKey, ReadonlyArray<string>> = {
 export const partTags = {
   sellingAndMarketing: ["SellingAndMarketingExpense"],
   generalAndAdministrative: ["GeneralAndAdministrativeExpense"],
+  operatingExpensesTotal: ["OperatingExpenses"],
+  costsAndExpensesTotal: ["CostsAndExpenses"],
 } as const;
 
 // Tags that cover only part of a term. They are never used for the term.
@@ -60,6 +65,11 @@ export const relatedTagPrefixes: Record<TermKey, ReadonlyArray<string>> = {
     "SellingGeneralAndAdministrative",
     "SellingAndMarketing",
     "GeneralAndAdministrative",
+  ],
+  otherOperatingExpenses: [
+    "OtherCostAndExpenseOperating",
+    "RestructuringCharges",
+    "GoodwillImpairmentLoss",
   ],
   operatingIncome: ["OperatingIncome"],
   netIncome: ["NetIncome", "ProfitLoss"],

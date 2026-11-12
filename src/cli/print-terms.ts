@@ -69,6 +69,20 @@ export const printTerms = (
   );
   if (doubtful.length > 0) out.push("", "Doubtful numbers:", ...doubtful);
 
+  const setAside = table.fiscalYears.flatMap((year) =>
+    termKeys.flatMap((term) => {
+      const figure = year.terms[term];
+      if (figure.kind !== "calculated" || figure.setAside === null) return [];
+      const filed = millions.format(figure.setAside.value / 1_000_000);
+      return [
+        `  Fiscal ${year.fiscalYear}, ${termNames[term].toLowerCase()}: filed as ${filed} under ${figure.setAside.tag}, a doubtful number. ${figure.setAside.doubtful}`,
+      ];
+    }),
+  );
+  if (setAside.length > 0) {
+    out.push("", "Filed figures set aside for the calculated number:", ...setAside);
+  }
+
   if (table.unlisted.length > 0) {
     out.push(
       "",
