@@ -54,6 +54,19 @@ The eight terms now come from ordered tag lists in [`src/server/terms/term-tags.
 - Apple's revenue reaches back to fiscal 2007, because its first machine-readable annual reports carried three years of income statements. Balances at year ends reach back further still.
 - Collecting one company is one request of about four megabytes and takes about a second. It yields 8,000 to 10,000 reported numbers from annual reports.
 
+**What the statements mock taught, on 11 November 2026**
+
+Tags tried for the balance sheet and cash flow statement, still to be confirmed in the statements work:
+
+- Balance sheet: `CashAndCashEquivalentsAtCarryingValue`, `AccountsReceivableNetCurrent` then `ReceivablesNetCurrent`, `InventoryNet`, `PropertyPlantAndEquipmentNet`, `Goodwill`, `Assets`, `Liabilities`, and equity from `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest` then `StockholdersEquity`. Debt is calculated from `ShortTermBorrowings` or `CommercialPaper`, `LongTermDebtCurrent` and `LongTermDebtNoncurrent`.
+- Cash flow statement: `DepreciationDepletionAndAmortization`, `ShareBasedCompensation`, `NetCashProvidedByUsedInOperatingActivities` then its continuing operations version, `PaymentsToAcquirePropertyPlantAndEquipment`, `PaymentsOfDividends` then `PaymentsOfDividendsCommonStock`, `PaymentsForRepurchaseOfCommonStock`, and the long-term debt proceeds and repayment tags.
+
+What it found:
+
+- Taking the latest restated value line by line can break a statement's own rule. Microsoft's fiscal 2016 assets and liabilities come from the fiscal 2017 report while its equity was restated in the fiscal 2018 report, so assets no longer equal liabilities plus equity. A balance sheet may need to be taken whole from one filing.
+- Apple's earnings per share for fiscal 2015 to 2017 were filed before its four-for-one share split and do not compare with later years until adjusted.
+- Microsoft files depreciation and amortization under its own label, outside the standard list, so it shows as a gap. Its acquisitions use no standard tag either.
+
 ## Options
 
 ### Settled on 11 November 2026
