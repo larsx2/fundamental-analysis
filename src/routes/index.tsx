@@ -208,6 +208,7 @@ function Home() {
         to: "/$ticker/ask",
         params: { ticker: understood.company.ticker },
         search: { q: trimmed },
+        state: { asked: true },
       });
     } else if (understood.kind === "collect") {
       void navigate({

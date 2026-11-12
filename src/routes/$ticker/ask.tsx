@@ -1,4 +1,4 @@
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { KnownFigure } from "../../shared/answer-figures";
 import { AnswerText, termsToLink, uncheckedIn } from "../../ui/ask/answer-text";
@@ -12,6 +12,12 @@ import { ownFigureLine } from "../../ui/own-figure";
 import type { CompanyScreen } from "../../ui/palette";
 import { Screen } from "../../ui/screen";
 import { OwnFigures } from "../../ui/term";
+
+declare module "@tanstack/history" {
+  interface HistoryState {
+    asked?: boolean;
+  }
+}
 
 export const Route = createFileRoute("/$ticker/ask")({
   validateSearch: (search: Record<string, unknown>): { q?: string | undefined } =>
@@ -66,7 +72,10 @@ function Ask() {
   const question = q ?? "";
   const { view, year } = useReadyCompany(ticker, undefined);
   const name = shortName(view.name);
-  const state = useAsk(view.ticker, question);
+  const asked = useLocation({ select: (location) => location.state.asked === true });
+  const [confirmed, setConfirmed] = useState<string | null>(null);
+  const run = asked || confirmed === question;
+  const state = useAsk(view.ticker, run ? question : "");
   const [lit, setLit] = useState<string | null>(null);
 
   useEffect(() => {
@@ -103,7 +112,7 @@ function Ask() {
         .map((filing) => [filing.url, filing] as const),
     ).values(),
   ].sort((a, b) => b.filedOn.localeCompare(a.filedOn));
-  const working = question !== "" && answer === null && state.failure === null;
+  const working = run && question !== "" && answer === null && state.failure === null;
 
   return (
     <OwnFigures figure={ownFigure}>
@@ -118,6 +127,22 @@ function Ask() {
                 <div className="eyebrow">You asked</div>
                 <h2 className="ask-question">{question}</h2>
               </>
+            )}
+            {question !== "" && !run && (
+              <section className="panel panel-pad ask-failure">
+                <h3>This question came from a link</h3>
+                <p>
+                  Asking it uses your ChatGPT subscription and sends the question to OpenAI. Ask it
+                  only if you meant to.
+                </p>
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={() => setConfirmed(question)}
+                >
+                  Ask it
+                </button>
+              </section>
             )}
             {working && <p className="ask-waiting">Reading {name}'s figures</p>}
             {state.failure !== null && (
@@ -173,6 +198,7 @@ function Ask() {
                         to="/$ticker/ask"
                         params={{ ticker: view.ticker }}
                         search={{ q: next }}
+                        state={{ asked: true }}
                       >
                         {next}
                         <span aria-hidden="true">→</span>
@@ -327,6 +353,7 @@ function Composer({ ticker, name }: { readonly ticker: string; readonly name: st
       to: "/$ticker/ask",
       params: { ticker },
       search: { q: question },
+      state: { asked: true },
     });
   };
 
