@@ -238,7 +238,7 @@ function Quote({ view, latest }: { readonly view: ReadyCompany; readonly latest:
 
 // One dollar of revenue split into the parts it went to, the picture of the
 // sentence above it. The whole bar opens Where the money goes.
-const labelInside = 7;
+const labelInside = 8;
 
 function DollarBar({ ticker, year }: { readonly ticker: string; readonly year: StatementYear }) {
   const revenue = valueOf(year.terms.revenue);
@@ -279,7 +279,10 @@ function DollarBar({ ticker, year }: { readonly ticker: string; readonly year: S
             style={{
               flexGrow: share,
               background: part.color,
-              color: part.key === "netIncome" ? "#fff" : "var(--color-surface-0)",
+              color:
+                part.key === "netIncome"
+                  ? "var(--color-text-on-kept)"
+                  : "var(--color-text-on-part)",
             }}
           >
             {share >= labelInside ? `${share}¢` : ""}

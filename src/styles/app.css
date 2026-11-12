@@ -25,6 +25,18 @@
   --color-part-below: #d55181;
   --color-part-kept: #008300;
 
+  /* Text set inside a part of a dollar: near-black on the five lighter
+     parts, white on net income's darker green. */
+  --color-text-on-part: #0b0b0c;
+  --color-text-on-kept: #ffffff;
+
+  /* The quiet lines of a chart: grid, baseline at zero, the chosen year
+     and the year under the pointer. */
+  --color-chart-grid: rgb(255 255 255 / 0.07);
+  --color-chart-baseline: rgb(255 255 255 / 0.22);
+  --color-chart-chosen: rgb(255 255 255 / 0.28);
+  --color-chart-hover: rgb(255 255 255 / 0.14);
+
   /* Doubtful numbers. Always with an icon and a word, never colour alone. */
   --color-doubtful: #fab219;
 
@@ -646,7 +658,7 @@
   }
 
   .grid-line {
-    stroke: rgb(255 255 255 / 0.07);
+    stroke: var(--color-chart-grid);
   }
 
   /* Two charts side by side that share the fiscal years. */
@@ -680,11 +692,11 @@
   }
 
   .chosen-line {
-    stroke: rgb(255 255 255 / 0.28);
+    stroke: var(--color-chart-chosen);
   }
 
   .hover-line {
-    stroke: rgb(255 255 255 / 0.14);
+    stroke: var(--color-chart-hover);
   }
 
   .tooltip .tip-title {
@@ -712,7 +724,7 @@
   }
 
   .baseline {
-    stroke: rgb(255 255 255 / 0.22);
+    stroke: var(--color-chart-baseline);
   }
 
   .legend {
@@ -2100,7 +2112,7 @@
   }
 
   .compare .zero-line {
-    stroke: rgb(255 255 255 / 0.22);
+    stroke: var(--color-chart-baseline);
   }
 
   .compare .tick-text {
@@ -2111,7 +2123,7 @@
   }
 
   .compare .chosen-line {
-    stroke: rgb(255 255 255 / 0.28);
+    stroke: var(--color-chart-chosen);
     stroke-dasharray: 2 4;
   }
 
@@ -2488,10 +2500,13 @@
     text-decoration: none;
   }
 
+  /* The cents inside a part are bold at 19 pixels, which counts as large
+     text: 5.07 to 5.78 to 1 on the part colours meets the strictest level
+     (AAA, 4.5 to 1 for large text). At 13 pixels they would not. */
   .dollar-bar {
     display: flex;
     gap: 2px;
-    height: 28px;
+    height: 32px;
     text-decoration: none;
   }
 
@@ -2501,8 +2516,8 @@
     min-width: 4px;
     padding: 0 8px;
     border-radius: 4px;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 19px;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
     overflow: hidden;
     white-space: nowrap;
