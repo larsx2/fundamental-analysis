@@ -9,7 +9,7 @@ The tool downloads each company from the SEC by itself: its list of filings, and
 
 We chose this because a person follows tens of companies, not thousands, so downloading gigabytes every night to their machine would be waste, and because the per-company downloads reflect a new filing within a minute. A check is one request, and only a new annual report brings a second one for its numbers.
 
-The SEC's summary leaves out breakdowns, such as revenue by product or by region, and numbers a company tags under its own names. No screen needs those yet. When one does, the data will come from each filing itself, which never changes once filed and so is downloaded once.
+The SEC's summary leaves out breakdowns, such as revenue by product or by region, and numbers a company tags under its own names. Saying what a company sells needs them: Apple's products and services, and Costco's membership fees, are not in the summary, only their totals. That data will come from each filing itself, which never changes once filed and so is downloaded once.
 
 ## Consequences
 
