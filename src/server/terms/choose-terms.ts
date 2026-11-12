@@ -8,37 +8,19 @@ import {
   termTags,
 } from "./term-tags";
 
+import type { CheckedFigure, Figure, SetAside, Source } from "../../shared/figures";
+
+export type { CheckedFigure, Figure, SetAside, Source };
+
 export type NumberRow = {
   readonly tag: string;
   readonly fiscalYear: number;
   readonly value: number;
   readonly accession: string;
   readonly filedOn: string;
+  readonly startOn?: string | null;
+  readonly endOn?: string;
 };
-
-export type Source = Pick<NumberRow, "tag" | "value" | "accession" | "filedOn">;
-
-export type SetAside = Source & { readonly doubtful: string };
-
-export type Figure =
-  | {
-      readonly kind: "reported";
-      readonly value: number;
-      readonly latest: Source;
-      readonly original: Source;
-    }
-  | {
-      readonly kind: "calculated";
-      readonly value: number;
-      readonly from: ReadonlyArray<{
-        readonly name: string;
-        readonly value: number;
-      }>;
-      readonly setAside: SetAside | null;
-    }
-  | { readonly kind: "gap" };
-
-export type CheckedFigure = Figure & { readonly doubtful: string | null };
 
 export type FiscalYearTerms = {
   readonly fiscalYear: number;
@@ -64,16 +46,16 @@ export const grossProfitCheck = "Gross profit should equal revenue minus cost of
 export const operatingIncomeCheck =
   "Operating income should equal what the company reports as its total operating expenses taken from gross profit, or its total costs and expenses taken from revenue.";
 
-const toSource = (row: NumberRow): Source => ({
+export const toSource = (row: NumberRow): Source => ({
   tag: row.tag,
   value: row.value,
   accession: row.accession,
   filedOn: row.filedOn,
 });
 
-type Reported = Extract<Figure, { kind: "reported" }>;
+export type Reported = Extract<Figure, { kind: "reported" }>;
 
-const reported = (
+export const reported = (
   byTagAndYear: Map<string, ReadonlyArray<NumberRow>>,
   tags: ReadonlyArray<string>,
   fiscalYear: number,
@@ -94,9 +76,9 @@ const reported = (
   return null;
 };
 
-const valueOf = (figure: Figure) => (figure.kind === "gap" ? null : figure.value);
+export const valueOf = (figure: Figure) => (figure.kind === "gap" ? null : figure.value);
 
-const gap: Figure = { kind: "gap" };
+export const gap: Figure = { kind: "gap" };
 
 const termsForYear = (
   byTagAndYear: Map<string, ReadonlyArray<NumberRow>>,
@@ -238,12 +220,19 @@ const findUnlisted = (rows: ReadonlyArray<NumberRow>): ReadonlyArray<UnlistedTag
   return unlisted;
 };
 
-export const chooseTerms = (rows: ReadonlyArray<NumberRow>): TermTable => {
+export const groupByTagAndYear = (rows: ReadonlyArray<NumberRow>) => {
   const byTagAndYear = new Map<string, Array<NumberRow>>();
   for (const row of rows) {
     const key = `${row.tag}/${row.fiscalYear}`;
-    byTagAndYear.set(key, [...(byTagAndYear.get(key) ?? []), row]);
+    const list = byTagAndYear.get(key);
+    if (list === undefined) byTagAndYear.set(key, [row]);
+    else list.push(row);
   }
+  return byTagAndYear;
+};
+
+export const chooseTerms = (rows: ReadonlyArray<NumberRow>): TermTable => {
+  const byTagAndYear = groupByTagAndYear(rows);
 
   const revenueTags = new Set(termTags.revenue);
   const fiscalYears = [

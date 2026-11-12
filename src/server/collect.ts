@@ -1,5 +1,8 @@
 import { Context, Data, Effect, Layer, Option, Result, Schema } from "effect";
+import { SqlClient } from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
+import { openingOfBusiness } from "./business-description";
+import { collectFilings } from "./filings";
 import { fiscalYearOf } from "./fiscal-year";
 import { type Filing, type ReportedNumber, ReportedNumbers } from "./reported-numbers";
 import { Sec, type SecError } from "./sec";
@@ -61,6 +64,11 @@ export class Collect extends Context.Service<
     readonly reportedNumbers: (
       cik: number,
     ) => Effect.Effect<CollectReport, SecError | UnexpectedCompanyFacts | SqlError>;
+    readonly filings: (
+      cik: number,
+    ) => Effect.Effect<number, SecError | Schema.SchemaError | SqlError>;
+    // A description that cannot be read leaves a gap; it never fails a company.
+    readonly businessDescription: (cik: number) => Effect.Effect<void>;
   }
 >()("Collect") {
   static readonly layer = Layer.effect(
@@ -68,6 +76,7 @@ export class Collect extends Context.Service<
     Effect.gen(function* () {
       const sec = yield* Sec;
       const store = yield* ReportedNumbers;
+      const sql = yield* SqlClient;
       const decodeFact = Schema.decodeUnknownResult(Fact);
 
       const reportedNumbers = (cik: number) =>
@@ -125,7 +134,33 @@ export class Collect extends Context.Service<
           return { filings: filings.size, numbers: numbers.length, unexpected };
         });
 
-      return Collect.of({ reportedNumbers });
+      const filings = (cik: number) =>
+        collectFilings(cik).pipe(
+          Effect.provideService(Sec, sec),
+          Effect.provideService(SqlClient, sql),
+        );
+
+      const businessDescription = (cik: number) =>
+        Effect.gen(function* () {
+          const latest = yield* sql<{ accession: string; primary_document: string }>`
+            SELECT accession, primary_document FROM company_filing
+            WHERE cik = ${cik} AND form = '10-K' AND primary_document IS NOT NULL
+            ORDER BY filed_on DESC LIMIT 1
+          `;
+          const filing = latest[0];
+          if (filing === undefined) return;
+          const html = yield* sec.getText(
+            `https://www.sec.gov/Archives/edgar/data/${cik}/${filing.accession.replaceAll("-", "")}/${filing.primary_document}`,
+          );
+          yield* sql`
+            UPDATE company SET
+              description = ${openingOfBusiness(html)},
+              description_accession = ${filing.accession}
+            WHERE cik = ${cik}
+          `;
+        }).pipe(Effect.ignore);
+
+      return Collect.of({ reportedNumbers, filings, businessDescription });
     }),
   );
 }

@@ -91,3 +91,27 @@ Read: [`src/cli/collect.ts`](../src/cli/collect.ts).
 `Effect.catchCause` catches every way an Effect can fail, including a crash, so one failed company is marked failed and the line carries on.
 
 Read: [`src/server/collector.ts`](../src/server/collector.ts).
+
+## Running several Effects together
+
+`Effect.all([a, b, c])` runs a list of Effects and gives back their results in the same order. If one fails, the whole thing fails with that error. The three statements are read this way: the yearly amounts, the balances at year ends and the amounts per share.
+
+Read: [`src/server/terms/terms.ts`](../src/server/terms/terms.ts).
+
+## Giving one Effect a service directly
+
+`Effect.provideService(Sec, sec)` hands a single Effect the service it asks for, without building a layer. Collecting a company's filings is written as a plain Effect that asks for `Sec` and `SqlClient`; the `Collect` service already holds both, so it passes them in.
+
+Read: [`src/server/collect.ts`](../src/server/collect.ts).
+
+## Giving up after a while, and falling back
+
+`Effect.timeout("20 seconds")` fails an Effect that takes longer than that. `Effect.catchCause(() => Effect.succeed(false))` turns any failure into an ordinary answer, so the economic data keeps the months it already holds when the central bank's service cannot be reached. `Effect.ignore` does the same when nothing needs to be known about the failure, as when a company's business description cannot be read.
+
+Read: [`src/server/economy.ts`](../src/server/economy.ts), [`src/server/collect.ts`](../src/server/collect.ts).
+
+## Checking what a screen sends to the server
+
+A server function's `.validator(Schema.decodeUnknownSync(schema))` checks the data a screen sends before the function runs, with the same schema tool used for the SEC's data. A wrong shape throws there, so the Effect inside never sees it.
+
+Read: [`src/functions/companies.ts`](../src/functions/companies.ts).

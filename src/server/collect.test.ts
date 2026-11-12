@@ -32,7 +32,12 @@ const collectWith = (answer: unknown) =>
   Collect.layer.pipe(
     Layer.provideMerge(ReportedNumbers.layer),
     Layer.provideMerge(databaseLayer(":memory:")),
-    Layer.provide(Layer.succeed(Sec, Sec.of({ getJson: () => Effect.succeed(answer) }))),
+    Layer.provide(
+      Layer.succeed(
+        Sec,
+        Sec.of({ getJson: () => Effect.succeed(answer), getText: () => Effect.die("unused") }),
+      ),
+    ),
   );
 
 describe("Collect", () => {

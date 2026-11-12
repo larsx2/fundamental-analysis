@@ -21,6 +21,8 @@ const services = (events: Array<Event>, failFirstTry: ReadonlySet<number> = new 
     Effect.gen(function* () {
       const sql = yield* SqlClient;
       return Collect.of({
+        filings: () => Effect.succeed(0),
+        businessDescription: () => Effect.void,
         reportedNumbers: (cik) =>
           Effect.gen(function* () {
             events.push(`start ${cik}`);

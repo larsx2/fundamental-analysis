@@ -28,7 +28,13 @@ const fiscalYear = (company: Company, year: number) =>
         Layer.provideMerge(ReportedNumbers.layer),
         Layer.provideMerge(databaseLayer(":memory:")),
         Layer.provide(
-          Layer.succeed(Sec, Sec.of({ getJson: () => Effect.succeed(extract(company)) })),
+          Layer.succeed(
+            Sec,
+            Sec.of({
+              getJson: () => Effect.succeed(extract(company)),
+              getText: () => Effect.die("unused"),
+            }),
+          ),
         ),
       ),
     ),

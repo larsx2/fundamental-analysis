@@ -15,6 +15,7 @@ const CompanyStatus = Schema.Struct({
   asOf: Schema.NullOr(Schema.String),
   lastCheckedOn: Schema.NullOr(Schema.String),
   notCoveredReason: Schema.NullOr(Schema.String),
+  collectStep: Schema.NullOr(Schema.Int),
 });
 export type CompanyStatus = typeof CompanyStatus.Type;
 
@@ -67,7 +68,9 @@ export class Collector extends Context.Service<
       const sql = yield* SqlClient;
       const collect = yield* Collect;
       const coverage = yield* CoverageCheck;
-      const line = yield* Queue.unbounded<number>();
+      // A company goes in line to be collected in full, or, when it was ready
+      // before the tool kept filings, only for its filings and description.
+      const line = yield* Queue.unbounded<{ readonly cik: number; readonly full: boolean }>();
 
       const status = SqlSchema.findOneOption({
         Request: Schema.Int,
@@ -75,7 +78,8 @@ export class Collector extends Context.Service<
         execute: (cik) => sql`
           SELECT
             cik, name, state, failure_reason AS "failureReason", as_of AS "asOf",
-            last_checked_on AS "lastCheckedOn", not_covered_reason AS "notCoveredReason"
+            last_checked_on AS "lastCheckedOn", not_covered_reason AS "notCoveredReason",
+            collect_step AS "collectStep"
           FROM company WHERE cik = ${cik}
         `,
       });
@@ -84,15 +88,23 @@ export class Collector extends Context.Service<
         Effect.map((now) => new Date(now).toLocaleDateString("en-CA")),
       );
 
+      const step = (cik: number, number: number) =>
+        sql`UPDATE company SET collect_step = ${number} WHERE cik = ${cik}`;
+
       const collectOne = (cik: number) =>
         Effect.gen(function* () {
-          yield* sql`UPDATE company SET state = 'collecting' WHERE cik = ${cik}`;
+          yield* sql`UPDATE company SET state = 'collecting', collect_step = 1 WHERE cik = ${cik}`;
+          yield* collect.filings(cik);
+          yield* step(cik, 2);
           yield* collect.reportedNumbers(cik);
+          yield* step(cik, 3);
+          yield* collect.businessDescription(cik);
           const checkedOn = yield* today;
           yield* sql`
             UPDATE company SET
               state = 'ready',
               failure_reason = NULL,
+              collect_step = NULL,
               as_of = (SELECT max(filed_on) FROM filing WHERE cik = ${cik}),
               last_checked_on = ${checkedOn}
             WHERE cik = ${cik}
@@ -100,11 +112,18 @@ export class Collector extends Context.Service<
         }).pipe(
           Effect.catchCause((cause) =>
             sql`
-              UPDATE company SET state = 'failed', failure_reason = ${reasonOf(cause)}
+              UPDATE company SET
+                state = 'failed', failure_reason = ${reasonOf(cause)}, collect_step = NULL
               WHERE cik = ${cik}
             `.pipe(Effect.ignore),
           ),
         );
+
+      const addDetails = (cik: number) =>
+        Effect.gen(function* () {
+          yield* collect.filings(cik);
+          yield* collect.businessDescription(cik);
+        }).pipe(Effect.ignore);
 
       // A company left waiting or collecting when the tool stopped goes back
       // in line, in the order it was asked for.
@@ -112,9 +131,19 @@ export class Collector extends Context.Service<
         SELECT cik FROM company WHERE state IN ('waiting', 'collecting') ORDER BY requested_at
       `;
       yield* sql`UPDATE company SET state = 'waiting' WHERE state = 'collecting'`;
-      for (const { cik } of leftOver) yield* Queue.offer(line, cik);
+      for (const { cik } of leftOver) yield* Queue.offer(line, { cik, full: true });
+      const withoutFilings = yield* sql<{ cik: number }>`
+        SELECT cik FROM company WHERE state = 'ready' AND filings_from IS NULL ORDER BY cik
+      `;
+      for (const { cik } of withoutFilings) yield* Queue.offer(line, { cik, full: false });
 
-      yield* Effect.forkScoped(Effect.forever(Queue.take(line).pipe(Effect.flatMap(collectOne))));
+      yield* Effect.forkScoped(
+        Effect.forever(
+          Queue.take(line).pipe(
+            Effect.flatMap((next) => (next.full ? collectOne(next.cik) : addDetails(next.cik))),
+          ),
+        ),
+      );
 
       const request = (cik: number) =>
         Effect.gen(function* () {
@@ -138,7 +167,7 @@ export class Collector extends Context.Service<
             UPDATE company SET state = 'waiting', failure_reason = NULL, requested_at = ${now}
             WHERE cik = ${cik}
           `;
-          yield* Queue.offer(line, cik);
+          yield* Queue.offer(line, { cik, full: true });
           return { answer: "waiting" } as const;
         });
 
@@ -154,10 +183,12 @@ export class Collector extends Context.Service<
             Effect.gen(function* () {
               yield* sql`DELETE FROM reported_number WHERE cik = ${cik}`;
               yield* sql`DELETE FROM filing WHERE cik = ${cik}`;
+              yield* sql`DELETE FROM company_filing WHERE cik = ${cik}`;
               yield* sql`
                 UPDATE company SET
                   state = 'not_collected', failure_reason = NULL, as_of = NULL,
-                  last_checked_on = NULL, requested_at = NULL
+                  last_checked_on = NULL, requested_at = NULL, filings_from = NULL,
+                  description = NULL, description_accession = NULL, collect_step = NULL
                 WHERE cik = ${cik}
               `;
             }),

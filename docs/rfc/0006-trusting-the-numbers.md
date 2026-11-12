@@ -34,9 +34,9 @@ Nothing unsure is hidden, and nothing unsure is shown as if it were certain.
 
 ## Open points
 
-- Which rules are checked for every company and every fiscal year, and what happens to a year that fails one?
+- Which rules are checked for every company and every fiscal year, and what happens to a year that fails one? Since 11 November 2026: gross profit, operating income against the company's totals, and assets against liabilities plus equity. A year that fails keeps its figures, marked doubtful with the check.
 - Is there a small set of companies whose numbers are confirmed by hand once and then used to catch mistakes after every change?
-- How does the reader see where a number came from: a link on every figure, or a mode that turns sources on?
-- What do the marks for doubtful and calculated numbers look like, so they are noticed without shouting?
+- How does the reader see where a number came from: a link on every figure, or a mode that turns sources on? Answered on 11 November 2026: every number in the statements opens a card with its period, its filing and any restatement, and every term card does the same for this company's figure.
+- What do the marks for doubtful and calculated numbers look like, so they are noticed without shouting? Answered on 11 November 2026: small outlined words, "calculated" and "gap" in grey, the gap dashed, and "doubtful" with a warning sign in the one reserved warning colour.
 
 ## Outcome
