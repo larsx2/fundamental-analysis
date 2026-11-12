@@ -158,25 +158,6 @@
       padding: 6px 12px;
       text-align: left;
     }
-  }
-
-  /* Arrival, once: the composer rises. */
-  @media (prefers-reduced-motion: no-preference) {
-    .composer::before {
-      animation: travel 6s linear infinite;
-    }
-
-    .composer {
-      animation: panel-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
-    }
-  }
-}
-
-@property --angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
 
     .composer .tools {
       flex-direction: row;
@@ -210,6 +191,25 @@
       flex: none;
       white-space: nowrap;
     }
+  }
+
+  /* Arrival, once: the composer rises. */
+  @media (prefers-reduced-motion: no-preference) {
+    .composer::before {
+      animation: travel 6s linear infinite;
+    }
+
+    .composer {
+      animation: panel-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+    }
+  }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
 
 @keyframes travel {
   to {

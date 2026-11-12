@@ -186,11 +186,6 @@
     stroke-linejoin: round;
   }
 
-  .tl-end {
-    fill: var(--color-text-1);
-    font-weight: 600;
-  }
-
   .tl-axis {
     position: relative;
     z-index: 1;
@@ -224,6 +219,30 @@
     font-size: 12.5px;
     font-weight: 600;
     font-family: var(--font-sans);
+  }
+
+  .tl-lead {
+    margin: 0 0 16px;
+    font-size: var(--text-xs);
+    color: var(--color-text-2);
+  }
+
+  .tl-none {
+    position: sticky;
+    left: 0;
+    width: fit-content;
+    margin: 12px 0 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-2);
+  }
+
+  .tl-count {
+    fill: var(--color-surface-0);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
   }
 
   .tl-hint {

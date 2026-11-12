@@ -124,8 +124,9 @@ const colors = {
   bar: "#6a6a70",
   barChosen: "#c9c8c1",
   kept: "#3f8f3f",
-  keptChosen: "var(--color-part-kept)",
-  hatch: "#6f6f75",
+  keptChosen: "#5fbf5f",
+  recession: "rgb(240 140 110 / 0.11)",
+  recessionEdge: "rgb(240 140 110 / 0.35)",
 };
 
 const day = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00Z`);
@@ -262,6 +263,7 @@ function Timeline() {
             share buybacks, {money(total("dividends"))} on dividends and{" "}
             {money(total("capitalExpenditure"))} on capital expenditure.
           </p>
+          <p className="tl-lead">Click or tap any year or month to see what was true then.</p>
           <Rows
             view={view}
             spans={spans}
@@ -272,9 +274,8 @@ function Timeline() {
             economyState={economy.isPending ? "loading" : economy.isError ? "failed" : "ready"}
           />
           <p className="tl-hint">
-            Click or tap anywhere on the timeline to choose a month. With the line of years under
-            the chart selected, <kbd>{"←"}</kbd> <kbd>{"→"}</kbd> move one month and{" "}
-            <kbd>Page Up</kbd> <kbd>Page Down</kbd> one year.
+            With the line of years under the chart selected, <kbd>{"←"}</kbd> <kbd>{"→"}</kbd> move
+            one month and <kbd>Page Up</kbd> <kbd>Page Down</kbd> one year.
           </p>
           {/* Under the chart on a narrow screen, the side panel is far below. */}
           <p className="tl-summary">
@@ -400,7 +401,7 @@ const eventPlain = (event: CorporateEvent) =>
     ? "Acquisition or sale of a business completed"
     : "Change among directors or officers";
 
-const pad = { left: 52, right: 132 };
+const pad = { left: 52, right: 16 };
 const axisHeight = 52;
 
 function Rows({
@@ -426,7 +427,9 @@ function Rows({
   const tip = useChartTip();
   const available = useWidth(scroller, 900);
   const W = Math.max(available, 620, spans.length * 28 + pad.left + pad.right);
+  const economyRow = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
+  const [economyTop, setEconomyTop] = useState(0);
   const [hover, setHover] = useState<number | null>(null);
   const [edges, setEdges] = useState({ left: false, right: false });
   const x = scaleUtc()
@@ -438,6 +441,8 @@ function Rows({
   useLayoutEffect(() => {
     if (rows.current !== null && rows.current.offsetHeight !== height)
       setHeight(rows.current.offsetHeight);
+    const top = economyRow.current?.offsetTop ?? 0;
+    if (top !== economyTop) setEconomyTop(top);
   });
 
   const updateEdges = () => {
@@ -481,30 +486,38 @@ function Rows({
   const pointX = (event: React.PointerEvent | React.MouseEvent) =>
     event.clientX - (rows.current?.getBoundingClientRect().left ?? 0);
 
-  // Revenue and net income
-  const incomeHeight = 150;
-  const yIncome = scaleLinear()
+  const revenueHeight = 120;
+  const yRevenue = scaleLinear()
     .domain([0, max(spans, (each) => valueOf(each.terms.revenue)) ?? 1])
     .nice()
-    .range([incomeHeight - 2, 14]);
+    .range([revenueHeight - 2, 10]);
 
-  // Capital allocation, all on one dollar scale
-  const stripHeight = 64;
-  const most =
-    max(spans.flatMap((each) => kinds.map((kind) => valueOf(figureOf(each, kind.key)) ?? 0))) ?? 1;
-  const yStrip = scaleLinear()
-    .domain([0, most])
-    .range([0, stripHeight - 4]);
+  const netHeight = 72;
+  const nets = spans.map((each) => valueOf(each.terms.netIncome) ?? 0);
+  const yNet = scaleLinear()
+    .domain([Math.min(0, min(nets) ?? 0), Math.max(0, max(nets) ?? 1) || 1])
+    .nice(2)
+    .range([netHeight - 2, 10]);
 
-  // Economic context: interest rate and inflation share one percent scale
+  const stripHeight = 52;
+  const strips = kinds.map((kind) => {
+    const figures = spans.map((each) => figureOf(each, kind.key));
+    const peak = max(figures, (figure) => valueOf(figure) ?? 0) ?? 0;
+    const scale = scaleLinear()
+      .domain([0, peak > 0 ? peak : 1])
+      .range([0, stripHeight - 14]);
+    return { kind, scale, empty: figures.every((figure) => figure.kind === "gap") };
+  });
+  const emptyStrips = strips.filter((strip) => strip.empty);
+
   const economyHeight = 150;
   const values = months
     .flatMap((each) => [each.interestRate, each.inflation])
     .filter((value): value is number => value !== null);
   const yEconomy = scaleLinear()
-    .domain([Math.min(0, min(values) ?? 0), max(values) ?? 5])
-    .nice()
+    .domain([Math.min(0, min(values) ?? 0), Math.ceil((max(values) ?? 5) / 5) * 5])
     .range([economyHeight - 4, 12]);
+  const economyTicks = yEconomy.ticks(4).filter((tick) => tick % 5 === 0);
   const recessions: Array<Array<string>> = [];
   months.forEach((each, index) => {
     if (!each.recession) return;
@@ -512,52 +525,24 @@ function Rows({
     if (last !== undefined && last.at(-1) === months[index - 1]?.month) last.push(each.month);
     else recessions.push([each.month]);
   });
-  const lastMonth = months.at(-1);
-  const endLabels =
-    lastMonth === undefined
-      ? []
-      : (
-          [
-            ["interestRate", "Interest rate", "var(--color-line-rate)"],
-            ["inflation", "Inflation", "var(--color-line-inflation)"],
-          ] as const
-        )
-          .filter(([key]) => lastMonth[key] !== null)
-          .map(([key, label, color]) => ({
-            key,
-            y: yEconomy(lastMonth[key]!),
-            text: `${label} ${key === "interestRate" ? rate(lastMonth[key]!) : inflationText(lastMonth[key])}`,
-            color,
-          }))
-          .sort((a, b) => a.y - b.y);
-  if (endLabels.length === 2 && endLabels[1]!.y - endLabels[0]!.y < 16) {
-    const centre = (endLabels[0]!.y + endLabels[1]!.y) / 2;
-    endLabels[0]!.y = centre - 8;
-    endLabels[1]!.y = centre + 8;
-  }
-
+  const chosenMonth = months.find((each) => each.month === month);
   const events = view.details.events;
   const eventsFrom = view.details.eventsFrom;
   const covered = eventsFrom === null ? null : day(eventsFrom);
-  // Events filed close together stack upwards, each on the lowest level
-  // with room, so every one can be seen and pointed at.
-  const levels: Array<number> = [];
-  const stacked = events
+  const shown = events
     .filter(
       (event) => day(event.filedOn) >= spans[0]!.start && day(event.filedOn) <= spans.at(-1)!.end,
     )
-    .map((event) => {
-      const px = x(day(event.filedOn));
-      let level = levels.findIndex((lastX) => px - lastX >= 12);
-      if (level === -1) {
-        level = levels.length;
-        levels.push(px);
-      } else levels[level] = px;
-      return { event, px, level };
-    });
-  const eventsHeight = 44 + 12 * Math.max(0, levels.length - 1);
-  const eventsLine = eventsHeight - 22;
-  const placedEvents = stacked.map((each) => ({ ...each, cy: eventsLine - 12 * each.level }));
+    .toSorted((a, b) => a.filedOn.localeCompare(b.filedOn));
+  const clusters = spans
+    .map((each) => ({
+      span: each,
+      events: shown.filter((event) => fiscalOf(spans, day(event.filedOn)) === each),
+    }))
+    .filter((cluster) => cluster.events.length > 0);
+  const eventsHeight = 36;
+  const eventsLine = 18;
+  const kindsShown = new Set(shown.map((event) => event.kind));
 
   // Where years are too narrow for every label, every other one is named,
   // and always the chosen one.
@@ -648,18 +633,6 @@ function Rows({
           }}
         >
           <svg className="tl-under" width={W} height={height} aria-hidden="true">
-            <defs>
-              <pattern
-                id="hatch"
-                width={6}
-                height={6}
-                patternUnits="userSpaceOnUse"
-                patternTransform="rotate(45)"
-              >
-                <rect width={6} height={6} fill="rgb(255 255 255 / 0.04)" />
-                <line x1={0} y1={0} x2={0} y2={6} stroke={colors.hatch} strokeWidth={1.5} />
-              </pattern>
-            </defs>
             {spans.map((each) => (
               <line
                 key={each.fiscalYear}
@@ -681,15 +654,28 @@ function Rows({
             {recessions.map((run) => {
               const left = x(monthStart(run[0]!));
               const right = x(nextMonth(run.at(-1)!));
+              const width = Math.max(8, right - left);
+              const at = (left + right) / 2 - width / 2;
               return (
-                <rect
-                  key={run[0]}
-                  x={left}
-                  width={Math.max(3, right - left)}
-                  y={0}
-                  height={height}
-                  fill="url(#hatch)"
-                />
+                <g key={run[0]}>
+                  <rect x={at} width={width} y={0} height={height} fill={colors.recession} />
+                  <line
+                    x1={at}
+                    x2={at}
+                    y1={0}
+                    y2={height}
+                    stroke={colors.recessionEdge}
+                    strokeDasharray="2 3"
+                  />
+                  <line
+                    x1={at + width}
+                    x2={at + width}
+                    y1={0}
+                    y2={height}
+                    stroke={colors.recessionEdge}
+                    strokeDasharray="2 3"
+                  />
+                </g>
               );
             })}
           </svg>
@@ -697,46 +683,23 @@ function Rows({
           <div className="tl-row">
             <TimelineHead>
               <span>
-                <Term name="Revenue" /> and <Term name="Net income">net income</Term>
-              </span>
-              <span className="tl-legend">
-                <span>
-                  <svg viewBox="0 0 14 14">
-                    <rect x="1" y="1" width="12" height="12" rx="3" fill={colors.barChosen} />
-                  </svg>
-                  <span>Revenue</span>
-                </span>
-                <span>
-                  <svg viewBox="0 0 14 14">
-                    <rect
-                      x="1"
-                      y="1"
-                      width="12"
-                      height="12"
-                      rx="3"
-                      fill={colors.keptChosen}
-                      stroke="var(--color-surface-1)"
-                      strokeWidth="2"
-                    />
-                  </svg>
-                  <span>Net income, inside revenue</span>
-                </span>
+                <Term name="Revenue" />
               </span>
             </TimelineHead>
             <div className="tl-plot">
               <Ticks
-                height={incomeHeight}
-                ticks={yIncome
+                height={revenueHeight}
+                ticks={yRevenue
                   .ticks(3)
-                  .map((tick) => ({ y: yIncome(tick), text: axisMoney(tick) }))}
+                  .map((tick) => ({ y: yRevenue(tick), text: axisMoney(tick) }))}
               />
               <svg
                 width={W}
-                height={incomeHeight}
+                height={revenueHeight}
                 role="img"
-                aria-label={`Revenue and net income for each fiscal year from ${spans[0]!.fiscalYear} to ${spans.at(-1)!.fiscalYear}`}
+                aria-label={`Revenue for each fiscal year from ${spans[0]!.fiscalYear} to ${spans.at(-1)!.fiscalYear}`}
               >
-                {yIncome
+                {yRevenue
                   .ticks(3)
                   .map((tick) =>
                     tick === 0 ? null : (
@@ -745,37 +708,76 @@ function Rows({
                         className="grid-line"
                         x1={pad.left}
                         x2={W - pad.right}
-                        y1={yIncome(tick)}
-                        y2={yIncome(tick)}
+                        y1={yRevenue(tick)}
+                        y2={yRevenue(tick)}
                       />
                     ),
                   )}
                 {spans.map((each) => {
                   const { left, width } = barBox(each);
                   const revenue = valueOf(each.terms.revenue) ?? 0;
-                  const net = Math.max(0, valueOf(each.terms.netIncome) ?? 0);
-                  const tipText = `Fiscal ${each.fiscalYear}: revenue ${money(revenue)}, net income ${money(valueOf(each.terms.netIncome) ?? 0)}`;
                   return (
-                    <g key={each.fiscalYear} data-tip={tipText} data-month={each.endOn.slice(0, 7)}>
-                      <rect
-                        x={left}
-                        width={width}
-                        y={yIncome(revenue)}
-                        height={yIncome(0) - yIncome(revenue)}
-                        rx={3}
-                        fill={isChosen(each) ? colors.barChosen : colors.bar}
-                      />
-                      <rect
-                        x={left + 3}
-                        width={Math.max(0, width - 6)}
-                        y={yIncome(net)}
-                        height={yIncome(0) - yIncome(net)}
-                        rx={2}
-                        fill={isChosen(each) ? colors.keptChosen : colors.kept}
-                        stroke="var(--color-surface-1)"
-                        strokeWidth={2}
-                      />
-                    </g>
+                    <rect
+                      key={each.fiscalYear}
+                      data-tip={`Fiscal ${each.fiscalYear}: revenue ${money(revenue)}`}
+                      data-month={each.endOn.slice(0, 7)}
+                      x={left}
+                      width={width}
+                      y={yRevenue(revenue)}
+                      height={yRevenue(0) - yRevenue(revenue)}
+                      rx={3}
+                      fill={isChosen(each) ? colors.barChosen : colors.bar}
+                    />
+                  );
+                })}
+              </svg>
+            </div>
+            <Years spans={spans} x={x} width={W} isChosen={isChosen} shown={yearLabelShown} />
+          </div>
+
+          <div className="tl-row">
+            <TimelineHead>
+              <span>
+                <Term name="Net income" />
+              </span>
+            </TimelineHead>
+            <div className="tl-plot">
+              <Ticks
+                height={netHeight}
+                ticks={yNet.ticks(2).map((tick) => ({ y: yNet(tick), text: axisMoney(tick) }))}
+              />
+              <svg
+                width={W}
+                height={netHeight}
+                role="img"
+                aria-label={`Net income for each fiscal year from ${spans[0]!.fiscalYear} to ${spans.at(-1)!.fiscalYear}`}
+              >
+                {yNet.ticks(2).map((tick) => (
+                  <line
+                    key={tick}
+                    className={tick === 0 ? "baseline" : "grid-line"}
+                    x1={pad.left}
+                    x2={W - pad.right}
+                    y1={yNet(tick)}
+                    y2={yNet(tick)}
+                  />
+                ))}
+                {spans.map((each) => {
+                  const { left, width } = barBox(each);
+                  const net = valueOf(each.terms.netIncome) ?? 0;
+                  const top = Math.min(yNet(net), yNet(0));
+                  return (
+                    <rect
+                      key={each.fiscalYear}
+                      data-tip={`Fiscal ${each.fiscalYear}: net income ${money(net)}`}
+                      data-month={each.endOn.slice(0, 7)}
+                      x={left}
+                      width={width}
+                      y={top}
+                      height={Math.max(net === 0 ? 0 : 1, Math.abs(yNet(net) - yNet(0)))}
+                      rx={3}
+                      fill={isChosen(each) ? colors.keptChosen : colors.kept}
+                    />
                   );
                 })}
               </svg>
@@ -788,84 +790,111 @@ function Rows({
                 <Term name="Capital allocation" /> per <Term name="Fiscal year">fiscal year</Term>
               </span>
             </TimelineHead>
-            {kinds.map((kind) => {
-              const figure = figureOf(span, kind.key);
-              return (
-                <div className="tl-sub" key={kind.key}>
-                  <div className="tl-sub-head">
-                    <span>
-                      {kind.label}, fiscal {span.fiscalYear}:
-                    </span>
-                    {figure.kind === "gap" ? (
-                      <GapMark />
-                    ) : (
-                      <span className="numbers">{money(figure.value)}</span>
-                    )}
+            {strips
+              .filter((strip) => !strip.empty)
+              .map(({ kind, scale }) => {
+                const figure = figureOf(span, kind.key);
+                const top = scale.domain()[1]!;
+                return (
+                  <div className="tl-sub" key={kind.key}>
+                    <div className="tl-sub-head">
+                      <span>
+                        {kind.label}, fiscal {span.fiscalYear}:
+                      </span>
+                      {figure.kind === "gap" ? (
+                        <GapMark />
+                      ) : (
+                        <span className="numbers">{money(figure.value)}</span>
+                      )}
+                    </div>
+                    <div className="tl-plot">
+                      <Ticks
+                        height={stripHeight}
+                        ticks={[{ y: stripHeight - 1 - scale(top), text: axisMoney(top) }]}
+                      />
+                      <svg
+                        width={W}
+                        height={stripHeight}
+                        role="img"
+                        aria-label={`${capital(kind.plain)} for each fiscal year, up to ${axisMoney(top)}`}
+                      >
+                        <line
+                          className="grid-line"
+                          x1={pad.left}
+                          x2={W - pad.right}
+                          y1={stripHeight - 1 - scale(top)}
+                          y2={stripHeight - 1 - scale(top)}
+                        />
+                        <line
+                          x1={pad.left}
+                          x2={W - pad.right}
+                          y1={stripHeight - 0.5}
+                          y2={stripHeight - 0.5}
+                          stroke="var(--color-hairline)"
+                        />
+                        {spans.map((each) => {
+                          const value = figureOf(each, kind.key);
+                          const { left, width } = barBox(each);
+                          const label = `${capital(kind.plain)}, fiscal ${each.fiscalYear}: ${value.kind === "gap" ? "gap, not reported as its own line" : money(value.value)}`;
+                          if (value.kind === "gap") {
+                            return (
+                              <rect
+                                key={each.fiscalYear}
+                                data-tip={label}
+                                data-month={each.endOn.slice(0, 7)}
+                                x={left + 0.5}
+                                y={stripHeight - 9.5}
+                                width={width - 1}
+                                height={8}
+                                rx={3}
+                                fill="transparent"
+                                stroke="var(--color-text-3)"
+                                strokeDasharray="3 3"
+                                opacity={isChosen(each) ? 1 : 0.7}
+                              />
+                            );
+                          }
+                          const h = Math.max(value.value > 0 ? 2 : 0, scale(value.value));
+                          return (
+                            <g
+                              key={each.fiscalYear}
+                              data-tip={label}
+                              data-month={each.endOn.slice(0, 7)}
+                            >
+                              <rect
+                                x={left}
+                                width={width}
+                                y={stripHeight - 1 - h}
+                                height={h + 1}
+                                rx={2}
+                                fill={isChosen(each) ? colors.barChosen : colors.bar}
+                              />
+                              <rect
+                                x={left - 4}
+                                width={width + 8}
+                                y={0}
+                                height={stripHeight}
+                                fill="transparent"
+                              />
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    </div>
                   </div>
-                  <svg
-                    width={W}
-                    height={stripHeight}
-                    role="img"
-                    aria-label={`${capital(kind.plain)} for each fiscal year`}
-                  >
-                    <line
-                      x1={pad.left}
-                      x2={W - pad.right}
-                      y1={stripHeight - 0.5}
-                      y2={stripHeight - 0.5}
-                      stroke="var(--color-hairline)"
-                    />
-                    {spans.map((each) => {
-                      const value = figureOf(each, kind.key);
-                      const { left, width } = barBox(each);
-                      const label = `${capital(kind.plain)}, fiscal ${each.fiscalYear}: ${value.kind === "gap" ? "gap, not reported as its own line" : money(value.value)}`;
-                      if (value.kind === "gap") {
-                        return (
-                          <rect
-                            key={each.fiscalYear}
-                            data-tip={label}
-                            data-month={each.endOn.slice(0, 7)}
-                            x={left + 0.5}
-                            y={stripHeight - 9.5}
-                            width={width - 1}
-                            height={8}
-                            rx={3}
-                            fill="transparent"
-                            stroke="var(--color-text-3)"
-                            strokeDasharray="3 3"
-                            opacity={isChosen(each) ? 1 : 0.7}
-                          />
-                        );
-                      }
-                      const h = Math.max(value.value > 0 ? 2 : 0, yStrip(value.value));
-                      return (
-                        <g
-                          key={each.fiscalYear}
-                          data-tip={label}
-                          data-month={each.endOn.slice(0, 7)}
-                        >
-                          <rect
-                            x={left}
-                            width={width}
-                            y={stripHeight - 1 - h}
-                            height={h + 1}
-                            rx={2}
-                            fill={isChosen(each) ? colors.barChosen : colors.bar}
-                          />
-                          <rect
-                            x={left - 4}
-                            width={width + 8}
-                            y={0}
-                            height={stripHeight}
-                            fill="transparent"
-                          />
-                        </g>
-                      );
-                    })}
-                  </svg>
-                </div>
-              );
-            })}
+                );
+              })}
+            {emptyStrips.length > 0 && (
+              <p className="tl-none">
+                {emptyStrips.map(({ kind }, index) => (
+                  <span key={kind.key}>
+                    {index > 0 && (index === emptyStrips.length - 1 ? " and " : ", ")}
+                    {index === 0 ? kind.label : kind.inline}
+                  </span>
+                ))}
+                : not reported as {emptyStrips.length === 1 ? "its" : "their"} own line in any year.
+              </p>
+            )}
           </div>
 
           <div className="tl-row">
@@ -875,23 +904,27 @@ function Rows({
                 <Term name="Current report (8-K)">current reports (8-K)</Term>
               </span>
               <span className="tl-legend">
-                <span>
-                  {officerIcon("var(--color-text-1)")}
-                  <span>Change among directors or officers</span>
-                </span>
-                <span>
-                  {businessIcon("var(--color-text-1)")}
+                {kindsShown.has("officers") && (
                   <span>
-                    <Term name="Acquisition" /> or sale of a business
+                    {officerIcon("var(--color-text-1)")}
+                    <span>Change among directors or officers</span>
                   </span>
-                </span>
+                )}
+                {kindsShown.has("business") && (
+                  <span>
+                    {businessIcon("var(--color-text-1)")}
+                    <span>
+                      <Term name="Acquisition" /> or sale of a business
+                    </span>
+                  </span>
+                )}
               </span>
             </TimelineHead>
             <svg
               width={W}
               height={eventsHeight}
               role="img"
-              aria-label={`${placedEvents.length} current reports (8-K) with item 5.02 or 2.01`}
+              aria-label={`${shown.length} current reports (8-K) with item 5.02 or 2.01`}
             >
               <line
                 x1={pad.left}
@@ -926,18 +959,48 @@ function Rows({
                   )}
                 </g>
               )}
-              {placedEvents.map(({ event, px, cy }) => {
-                const inYear = fiscalOf(spans, day(event.filedOn)) === span;
+              {clusters.map((cluster) => {
+                const first = cluster.events[0]!;
+                const lastEvent = cluster.events.at(-1)!;
+                const px =
+                  cluster.events.length > 1
+                    ? (x(cluster.span.start) + x(cluster.span.end)) / 2
+                    : x(day(first.filedOn));
+                const cy = eventsLine;
+                const inYear = cluster.span === span;
                 const fill = inYear ? "var(--color-text-1)" : "var(--color-text-3)";
+                if (cluster.events.length > 1) {
+                  const count = cluster.events.length;
+                  return (
+                    <g
+                      key={cluster.span.fiscalYear}
+                      data-tip={`Fiscal ${cluster.span.fiscalYear}: ${count} current reports (8-K), filed ${longDate(first.filedOn)} to ${longDate(lastEvent.filedOn)}`}
+                      data-month={lastEvent.filedOn.slice(0, 7)}
+                      className="cursor-pointer"
+                    >
+                      <circle
+                        cx={px}
+                        cy={cy}
+                        r={8.5}
+                        fill={fill}
+                        stroke="var(--color-surface-1)"
+                        strokeWidth={2}
+                      />
+                      <text className="tl-count" x={px} y={cy + 4} textAnchor="middle">
+                        {count}
+                      </text>
+                    </g>
+                  );
+                }
                 return (
                   <g
-                    key={`${event.accession}-${event.kind}`}
-                    data-tip={`${eventPlain(event)}, filed on ${longDate(event.filedOn)}${event.amendedOn === null ? "" : `, amended on ${longDate(event.amendedOn)}`}`}
-                    data-month={event.filedOn.slice(0, 7)}
+                    key={`${first.accession}-${first.kind}`}
+                    data-tip={`${eventPlain(first)}, filed on ${longDate(first.filedOn)}${first.amendedOn === null ? "" : `, amended on ${longDate(first.amendedOn)}`}`}
+                    data-month={first.filedOn.slice(0, 7)}
                     className="cursor-pointer"
                   >
                     <circle cx={px} cy={cy} r={8} fill="transparent" />
-                    {event.kind === "business" ? (
+                    {first.kind === "business" ? (
                       <path
                         d={`M${px},${cy - 6.5}L${px + 6.5},${cy}L${px},${cy + 6.5}L${px - 6.5},${cy}Z`}
                         fill={fill}
@@ -960,10 +1023,10 @@ function Rows({
             </svg>
           </div>
 
-          <div className="tl-row">
+          <div className="tl-row" ref={economyRow}>
             <TimelineHead>
               <span>
-                <Term name="Economic context" />
+                <Term name="Economic context" />, {monthName(month)}
               </span>
               <span className="tl-legend">
                 <span>
@@ -977,6 +1040,9 @@ function Rows({
                   </svg>
                   <span>
                     <Term name="Interest rate" />
+                    {chosenMonth !== undefined && chosenMonth.interestRate !== null && (
+                      <span className="numbers">{` ${rate(chosenMonth.interestRate)}`}</span>
+                    )}
                   </span>
                 </span>
                 <span>
@@ -989,7 +1055,10 @@ function Rows({
                     />
                   </svg>
                   <span>
-                    <Term name="Inflation" />, dashed
+                    <Term name="Inflation" />
+                    {chosenMonth !== undefined && chosenMonth.inflation !== null && (
+                      <span className="numbers">{` ${inflationText(chosenMonth.inflation)}`}</span>
+                    )}
                   </span>
                 </span>
                 <span>
@@ -1000,12 +1069,12 @@ function Rows({
                       width="12"
                       height="12"
                       rx="2"
-                      fill="url(#hatch)"
-                      stroke="var(--color-hairline-strong)"
+                      fill={colors.recession}
+                      stroke={colors.recessionEdge}
                     />
                   </svg>
                   <span>
-                    <Term name="Recession" />, across every row
+                    <Term name="Recession" />, shaded in every row
                   </span>
                 </span>
               </span>
@@ -1023,7 +1092,7 @@ function Rows({
               <div className="tl-plot">
                 <Ticks
                   height={economyHeight}
-                  ticks={yEconomy.ticks(3).map((tick) => ({ y: yEconomy(tick), text: `${tick}%` }))}
+                  ticks={economyTicks.map((tick) => ({ y: yEconomy(tick), text: `${tick}%` }))}
                 />
                 <svg
                   width={W}
@@ -1031,7 +1100,7 @@ function Rows({
                   role="img"
                   aria-label="Interest rate and inflation for each month, with recessions shaded"
                 >
-                  {yEconomy.ticks(3).map((tick) => (
+                  {economyTicks.map((tick) => (
                     <line
                       key={tick}
                       className={tick === 0 ? "baseline" : "grid-line"}
@@ -1063,24 +1132,24 @@ function Rows({
                       />
                     );
                   })}
-                  {lastMonth !== undefined &&
-                    endLabels.map((label) => (
-                      <g key={label.key}>
+                  {chosenMonth !== undefined &&
+                    (["interestRate", "inflation"] as const).map((key) =>
+                      chosenMonth[key] === null ? null : (
                         <circle
-                          cx={x(middle(lastMonth.month))}
-                          cy={yEconomy(lastMonth[label.key]!)}
-                          r={3}
-                          fill={label.color}
+                          key={key}
+                          cx={cursorX}
+                          cy={yEconomy(chosenMonth[key]!)}
+                          r={3.5}
+                          fill={
+                            key === "interestRate"
+                              ? "var(--color-line-rate)"
+                              : "var(--color-line-inflation)"
+                          }
+                          stroke="var(--color-surface-1)"
+                          strokeWidth={1.5}
                         />
-                        <text
-                          className="tl-text tl-end"
-                          x={x(middle(lastMonth.month)) + 8}
-                          y={label.y + 4.5}
-                        >
-                          {label.text}
-                        </text>
-                      </g>
-                    ))}
+                      ),
+                    )}
                 </svg>
               </div>
             )}
@@ -1135,7 +1204,7 @@ function Rows({
               <line
                 x1={hover}
                 x2={hover}
-                y1={0}
+                y1={economyTop}
                 y2={height - axisHeight}
                 stroke="var(--color-text-3)"
                 strokeDasharray="2 3"
@@ -1144,7 +1213,7 @@ function Rows({
             <line
               x1={cursorX}
               x2={cursorX}
-              y1={0}
+              y1={economyTop}
               y2={height - axisHeight + 28}
               stroke="var(--color-text-1)"
               strokeWidth={1.5}
@@ -1174,6 +1243,37 @@ function Ticks({
         </span>
       ))}
     </div>
+  );
+}
+
+function Years({
+  spans,
+  x,
+  width,
+  isChosen,
+  shown,
+}: {
+  readonly spans: ReadonlyArray<Span>;
+  readonly x: (date: Date) => number;
+  readonly width: number;
+  readonly isChosen: (each: Span) => boolean;
+  readonly shown: (index: number) => boolean;
+}) {
+  return (
+    <svg width={width} height={22} aria-hidden="true">
+      {spans.map((each, index) => (
+        <text
+          key={each.fiscalYear}
+          className={`tl-year ${isChosen(each) ? "current" : ""}`}
+          x={(x(each.start) + x(each.end)) / 2}
+          y={16}
+          textAnchor="middle"
+          opacity={shown(index) ? 1 : 0}
+        >
+          {each.fiscalYear}
+        </text>
+      ))}
+    </svg>
   );
 }
 
