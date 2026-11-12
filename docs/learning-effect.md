@@ -38,7 +38,7 @@ Read: [`src/server/settings.ts`](../src/server/settings.ts), [`src/server/compan
 
 `ManagedRuntime.make(layer)` builds the services once. `runtime.runPromise(effect)` runs a program with them and returns an ordinary promise, and a failure becomes a rejected promise. Server functions are the only place this happens, so screens never see Effect.
 
-Read: [`src/server/runtime.ts`](../src/server/runtime.ts), [`src/functions/settings.ts`](../src/functions/settings.ts).
+Read: [`src/server/runtime.ts`](../src/server/runtime.ts), [`src/functions/company.ts`](../src/functions/company.ts).
 
 ## Testing with Effect's helper for Vitest
 

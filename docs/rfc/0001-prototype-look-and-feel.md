@@ -85,6 +85,17 @@ Looked at: financial stats, comparing financial metrics, comparing stock metrics
 - **Search that lists a company's screens as well as companies.** Typing a company offers its overview, statements and timeline directly.
 - **Peer comparison is not in the first version.** A later comparison could mark the company's own row, use small bars to show where it sits among peers, and let the reader edit the list of peers.
 
+### Settled on 11 November 2026, while building the screens
+
+- **Logos.** Company logos are trademarks, so the tool shows a tile with the first letter of the company's name, as the mocks did for companies without a logo. The open point on logos below stays open: a published source for them may still be found.
+- **The home picture.** The night city is drawn by the tool itself, as layers of buildings with lit windows, graded into the app's blues. The mock's photo was under the Unsplash licence, not MIT, so it is not shipped.
+- **The fiscal year ruler widens with history.** Apple has twenty fiscal years. Each year keeps room for its label, and on a phone only every few years are named, plus the chosen one.
+- **Timeline.** The interest rate is a solid line and inflation a dashed one, each named with its latest value at its end. Axis labels sit in a margin the bars never enter. Bars for years not chosen are solid colours of at least 3 to 1 against the panel, and so is the recession hatch. On a narrow screen the timeline box fades at the edge that scrolls and opens at the chosen month. It covers every fiscal year collected, and its corporate events reach back as far, because the SEC's older pages of filings are read too.
+- **The term card knows every number.** Every term of the three statements, the margins, free cash flow and net debt open their card with this company's figure for the fiscal year shown, and where it came from.
+- **The step between operating income and net income** is now the glossary term "Interest, other income and tax".
+- **Overview.** The big sentence is worked out from the numbers, such as "Apple brought in $478.8 billion in fiscal 2026 and kept 28¢ of each dollar". The mock's plain description of the business was written by hand, which the tool cannot do for any company. The company's own words come from the opening of the business description in its latest annual report (10-K), with a link.
+- **Collecting progress** is shown by step, out of three, rather than as a percentage the tool cannot know.
+
 ## Open points
 
 - Settled on 11 November 2026: the look is settled on one real screen, not on a separate mock-up. The first slice's screen, "Where the money goes", is taken to finished quality and later screens reuse its colours, type, spacing and movement. See [Which screens the first version needs](./0002-first-version-site-structure.md).

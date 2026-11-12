@@ -16,6 +16,8 @@ data/
 .mobbin/
 
 # Installed and built files
+test-results/
+playwright-report/
 node_modules/
 dist/
 .output/
@@ -28,3 +30,4 @@ mocks/
 
 # Local git worktrees for parallel sessions
 .worktrees/
+.tanstack/

@@ -10,33 +10,134 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TickerRouteImport } from './routes/$ticker'
+import { Route as CompaniesRouteImport } from './routes/companies'
+import { Route as GlossaryRouteImport } from './routes/glossary'
+import { Route as TickerIndexRouteImport } from './routes/$ticker/index'
+import { Route as TickerOverviewRouteImport } from './routes/$ticker/overview'
+import { Route as TickerStatementsRouteImport } from './routes/$ticker/statements'
+import { Route as TickerTimelineRouteImport } from './routes/$ticker/timeline'
+import { Route as TickerWhereTheMoneyGoesRouteImport } from './routes/$ticker/where-the-money-goes'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TickerRoute = TickerRouteImport.update({
+  id: '/$ticker',
+  path: '/$ticker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesRoute = CompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GlossaryRoute = GlossaryRouteImport.update({
+  id: '/glossary',
+  path: '/glossary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TickerIndexRoute = TickerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TickerRoute,
+} as any)
+const TickerOverviewRoute = TickerOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => TickerRoute,
+} as any)
+const TickerStatementsRoute = TickerStatementsRouteImport.update({
+  id: '/statements',
+  path: '/statements',
+  getParentRoute: () => TickerRoute,
+} as any)
+const TickerTimelineRoute = TickerTimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => TickerRoute,
+} as any)
+const TickerWhereTheMoneyGoesRoute = TickerWhereTheMoneyGoesRouteImport.update({
+  id: '/where-the-money-goes',
+  path: '/where-the-money-goes',
+  getParentRoute: () => TickerRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$ticker': typeof TickerRouteWithChildren
+  '/companies': typeof CompaniesRoute
+  '/glossary': typeof GlossaryRoute
+  '/$ticker/overview': typeof TickerOverviewRoute
+  '/$ticker/statements': typeof TickerStatementsRoute
+  '/$ticker/timeline': typeof TickerTimelineRoute
+  '/$ticker/where-the-money-goes': typeof TickerWhereTheMoneyGoesRoute
+  '/$ticker/': typeof TickerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/companies': typeof CompaniesRoute
+  '/glossary': typeof GlossaryRoute
+  '/$ticker/overview': typeof TickerOverviewRoute
+  '/$ticker/statements': typeof TickerStatementsRoute
+  '/$ticker/timeline': typeof TickerTimelineRoute
+  '/$ticker/where-the-money-goes': typeof TickerWhereTheMoneyGoesRoute
+  '/$ticker': typeof TickerIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$ticker': typeof TickerRouteWithChildren
+  '/companies': typeof CompaniesRoute
+  '/glossary': typeof GlossaryRoute
+  '/$ticker/overview': typeof TickerOverviewRoute
+  '/$ticker/statements': typeof TickerStatementsRoute
+  '/$ticker/timeline': typeof TickerTimelineRoute
+  '/$ticker/where-the-money-goes': typeof TickerWhereTheMoneyGoesRoute
+  '/$ticker/': typeof TickerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/$ticker'
+    | '/companies'
+    | '/glossary'
+    | '/$ticker/overview'
+    | '/$ticker/statements'
+    | '/$ticker/timeline'
+    | '/$ticker/where-the-money-goes'
+    | '/$ticker/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/companies'
+    | '/glossary'
+    | '/$ticker/overview'
+    | '/$ticker/statements'
+    | '/$ticker/timeline'
+    | '/$ticker/where-the-money-goes'
+    | '/$ticker'
+  id:
+    | '__root__'
+    | '/'
+    | '/$ticker'
+    | '/companies'
+    | '/glossary'
+    | '/$ticker/overview'
+    | '/$ticker/statements'
+    | '/$ticker/timeline'
+    | '/$ticker/where-the-money-goes'
+    | '/$ticker/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TickerRoute: typeof TickerRouteWithChildren
+  CompaniesRoute: typeof CompaniesRoute
+  GlossaryRoute: typeof GlossaryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +149,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$ticker': {
+      id: '/$ticker'
+      path: '/$ticker'
+      fullPath: '/$ticker'
+      preLoaderRoute: typeof TickerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies': {
+      id: '/companies'
+      path: '/companies'
+      fullPath: '/companies'
+      preLoaderRoute: typeof CompaniesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/glossary': {
+      id: '/glossary'
+      path: '/glossary'
+      fullPath: '/glossary'
+      preLoaderRoute: typeof GlossaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$ticker/': {
+      id: '/$ticker/'
+      path: '/'
+      fullPath: '/$ticker/'
+      preLoaderRoute: typeof TickerIndexRouteImport
+      parentRoute: typeof TickerRoute
+    }
+    '/$ticker/overview': {
+      id: '/$ticker/overview'
+      path: '/overview'
+      fullPath: '/$ticker/overview'
+      preLoaderRoute: typeof TickerOverviewRouteImport
+      parentRoute: typeof TickerRoute
+    }
+    '/$ticker/statements': {
+      id: '/$ticker/statements'
+      path: '/statements'
+      fullPath: '/$ticker/statements'
+      preLoaderRoute: typeof TickerStatementsRouteImport
+      parentRoute: typeof TickerRoute
+    }
+    '/$ticker/timeline': {
+      id: '/$ticker/timeline'
+      path: '/timeline'
+      fullPath: '/$ticker/timeline'
+      preLoaderRoute: typeof TickerTimelineRouteImport
+      parentRoute: typeof TickerRoute
+    }
+    '/$ticker/where-the-money-goes': {
+      id: '/$ticker/where-the-money-goes'
+      path: '/where-the-money-goes'
+      fullPath: '/$ticker/where-the-money-goes'
+      preLoaderRoute: typeof TickerWhereTheMoneyGoesRouteImport
+      parentRoute: typeof TickerRoute
+    }
   }
 }
 
+interface TickerRouteChildren {
+  TickerOverviewRoute: typeof TickerOverviewRoute
+  TickerStatementsRoute: typeof TickerStatementsRoute
+  TickerTimelineRoute: typeof TickerTimelineRoute
+  TickerWhereTheMoneyGoesRoute: typeof TickerWhereTheMoneyGoesRoute
+  TickerIndexRoute: typeof TickerIndexRoute
+}
+
+const TickerRouteChildren: TickerRouteChildren = {
+  TickerOverviewRoute: TickerOverviewRoute,
+  TickerStatementsRoute: TickerStatementsRoute,
+  TickerTimelineRoute: TickerTimelineRoute,
+  TickerWhereTheMoneyGoesRoute: TickerWhereTheMoneyGoesRoute,
+  TickerIndexRoute: TickerIndexRoute,
+}
+
+const TickerRouteWithChildren =
+  TickerRoute._addFileChildren(TickerRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TickerRoute: TickerRouteWithChildren,
+  CompaniesRoute: CompaniesRoute,
+  GlossaryRoute: GlossaryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
