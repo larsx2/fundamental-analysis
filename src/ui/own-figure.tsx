@@ -3,7 +3,7 @@ import { type CheckedFigure, valueOf } from "../shared/figures";
 import { filingUrl, longDate, money, percent, perShare } from "./format";
 import { CalculatedMark, DoubtfulMark, GapMark } from "./marks";
 
-export type FigureKey = keyof StatementYear["terms"] | "below";
+export type FigureKey = keyof StatementYear["terms"] | "below" | "interestAndOther";
 
 // Which number each glossary term stands for on a company screen.
 export const keyOfTerm: Record<string, FigureKey> = {
@@ -15,6 +15,8 @@ export const keyOfTerm: Record<string, FigureKey> = {
   "Other operating expenses": "otherOperatingExpenses",
   "Operating income": "operatingIncome",
   "Interest, other income and tax": "below",
+  "Income tax": "incomeTax",
+  "Interest and other income": "interestAndOther",
   "Net income": "netIncome",
   "Earnings per share": "earningsPerShare",
   "Gross margin": "grossMargin",
@@ -62,6 +64,8 @@ export const incomeKeys = new Set<FigureKey>([
   "otherOperatingExpenses",
   "operatingIncome",
   "below",
+  "incomeTax",
+  "interestAndOther",
   "netIncome",
 ]);
 
@@ -82,8 +86,30 @@ export const belowOperatingIncome = (year: StatementYear): CheckedFigure => {
   };
 };
 
+export const interestAndOtherIncome = (year: StatementYear): CheckedFigure => {
+  const operating = valueOf(year.terms.operatingIncome);
+  const net = valueOf(year.terms.netIncome);
+  const tax = valueOf(year.terms.incomeTax);
+  if (operating === null || net === null || tax === null) return { kind: "gap", doubtful: null };
+  return {
+    kind: "calculated",
+    value: net - operating + tax,
+    from: [
+      { name: "Net income", value: net },
+      { name: "Operating income", value: -operating },
+      { name: "Income tax", value: tax },
+    ],
+    setAside: null,
+    doubtful: null,
+  };
+};
+
 export const figureOf = (year: StatementYear, key: FigureKey): CheckedFigure =>
-  key === "below" ? belowOperatingIncome(year) : year.terms[key];
+  key === "below"
+    ? belowOperatingIncome(year)
+    : key === "interestAndOther"
+      ? interestAndOtherIncome(year)
+      : year.terms[key];
 
 export const formatValue = (key: FigureKey, value: number) =>
   ratioKeys.has(key) ? percent(value) : key === "earningsPerShare" ? perShare(value) : money(value);

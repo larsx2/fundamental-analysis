@@ -83,6 +83,18 @@ const paths = {
   external: <path d="M8 16 16 8M10 8h6v6" />,
   left: <path d="m15 6-6 6 6 6" />,
   right: <path d="m9 6 6 6-6 6" />,
+  zoomIn: (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.2-4.2M11 8.5v5M8.5 11h5" />
+    </>
+  ),
+  zoomOut: (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.2-4.2M8.5 11h5" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;

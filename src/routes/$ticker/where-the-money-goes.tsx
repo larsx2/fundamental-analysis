@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { StatementYear } from "../../functions/company";
 import { valueOf } from "../../shared/figures";
 import { CompanyFrame, searchYear, useReadyCompany } from "../../ui/company-frame";
@@ -7,7 +7,8 @@ import { centsOfDollar, lowerFirst, money, percent } from "../../ui/format";
 import { Icon } from "../../ui/icons";
 import { shortName } from "../../ui/logo-tile";
 import { GapMark } from "../../ui/marks";
-import { Bands } from "../../ui/money-flow/bands";
+import { useChooseYear } from "../../ui/company-header";
+import { MoneyExplorer } from "../../ui/money-flow/explorer";
 import { FiguresTable } from "../../ui/money-flow/figures-table";
 import { yearParts } from "../../ui/money-flow/parts";
 import { RollingNumber, useWidth } from "../../ui/motion";
@@ -19,12 +20,18 @@ type Drawing = "flow" | "table";
 export const Route = createFileRoute("/$ticker/where-the-money-goes")({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { year?: number | undefined; drawing?: Drawing | undefined } => {
+  ): {
+    year?: number | undefined;
+    drawing?: Drawing | undefined;
+    follow?: "cash" | undefined;
+  } => {
     const year = searchYear(search);
     const drawing = search.drawing === "table" ? search.drawing : undefined;
+    const follow = search.follow === "cash" ? search.follow : undefined;
     return {
       ...(year === undefined ? {} : { year }),
       ...(drawing === undefined ? {} : { drawing }),
+      ...(follow === undefined ? {} : { follow }),
     };
   },
   component: MoneyFlow,
@@ -45,6 +52,14 @@ function MoneyFlow() {
   const drawing: Drawing = search.drawing === "table" || !flowFits ? "table" : "flow";
   const name = shortName(view.name);
   const previous = years.find((each) => each.fiscalYear === year.fiscalYear - 1);
+  const chooseYear = useChooseYear();
+  const [compare, setCompare] = useState(false);
+  const lens = search.follow ?? "profit";
+  const follow = (next: "profit" | "cash") =>
+    void navigate({
+      search: (was) => ({ ...was, follow: next === "cash" ? next : undefined }),
+      resetScroll: false,
+    });
 
   return (
     <CompanyFrame
@@ -56,8 +71,35 @@ function MoneyFlow() {
       <Hero name={name} year={year} />
       <section ref={panel} className="panel panel-pad" aria-labelledby="chart-title">
         <div className="panel-title">
-          <h2 id="chart-title">Where each dollar went in fiscal {year.fiscalYear}</h2>
+          <h2 id="chart-title">
+            {drawing === "flow" && lens === "cash"
+              ? `Where the cash went in fiscal ${year.fiscalYear}`
+              : `Where each dollar went in fiscal ${year.fiscalYear}`}
+          </h2>
           <div className="flex flex-wrap items-center gap-2">
+            {drawing === "flow" && (
+              <>
+                <Segmented
+                  label="What to follow"
+                  value={lens}
+                  onChange={follow}
+                  options={[
+                    { value: "profit", label: "Each dollar of revenue" },
+                    { value: "cash", label: "The cash" },
+                  ]}
+                />
+                <button
+                  type="button"
+                  className="flow-compare"
+                  aria-pressed={compare}
+                  disabled={previous === undefined}
+                  onClick={() => setCompare((was) => !was)}
+                >
+                  Compare with{" "}
+                  {previous === undefined ? "the year before" : `fiscal ${previous.fiscalYear}`}
+                </button>
+              </>
+            )}
             <Segmented
               label="Drawing"
               className="chart-switch"
@@ -87,8 +129,17 @@ function MoneyFlow() {
             />
           </div>
         </div>
-        <p className="verdict">{verdict(year)}</p>
-        {drawing === "flow" && <Bands year={year} company={view.ticker} />}
+        {(drawing === "table" || lens === "profit") && <p className="verdict">{verdict(year)}</p>}
+        {drawing === "flow" && (
+          <MoneyExplorer
+            lens={lens}
+            compare={compare && previous !== undefined}
+            years={years}
+            year={year}
+            company={name}
+            onYear={(fiscalYear) => void chooseYear(fiscalYear)}
+          />
+        )}
         {drawing === "table" && <FiguresTable year={year} previous={previous} />}
       </section>
     </CompanyFrame>

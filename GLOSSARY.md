@@ -152,6 +152,16 @@ Everything between operating income and net income: interest the company paid or
 _Example_: In fiscal 2023 Apple's operating income was about $114.3 billion and its net income about $97.0 billion. The $17.3 billion between them was mostly about $16.7 billion of income tax.
 _Avoid_: Non-operating items, below the line, other expenses
 
+**Income tax**:
+The tax a company owes on its profit for the year. It is the largest part of what lies between operating income and net income for most companies.
+_Example_: Apple's income tax in fiscal 2023 was about $16.7 billion.
+_Avoid_: Tax provision, provision for income taxes, tax expense
+
+**Interest and other income**:
+Interest the company earned on its cash, minus interest it paid on its debt, plus gains and losses outside the business itself. It can add to net income or take from it. The tool works it out as net income minus operating income plus income tax.
+_Example_: In fiscal 2023 Apple's interest and other income was about −$0.6 billion: it took a little from net income. Costco's was about +$0.6 billion in fiscal 2026, because it earned more interest on its cash than it paid.
+_Avoid_: Non-operating income, other income (expense), net
+
 **Net income**:
 What is left for the owners after every cost, interest payment and tax.
 _Example_: Apple's net income in fiscal 2023 was about $97 billion.

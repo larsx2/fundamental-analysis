@@ -18,13 +18,20 @@ import {
   cashFlowTags,
   debtParts,
   earningsPerShareTags,
+  incomeTaxTags,
   liabilitiesAndEquityTags,
   longTermDebtTotalTags,
   type RatioKey,
 } from "./statement-tags";
 import { type TermKey, termKeys, termNames, termTags } from "./term-tags";
 
-export type StatementKey = TermKey | BalanceKey | CashFlowKey | RatioKey | "earningsPerShare";
+export type StatementKey =
+  | TermKey
+  | BalanceKey
+  | CashFlowKey
+  | RatioKey
+  | "earningsPerShare"
+  | "incomeTax";
 
 export type StatementYear = {
   readonly fiscalYear: number;
@@ -256,6 +263,7 @@ export const chooseStatements = (input: {
       operatingMargin: checked(ratio(named("operatingIncome"), named("revenue"))),
       netMargin: checked(ratio(named("netIncome"), named("revenue"))),
       earningsPerShare: checked(earningsPerShareFor(perShare, splits, fiscalYear)),
+      incomeTax: checked(flow(incomeTaxTags)),
       cash: checked(balance.cash),
       receivables: checked(balance.receivables),
       inventory: checked(balance.inventory),
