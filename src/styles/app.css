@@ -319,8 +319,10 @@
       color 200ms var(--ease-out-soft);
   }
 
-  .segmented > *:hover {
-    color: var(--color-text-1);
+  @media (hover: hover) {
+    .segmented > *:hover {
+      color: var(--color-text-1);
+    }
   }
 
   .segmented > [aria-pressed="true"],
@@ -1519,9 +1521,18 @@
     height: 18px;
   }
 
-  .chart-switch [data-tip]:hover::after,
   .chart-switch [data-tip]:focus-visible::after {
     content: attr(data-tip);
+  }
+
+  @media (hover: hover) {
+    .chart-switch [data-tip]:hover::after {
+      content: attr(data-tip);
+    }
+  }
+
+  .chart-switch [data-tip]:hover::after,
+  .chart-switch [data-tip]:focus-visible::after {
     position: absolute;
     top: 42px;
     right: 0;
@@ -2464,12 +2475,34 @@
   }
 
   .strip {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     border: 1px solid var(--color-hairline);
     border-radius: var(--radius-l);
     background: color-mix(in oklab, var(--color-surface-1) 88%, transparent);
     overflow: hidden;
+  }
+
+  .strip-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .strip-row + .strip-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sparkline {
+    display: block;
+    margin: 4px 0 2px;
+  }
+
+  .sparkline path {
+    stroke: var(--color-text-3);
+  }
+
+  .sparkline circle {
+    fill: var(--color-text-1);
+    stroke: var(--color-surface-1);
+    stroke-width: 2px;
   }
 
   .tile {
@@ -2515,8 +2548,13 @@
       gap: 24px;
     }
 
-    .strip {
+    .strip-row,
+    .strip-row + .strip-row {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .strip-row > :last-child:nth-child(odd) {
+      grid-column: span 2;
     }
   }
 

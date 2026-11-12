@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { max, min } from "d3-array";
 import { scalePoint, scaleLinear } from "d3-scale";
-import { area as areaShape, curveMonotoneX, line as lineShape } from "d3-shape";
+import { curveMonotoneX, line as lineShape } from "d3-shape";
 import { motion } from "motion/react";
 import { type ReactNode, useRef, useState } from "react";
 import type { StatementYear } from "../../functions/company";
@@ -214,13 +214,11 @@ const series = [
     key: "revenue",
     name: "Revenue",
     color: "var(--color-text-1)",
-    wash: "rgb(244 244 242 / 0.07)",
   },
   {
     key: "netIncome",
     name: "Net income",
     color: "var(--color-part-kept)",
-    wash: "rgb(0 131 0 / 0.16)",
   },
 ] as const;
 
@@ -329,7 +327,7 @@ function Multiple({
   const y = scaleLinear()
     .domain([Math.min(0, min(known) ?? 0), Math.max(0, max(known) ?? 1)])
     .range([innerHeight, 0])
-    .nice(4);
+    .nice(6);
   const transition = still ? { duration: 0 } : glide;
   const at = (point: StatementYear) => x(point.fiscalYear) ?? 0;
   const valueAt = (point: StatementYear) => valueOf(point.terms[each.key]);
@@ -338,13 +336,6 @@ function Multiple({
     .x(at)
     .y((point) => y(valueAt(point) ?? 0))
     .curve(curveMonotoneX)(years);
-  const wash = areaShape<StatementYear>()
-    .defined((point) => valueAt(point) !== null)
-    .x(at)
-    .y0(y(0))
-    .y1((point) => y(valueAt(point) ?? 0))
-    .curve(curveMonotoneX)(years);
-
   const chosen = valueAt(year);
   const cx = at(year);
   const cy = chosen === null ? null : y(chosen);
@@ -384,7 +375,6 @@ function Multiple({
               </text>
             </g>
           ))}
-          <path d={wash ?? ""} style={{ fill: each.wash }} />
           <motion.path
             d={line ?? ""}
             fill="none"
@@ -572,6 +562,7 @@ function KeyFigures({
             ? `unchanged since fiscal ${before.fiscalYear}`
             : `${signedPercent(delta)} since fiscal ${before.fiscalYear}`,
       figure,
+      key,
     };
   };
   const ratioTile = (key: FigureKey) => {
@@ -583,8 +574,11 @@ function KeyFigures({
       change:
         before === undefined || value === null || then === null
           ? null
-          : `${signedPoints((value - then) * 100)} since fiscal ${before.fiscalYear}`,
+          : Math.abs(value - then) < 0.0005
+            ? `unchanged since fiscal ${before.fiscalYear}`
+            : `${signedPoints((value - then) * 100)} since fiscal ${before.fiscalYear}`,
       figure,
+      key,
     };
   };
   const tiles: ReadonlyArray<{
@@ -616,6 +610,21 @@ function KeyFigures({
     { term: "Cash", tile: moneyTile("cash"), marksFrom: "cash" },
     { term: "Debt", tile: moneyTile("debt"), marksFrom: "debt" },
   ];
+  // Each tile draws its last ten fiscal years, up to the one shown.
+  const recent = years.filter((each) => each.fiscalYear <= year.fiscalYear).slice(-10);
+  const trendOf = (key: FigureKey) => recent.map((each) => valueOf(figureOf(each, key)));
+  const tile = ({ term, tile, marksFrom }: (typeof tiles)[number]) => (
+    <Tile
+      key={term}
+      term={term}
+      value={tile.value}
+      change={tile.change}
+      trend={trendOf(tile.key)}
+      ratio={tile.key === "grossMargin" || tile.key === "operatingMargin"}
+      trendLabel={`${term}, fiscal ${recent[0]?.fiscalYear} to fiscal ${year.fiscalYear}`}
+      marks={<Marks figure={figureOf(year, marksFrom)} />}
+    />
+  );
   const gross = valueOf(year.terms.grossMargin);
   const grossBefore = before === undefined ? null : valueOf(before.terms.grossMargin);
 
@@ -624,16 +633,10 @@ function KeyFigures({
       <h2 id="strip-title" className="mt-8 mb-3 text-m font-semibold">
         Key figures for fiscal {year.fiscalYear}
       </h2>
+      {/* What the year earned, then the cash and debt it ended with. */}
       <div className="strip">
-        {tiles.map(({ term, tile, marksFrom }) => (
-          <Tile
-            key={term}
-            term={term}
-            value={tile.value}
-            change={tile.change}
-            marks={<Marks figure={figureOf(year, marksFrom)} />}
-          />
-        ))}
+        <div className="strip-row">{tiles.slice(0, 4).map(tile)}</div>
+        <div className="strip-row">{tiles.slice(4).map(tile)}</div>
       </div>
       <p className="mt-3 mb-0 text-xs text-text-3">
         {before === undefined ? (
@@ -657,11 +660,17 @@ function Tile({
   term,
   value,
   change,
+  trend,
+  ratio,
+  trendLabel,
   marks,
 }: {
   readonly term: string;
   readonly value: ReactNode;
   readonly change: string | null;
+  readonly trend: ReadonlyArray<number | null>;
+  readonly ratio: boolean;
+  readonly trendLabel: string;
   readonly marks: ReactNode;
 }) {
   return (
@@ -671,7 +680,60 @@ function Tile({
       </div>
       <div className="tile-value numbers">{value}</div>
       <div className="change">{change ?? " "}</div>
+      <Sparkline values={trend} ratio={ratio} label={trendLabel} />
       <div>{marks}</div>
     </div>
+  );
+}
+
+// A small line of the last fiscal years in a quiet grey, with the year shown
+// marked at its end. It has no scale, so it must not exaggerate: dollars are
+// drawn from zero, and a margin's line spans at least four points, so a move
+// of a few tenths of a point stays nearly flat.
+const marginSpan = 0.04;
+
+function Sparkline({
+  values,
+  ratio,
+  label,
+}: {
+  readonly values: ReadonlyArray<number | null>;
+  readonly ratio: boolean;
+  readonly label: string;
+}) {
+  const width = 120;
+  const height = 28;
+  const known = values.filter((value): value is number => value !== null);
+  if (known.length < 2) return null;
+  const x = scaleLinear()
+    .domain([0, values.length - 1])
+    .range([4, width - 4]);
+  const low = min(known) ?? 0;
+  const high = max(known) ?? 1;
+  const middle = (low + high) / 2;
+  const span = Math.max(high - low, marginSpan) / 2;
+  const y = scaleLinear()
+    .domain(ratio ? [middle - span, middle + span] : [Math.min(0, low), Math.max(0, high) || 1])
+    .range([height - 4, 4]);
+  const path = lineShape<number | null>()
+    .defined((value) => value !== null)
+    .x((_, index) => x(index))
+    .y((value) => y(value ?? 0))
+    .curve(curveMonotoneX)(values);
+  const last = values.at(-1);
+  return (
+    <svg
+      className="sparkline"
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      role="img"
+      aria-label={label}
+    >
+      <path d={path ?? ""} fill="none" strokeWidth={1.5} strokeLinejoin="round" />
+      {last !== null && last !== undefined && (
+        <circle cx={x(values.length - 1)} cy={y(last)} r={3.5} />
+      )}
+    </svg>
   );
 }
