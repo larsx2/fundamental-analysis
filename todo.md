@@ -135,9 +135,9 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T02. **Size:** medium.
 
-- [ ] The database holds companies, filings and reported numbers.
-- [ ] A reported number keeps its value, its tag, the dates it covers, the filing it came from and the day that filing was published.
-- [ ] Two different values for the same fiscal year are both kept.
+- [x] The database holds companies, filings and reported numbers.
+- [x] A reported number keeps its value, its tag, the dates it covers, the filing it came from and the day that filing was published.
+- [x] Two different values for the same fiscal year are both kept.
 
 **Check:** a test stores an original and a restated number for one fiscal year and reads back both.
 
@@ -145,9 +145,9 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T04, T06. **Size:** medium.
 
-- [ ] Fetch all reported numbers for one company in a single request and check their shape with the schema tool.
-- [ ] Keep only numbers from annual reports (10-K) that cover a full fiscal year.
-- [ ] A number in an unexpected shape is reported, not silently dropped.
+- [x] Fetch all reported numbers for one company in a single request and check their shape with the schema tool.
+- [x] Keep only numbers from annual reports (10-K) that cover a full fiscal year, and the balances at each year end.
+- [x] A number in an unexpected shape is reported, not silently dropped.
 - [ ] A small script trims the SEC's data for Apple, Costco and Microsoft down to the tags the tests need, and the extracts are committed beside the tests.
 
 **Effect ideas:** decoding outside data with the schema tool, doing database work in one transaction.
@@ -158,9 +158,9 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 **Depends on:** T07. **Size:** small.
 
-- [ ] A number's fiscal year comes from the dates it covers, never from the SEC's own year label, which is the year of the filing.
-- [ ] Years of 52 and 53 weeks both count as full fiscal years.
-- [ ] A fiscal year is named by the calendar year it ends in.
+- [x] A number's fiscal year comes from the dates it covers, never from the SEC's own year label, which is the year of the filing.
+- [x] Years of 52 and 53 weeks both count as full fiscal years.
+- [x] A fiscal year is named by the calendar year it ends in.
 
 **Check:** Apple's fiscal 2023 is the period ending 30 September 2023. Microsoft's is the year ending 30 June 2023. Costco's ends on 3 September 2023.
 

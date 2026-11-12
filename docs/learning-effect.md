@@ -69,3 +69,9 @@ Read: [`src/server/sec.ts`](../src/server/sec.ts).
 `sql.withTransaction(effect)` runs every query inside it as one transaction: all of it is stored, or none of it.
 
 Read: [`src/server/companies.ts`](../src/server/companies.ts).
+
+## Decoding outside data one piece at a time
+
+`Schema.decodeUnknownEffect(schema)(data)` checks data from outside and fails the whole Effect if anything is off. When one bad entry should not sink the rest, `Schema.decodeUnknownResult(schema)` checks a single entry and returns a `Result`: `Result.isFailure(result)` says whether it failed, `result.failure.message` says why, and `result.success` holds the checked value.
+
+Read: [`src/server/collect.ts`](../src/server/collect.ts).
