@@ -6,11 +6,9 @@ import { questions, topics } from "../../shared/questions";
 import { useAskToCollect } from "../collect-dialog";
 import { plainName, shortName } from "../logo-tile";
 import { type Mention, MentionInput } from "../mention-input";
-import { usePrefill } from "../prefill";
+import { inWords } from "../format";
+import { Clears, usePrefill } from "../prefill";
 import { namedCompanyQuery } from "./named-company";
-
-const listed = (names: ReadonlyArray<string>) =>
-  names.length < 2 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 
 export function AskComposer({
   context,
@@ -99,7 +97,7 @@ export function AskComposer({
             "Asks a general question"
           ) : (
             <>
-              Asks about <strong>{listed(targets.map((each) => shortName(each.name)))}</strong>
+              Asks about <strong>{inWords(targets.map((each) => shortName(each.name)))}</strong>
             </>
           )}
         </span>
@@ -127,7 +125,7 @@ export function AskComposer({
               ? "Working on the answer. Type your next question, or stop it."
               : context.length === 0
                 ? "Ask about any company, such as Apple or COST"
-                : `Ask about ${listed(context.map((each) => shortName(each.name)))}, or name another company`
+                : `Ask about ${inWords(context.map((each) => shortName(each.name)))}, or name another company`
           }
           value={text}
           mentions={mentions}
@@ -188,13 +186,5 @@ export function AskComposer({
         </div>
       </form>
     </div>
-  );
-}
-
-export function Clears() {
-  return (
-    <span className="intent-clears">
-      <kbd>esc</kbd> clears
-    </span>
   );
 }

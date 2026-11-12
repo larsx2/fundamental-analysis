@@ -78,8 +78,6 @@ const drawingTitle = (state: AskState | undefined) =>
 const answerText = (state: AskState) =>
   state.answer === null ? "" : [state.answer.lead, ...state.answer.sentences].join(" ");
 
-export type ConversationCompany = Company;
-
 const following = { on: true };
 
 export function Conversation({
@@ -197,7 +195,6 @@ export function Conversation({
       askedAt: done.startedAt,
       state: done,
       companies: pendingCompanies,
-      ...(first === undefined ? {} : { ticker: first.ticker, cik: first.cik, name: first.name }),
     };
     const threadId = thread?.id ?? crypto.randomUUID();
     if (thread === undefined) {

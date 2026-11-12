@@ -7,9 +7,8 @@ import { allTerms, type GlossaryTerm } from "../glossary/glossary";
 import { RevenueExhibit } from "../ui/home/revenue-exhibit";
 import { HomeBackdrop } from "../ui/home/backdrop";
 import { plainName, shortName } from "../ui/logo-tile";
-import { Clears } from "../ui/ask/composer";
 import { type Mention, MentionInput } from "../ui/mention-input";
-import { usePrefill } from "../ui/prefill";
+import { Clears, usePrefill } from "../ui/prefill";
 import { useStill } from "../ui/motion";
 import type { CompanyScreen } from "../ui/palette";
 

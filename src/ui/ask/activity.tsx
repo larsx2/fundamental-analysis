@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { lowerFirst } from "../format";
+import { inWords, lowerFirst } from "../format";
 import { LogoTile, plainName, shortName } from "../logo-tile";
 import type { AskState, LookupRead } from "./use-ask";
 
@@ -11,9 +11,6 @@ const termsOf = (input: unknown) =>
 const termOf = (input: unknown) =>
   typeof input === "object" && input !== null && "term" in input ? String(input.term) : "a term";
 
-const listed = (words: ReadonlyArray<string>) =>
-  words.length < 2 ? (words[0] ?? "") : `${words.slice(0, -1).join(", ")} and ${words.at(-1)}`;
-
 export const lookupPhrase = (name: string, read: Pick<LookupRead, "lookup" | "input">) => {
   switch (read.lookup) {
     case "company":
@@ -22,7 +19,7 @@ export const lookupPhrase = (name: string, read: Pick<LookupRead, "lookup" | "in
       const terms = termsOf(read.input);
       return terms.length === 0
         ? `${name}'s figures across ten fiscal years`
-        : `${name}'s ${listed(terms)} across ten fiscal years`;
+        : `${name}'s ${inWords(terms)} across ten fiscal years`;
     }
     case "dollar":
       return `${name}'s income statement`;

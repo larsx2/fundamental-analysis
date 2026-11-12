@@ -163,4 +163,7 @@ export const filingUrl = (cik: number, accession: string, document?: string | nu
 
 export const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
+export const inWords = (items: ReadonlyArray<string>) =>
+  items.length < 2 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+
 export const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);

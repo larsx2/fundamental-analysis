@@ -24,3 +24,11 @@ export const usePrefill = (
   };
   return { fill, pending, onKeyDown };
 };
+
+export function Clears() {
+  return (
+    <span className="intent-clears">
+      <kbd>esc</kbd> clears
+    </span>
+  );
+}
