@@ -147,11 +147,15 @@ export class Logos extends Context.Service<
           const file = chooseLogo(yield* claims(entity, "P8972"), yield* claims(entity, "P154"));
           if (file === null) return yield* store(cik, null);
           const response = yield* get(pictureOf(file));
+          // The size is checked before the picture is read, so a wrong answer
+          // never fills memory. A picture without a stated size is skipped.
           const type = response.headers["content-type"]?.split(";")[0]?.trim() ?? "";
-          const image = new Uint8Array(yield* response.arrayBuffer);
-          if (!pictureTypes.has(type) || image.byteLength > largestPicture) {
+          const size = Number(response.headers["content-length"] ?? Number.NaN);
+          if (!pictureTypes.has(type) || !(size > 0 && size <= largestPicture)) {
             return yield* store(cik, null);
           }
+          const image = new Uint8Array(yield* response.arrayBuffer);
+          if (image.byteLength > largestPicture) return yield* store(cik, null);
           yield* store(cik, { image, type, source: file });
         }).pipe(Effect.ignoreCause);
 
