@@ -63,6 +63,17 @@ Local mocks were built with the real collected numbers and approved step by step
 - **Six colours, one per part of a dollar,** always the same part on every screen, checked as a set for colour blindness and contrast against the near-black surface: blue for cost of revenue, orange for research and development, aqua for selling, general and administrative, yellow for other operating expenses, magenta for the step from operating income to net income, green for net income.
 - **All text passes the strictest contrast level (AAA)** on the surface: white for main figures, two greys for the rest, the smallest text 14 pixels.
 
+### Settled later on 11 November 2026, from the mocks of every screen
+
+- **Seven screens.** Home, Companies, Overview, Where the money goes, Statements, Timeline and Glossary. The bottom bar holds Home, Companies, the four company screens, Glossary and search, in that order. The home has no bar.
+- **Home.** "Follow the money." over a night city photo graded into the app's blues, breathing slowly and shifting a little with the pointer. One composer: what you type on top, three example chips and a send button underneath, and its placeholder types real example questions until you type. It reads companies, tickers, glossary terms, screens and years, and says what Enter will open before you press it: "Where does Costco's money go?" opens Costco's money flow, "What is gross profit?" opens the glossary, a company that is not collected opens Companies to collect it. It is not the agent; it is the box the agent will grow into. Ready companies sit under it as logo chips.
+- **Where the money goes has three drawings of the same numbers:** bars for ten fiscal years (the default), bands for one year, and the figures table. A switch in the corner of the chart picks one, and the choice lives in the address bar. Bands hide on a screen too narrow for their four columns of labels.
+- **Glossary is two panes.** The list of sections stays fixed on the left; the right shows only the chosen section, which fades in. Filtering shows matches from every section. A link to a term opens its section with the term highlighted. Clicking a term there opens no card, because its explanation is already on screen.
+- **One content width and one pair of side margins on every screen:** 1240 pixels at most, 24 pixels at each side, 16 on a phone. No screen overrides it.
+- **Motion.** On arrival a screen's sections settle in one after another, 80 milliseconds apart, from the first paint so nothing shows before its entrance. Changing company or year crossfades the screen. Bars grow from the baseline; bands sweep in from revenue on the left and glide between years. Everything moving has a reduced-motion version that does not move.
+- **Content fades and softens as it scrolls under the bottom bar,** solid behind the bar and fading above it, so nothing collides with the icons.
+- **Numbers on a term card.** Every term on every screen opens its card with the definition, the example and this company's figure. The card knows every glossary term.
+
 ### Ideas from the analysis-screen research, on 11 November 2026
 
 Looked at: financial stats, comparing financial metrics, comparing stock metrics, peer analysis, and search. Each idea is adapted to teaching, not copied.
