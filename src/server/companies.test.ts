@@ -52,6 +52,19 @@ describe("Companies", () => {
     }).pipe(Effect.provide(companiesWith(madeUpList))),
   );
 
+  it.effect("a company with two tickers ranks by the higher of its two places in the list", () =>
+    Effect.gen(function* () {
+      const companies = yield* Companies;
+      yield* companies.refreshList;
+      expect(yield* searchNames("inc")).toEqual([
+        "Apple Inc.",
+        "Alphabet Inc.",
+        "COSTAR GROUP, INC.",
+        "Big Cost Savers Inc.",
+      ]);
+    }).pipe(Effect.provide(companiesWith(madeUpList))),
+  );
+
   it.effect("a company with two tickers is one result listing both", () =>
     Effect.gen(function* () {
       const companies = yield* Companies;

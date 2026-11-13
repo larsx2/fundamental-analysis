@@ -5,7 +5,8 @@ import { Collect } from "../collect";
 import { databaseLayer } from "../database";
 import { ReportedNumbers } from "../reported-numbers";
 import { Sec } from "../sec";
-import { balanceCheck } from "./statements";
+import type { NumberRow } from "./choose-terms";
+import { balanceCheck, findSplits } from "./statements";
 import { statementsFor } from "./terms";
 
 const companies = { apple: 320193, microsoft: 789019 } as const;
@@ -52,6 +53,20 @@ describe("the balance sheet and cash flow statement, from trimmed SEC data", () 
       ).toBe(1.42);
     }),
   );
+
+  it("does not take a restatement that is not a whole multiple for a share split", () => {
+    const filed = (value: number, filedOn: string): NumberRow => ({
+      tag: "EarningsPerShareDiluted",
+      fiscalYear: 2013,
+      value,
+      accession: filedOn,
+      filedOn,
+    });
+    expect(findSplits([filed(39.75, "2013-10-30"), filed(5.68, "2014-10-27")])).toEqual([
+      { ratio: 7, seenOn: "2014-10-27" },
+    ]);
+    expect(findSplits([filed(39.75, "2013-10-30"), filed(19.3, "2014-10-27")])).toEqual([]);
+  });
 
   // Microsoft restated its fiscal 2016 equity in a later report than its
   // assets and liabilities. Mixing the two filings breaks the sheet's rule.

@@ -127,7 +127,7 @@ describe("Sec", () => {
 
   it.effect("a busy SEC is tried again until it answers", () => {
     const seen: Array<Seen> = [];
-    const { services, giveContact } = setup(seen, (n) => (n < 2 ? 503 : 200));
+    const { services, giveContact } = setup(seen, (n) => [429, 503][n] ?? 200);
     return Effect.gen(function* () {
       yield* giveContact;
       const sec = yield* Sec;

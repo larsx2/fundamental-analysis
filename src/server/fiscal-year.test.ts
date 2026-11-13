@@ -16,9 +16,10 @@ describe("fiscalYearOf", () => {
     expect(fiscalYearOf({ start: "2022-01-02", end: "2022-12-31" })).toEqual(Option.some(2022));
   });
 
-  it("does not count a quarter or nine months as a fiscal year", () => {
+  it("does not count a quarter, nine months or eleven months as a fiscal year", () => {
     expect(fiscalYearOf({ start: "2023-07-02", end: "2023-09-30" })).toEqual(Option.none());
     expect(fiscalYearOf({ start: "2022-10-01", end: "2023-07-01" })).toEqual(Option.none());
+    expect(fiscalYearOf({ start: "2022-11-01", end: "2023-09-30" })).toEqual(Option.none());
   });
 
   it("gives a balance at a single date the year of that date", () => {

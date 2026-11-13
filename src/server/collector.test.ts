@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Context, Effect, Layer, Option, Schedule } from "effect";
+import { Context, Effect, Exit, Layer, Option, Schedule } from "effect";
 import { SqlClient } from "effect/sql/SqlClient";
 import { Collect } from "./collect";
 import { Collector } from "./collector";
@@ -218,14 +218,29 @@ describe("Collector", () => {
       const collector = yield* startCollector;
       yield* collector.request(apple);
       yield* waitUntil(collector, apple, ["ready"]);
+      yield* sql`
+        INSERT INTO company_logo (cik, image, type, source, fetched_on)
+        VALUES (${apple}, ${new Uint8Array([1])}, 'image/svg+xml', 'Apple logo.svg', '2026-11-11')
+      `;
 
       yield* collector.remove(apple);
       const company = Option.getOrThrow(yield* collector.status(apple));
       const left = yield* sql<{ n: number }>`
         SELECT (SELECT count(*) FROM reported_number WHERE cik = ${apple})
-             + (SELECT count(*) FROM filing WHERE cik = ${apple}) AS n
+             + (SELECT count(*) FROM filing WHERE cik = ${apple})
+             + (SELECT count(*) FROM company_logo WHERE cik = ${apple}) AS n
       `;
       expect([company.state, company.asOf, left[0]?.n]).toEqual(["not_collected", null, 0]);
+    }).pipe(Effect.provide(services([]))),
+  );
+
+  it.live("a company waiting or being collected cannot be removed", () =>
+    Effect.gen(function* () {
+      yield* seed([[apple]]);
+      const collector = yield* startCollector;
+      yield* collector.request(apple);
+      const exit = yield* Effect.exit(collector.remove(apple));
+      expect(exit).toStrictEqual(Exit.fail(expect.objectContaining({ _tag: "StillCollecting" })));
     }).pipe(Effect.provide(services([]))),
   );
 
