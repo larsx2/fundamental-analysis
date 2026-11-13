@@ -31,6 +31,22 @@ describe("coverageOf", () => {
     ]);
   });
 
+  // The SEC.s industry codes: 6000 to 6199 are banks and lenders, and 6300 to
+  // 6411 are insurers, their agents and brokers. The codes between and after
+  // them, such as stockbrokers (6211) and property agents (6531), are covered.
+  it("declines the whole range of lenders and insurers, and nothing just outside them", () => {
+    const covered = (sic: string) => coverageOf(company("Made Up", sic, ["10-K"])).covered;
+    expect(["6000", "6199", "6300", "6411"].map(covered)).toEqual([false, false, false, false]);
+    expect(["5999", "6200", "6211", "6299", "6412", "6531"].map(covered)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ]);
+  });
+
   it("declines a company that files another form instead of an annual report (10-K), naming it", () => {
     expect(coverageOf(company("Toyota", "3711", ["6-K", "20-F"]))).toMatchObject({
       covered: false,

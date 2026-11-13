@@ -6,13 +6,13 @@ import { CollectProgress } from "../ui/collect-progress";
 import { LogoTile, plainName } from "../ui/logo-tile";
 import {
   type Order,
-  ReadyTable,
   type SortKey,
   type TableView,
   defaultView,
   firstOrder,
   sortKeys,
-} from "../ui/ready-table";
+} from "../ui/ready-rows";
+import { ReadyTable } from "../ui/ready-table";
 import { Screen } from "../ui/screen";
 import { OwnFigures, Term } from "../ui/term";
 import { Welcome } from "../ui/companies/welcome";

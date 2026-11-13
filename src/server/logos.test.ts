@@ -18,4 +18,18 @@ describe("choosing a company's logo from Wikidata", () => {
   it("takes the logo in use today, not the 1980 one listed first", () => {
     expect(chooseLogo([], logos)).toBe("Microsoft logo (2012).svg");
   });
+
+  // Made up in Wikidata.s shape: an older logo listed first with an end date
+  // (P582), and neither one marked as preferred.
+  it("skips a logo with an end date even when none is marked as the one to prefer", () => {
+    const claim = (file: string, ended: boolean): LogoClaim => ({
+      rank: "normal",
+      mainsnak: { datavalue: { value: file } },
+      ...(ended ? { qualifiers: { P582: [{}] } } : {}),
+    });
+    expect(chooseLogo([], [claim("Old logo.svg", true), claim("Logo today.svg", false)])).toBe(
+      "Logo today.svg",
+    );
+    expect(chooseLogo([], [claim("Old logo.svg", true)])).toBeNull();
+  });
 });

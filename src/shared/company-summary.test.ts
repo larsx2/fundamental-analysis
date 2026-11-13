@@ -28,6 +28,15 @@ describe("growth of revenue across ready companies", () => {
     expect(compoundAnnualGrowthRate(100, 200, 5)).toBeCloseTo(0.1487, 4);
   });
 
+  // Ten fiscal years are nine steps apart. Revenue that grows 10% in each
+  // of those nine steps grew at 10% a year.
+  it("measures growth over the nine steps between the ten fiscal years shown", () => {
+    const statements = Array.from({ length: 10 }, (_, index) =>
+      year(2017 + index, amount(100 * 1.1 ** index)),
+    );
+    expect(summarise(statements)?.growth).toBeCloseTo(0.1, 6);
+  });
+
   // A gap is never zero, and the rate is over the same ten fiscal years for
   // every company, so a missing first year gives no rate at all rather than
   // one measured from a later year.

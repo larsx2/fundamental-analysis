@@ -16,6 +16,12 @@ describe("fiscalYearOf", () => {
     expect(fiscalYearOf({ start: "2022-01-02", end: "2022-12-31" })).toEqual(Option.some(2022));
   });
 
+  // A fiscal year is 52 or 53 weeks, or a calendar year.
+  it("does not count fifty weeks or fifty-five weeks as a fiscal year", () => {
+    expect(fiscalYearOf({ start: "2022-10-16", end: "2023-09-30" })).toEqual(Option.none());
+    expect(fiscalYearOf({ start: "2022-09-11", end: "2023-09-30" })).toEqual(Option.none());
+  });
+
   it("does not count a quarter, nine months or eleven months as a fiscal year", () => {
     expect(fiscalYearOf({ start: "2023-07-02", end: "2023-09-30" })).toEqual(Option.none());
     expect(fiscalYearOf({ start: "2022-10-01", end: "2023-07-01" })).toEqual(Option.none());

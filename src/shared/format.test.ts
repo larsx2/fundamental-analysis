@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { centsOfDollar, yearEndInWords } from "./format";
+import { centsOfDollar, money, yearEndInWords } from "./format";
+
+describe("money in words", () => {
+  // Apple.s fiscal 2023, from its annual report (10-K): revenue of $383,285
+  // million and $5,228 million of debt raised.
+  it("shows one decimal from ten billion, two below it, and whole millions below one billion", () => {
+    expect(money(383_285_000_000)).toBe("$383.3 billion");
+    expect(money(5_228_000_000)).toBe("$5.23 billion");
+    expect(money(-5_228_000_000)).toBe("−$5.23 billion");
+    expect(money(960_400_000)).toBe("$960 million");
+    expect(money(0)).toBe("$0");
+  });
+});
 
 describe("cents of each dollar of revenue", () => {
   // Apple's fiscal 2023 in millions of dollars: revenue 383,285, cost of revenue
