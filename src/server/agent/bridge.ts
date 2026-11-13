@@ -12,6 +12,9 @@ type Message = {
 
 const send = (message: object) => process.stdout.write(`${JSON.stringify(message)}\n`);
 
+const fail = (id: number | string | null, code: number, message: string) =>
+  send({ jsonrpc: "2.0", id, error: { code, message } });
+
 const unreachable =
   "The tool is not running, so its figures cannot be read. Start it with `task dev` and ask again.";
 
@@ -57,36 +60,34 @@ const handle = async (message: Message) => {
     case "tools/list": {
       const response = await fetch(endpoint).catch(() => null);
       const tools: unknown = await response?.json().catch(() => null);
+      if (!Array.isArray(tools)) process.stderr.write("The tool's lookups could not be listed.\n");
       return reply({ tools: Array.isArray(tools) ? tools : [] });
     }
     case "tools/call":
       return reply(await callLookup(message.params?.name ?? "", message.params?.arguments ?? {}));
     default:
-      return send({
-        jsonrpc: "2.0",
-        id: message.id,
-        error: { code: -32601, message: `Unknown method ${message.method}` },
-      });
+      return fail(message.id, -32601, `Unknown method ${message.method}`);
   }
 };
 
 for await (const line of console) {
   if (line.trim() === "") continue;
-  let message: Message;
+  let message: unknown;
   try {
-    message = JSON.parse(line) as Message;
+    message = JSON.parse(line);
   } catch (cause) {
     process.stderr.write(`${String(cause)}\n`);
+    fail(null, -32700, "The message is not JSON.");
     continue;
   }
-  await handle(message).catch((cause: unknown) => {
+  if (typeof message !== "object" || message === null || Array.isArray(message)) {
+    fail(null, -32600, "Send one JSON-RPC message per line.");
+    continue;
+  }
+  const request = message as Message;
+  await handle(request).catch((cause: unknown) => {
     process.stderr.write(`${String(cause)}\n`);
-    if (message.id === undefined) return;
-    send({
-      jsonrpc: "2.0",
-      id: message.id,
-      error: { code: -32603, message: String(cause) },
-    });
+    if (request.id !== undefined) fail(request.id, -32603, String(cause));
   });
 }
 
