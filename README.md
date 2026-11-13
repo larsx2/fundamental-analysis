@@ -90,7 +90,7 @@ Both are needed together. The dialog wins over the environment: details given or
 
 The first version is being finished. Collecting, the Companies list, the four company screens, the Glossary and questions all work. What is left before publishing is in [`todo.md`](./todo.md).
 
-The plan is to publish it as open source under the MIT licence. Until a licence file is added, no licence has been granted.
+It is open source under the [MIT licence](./LICENSE). The typefaces, Inter and Newsreader, are under the SIL Open Font Licence.
 
 ## Rules that follow from being open source
 

@@ -432,9 +432,9 @@ From the review by a financial adviser, a product manager and a designer on 11 N
 
 ### T32: Licence and housekeeping
 
-- [ ] Add the MIT licence file.
-- [ ] Confirm the licence of everything installed, and of the typeface and icons.
-- [ ] Decide which email address appears on the commits before the history becomes public.
+- [x] Add the MIT licence file.
+- [x] Confirm the licence of everything installed, and of the typeface and icons.
+- [x] Decide which email address appears on the commits before the history becomes public.
 - [ ] Add a short guide for contributors and for coding agents: the glossary rule, the rules for tests, RFCs and decision records, the task names, the commit format.
 
 ### T33: Checks that run by themselves
