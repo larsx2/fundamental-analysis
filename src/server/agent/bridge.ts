@@ -15,17 +15,26 @@ const send = (message: object) => process.stdout.write(`${JSON.stringify(message
 const unreachable =
   "The tool is not running, so its figures cannot be read. Start it with `task dev` and ask again.";
 
+const failure = (text: string) => ({
+  content: [{ type: "text", text }],
+  isError: true,
+});
+
 const callLookup = async (name: string, input: unknown) => {
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name, input }),
   }).catch(() => null);
-  if (response === null) return { content: [{ type: "text", text: unreachable }], isError: true };
-  const body = (await response.json()) as
+  if (response === null) return failure(unreachable);
+  const body = (await response.json().catch(() => null)) as
     | { result: { figures: unknown; notes: unknown; lookup: string } }
-    | { error: string };
-  if ("error" in body) return { content: [{ type: "text", text: body.error }], isError: true };
+    | { error: string }
+    | null;
+  if (body === null) {
+    return failure(`The tool could not answer the lookup ${name} (status ${response.status}).`);
+  }
+  if ("error" in body) return failure(body.error);
   const { lookup, figures, notes } = body.result;
   return {
     content: [{ type: "text", text: JSON.stringify({ lookup, figures, notes }) }],
@@ -47,7 +56,8 @@ const handle = async (message: Message) => {
       return reply({});
     case "tools/list": {
       const response = await fetch(endpoint).catch(() => null);
-      return reply({ tools: response === null ? [] : await response.json() });
+      const tools: unknown = await response?.json().catch(() => null);
+      return reply({ tools: Array.isArray(tools) ? tools : [] });
     }
     case "tools/call":
       return reply(await callLookup(message.params?.name ?? "", message.params?.arguments ?? {}));
@@ -62,11 +72,22 @@ const handle = async (message: Message) => {
 
 for await (const line of console) {
   if (line.trim() === "") continue;
+  let message: Message;
   try {
-    await handle(JSON.parse(line) as Message);
+    message = JSON.parse(line) as Message;
   } catch (cause) {
     process.stderr.write(`${String(cause)}\n`);
+    continue;
   }
+  await handle(message).catch((cause: unknown) => {
+    process.stderr.write(`${String(cause)}\n`);
+    if (message.id === undefined) return;
+    send({
+      jsonrpc: "2.0",
+      id: message.id,
+      error: { code: -32603, message: String(cause) },
+    });
+  });
 }
 
 export {};
