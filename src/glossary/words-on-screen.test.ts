@@ -18,8 +18,17 @@ const agentFiles = import.meta.glob<string>(["../server/agent/**/*.ts", "!**/*.t
 
 const shortPath = (path: string) => path.replace("../", "src/");
 
-const fileEnding = (files: Record<string, string>, ending: string) =>
-  Object.entries(files).find(([path]) => path.endsWith(ending))?.[1] ?? "";
+const fileEnding = (files: Record<string, string>, ending: string) => {
+  const found = Object.entries(files).find(([path]) => path.endsWith(ending));
+  if (found === undefined) throw new Error(`The test reads ${ending}, which no longer exists.`);
+  return found[1];
+};
+
+const folder = (files: Record<string, string>, path: string) => {
+  const sources = Object.entries(files).filter(([each]) => each.includes(path));
+  if (sources.length === 0) throw new Error(`The test reads ${path}, which no longer exists.`);
+  return sources.map(([, source]) => source).join("\n");
+};
 
 const matchesIn = (source: string, pattern: RegExp) =>
   [...source.matchAll(pattern)].map((match) => match[1] ?? match[2] ?? "");
@@ -59,9 +68,10 @@ const termNamesOnScreens = (): ReadonlyArray<Named> => {
       from: "unlinked",
       name,
     })),
-    ...matchesIn(fileEnding(screenFiles, "/routes/$ticker/overview.tsx"), /\bname: "([^"]+)"/g).map(
-      (name) => ({ from: "overview figures", name }),
-    ),
+    ...matchesIn(folder(screenFiles, "/ui/overview/"), /\bname: "([^"]+)"/g).map((name) => ({
+      from: "overview figures",
+      name,
+    })),
     ...matchesIn(fileEnding(agentFiles, "/lookups/marks.ts"), /\["[A-Za-z]+", "([^"]+)"\]/g).map(
       (name) => ({ from: "marks lookup", name }),
     ),
