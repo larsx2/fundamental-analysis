@@ -1,11 +1,14 @@
 const loopback = new Set(["127.0.0.1", "localhost", "[::1]"]);
 
+export const addressedToThisComputer = (request: Request) =>
+  loopback.has(new URL(request.url).hostname);
+
 export const fromThisComputer = (request: Request) => {
   const url = new URL(request.url);
   const origin = request.headers.get("origin");
   const site = request.headers.get("sec-fetch-site");
   return (
-    loopback.has(url.hostname) &&
+    addressedToThisComputer(request) &&
     (origin === null || origin === url.origin) &&
     (site === null || site === "same-origin" || site === "none") &&
     (request.method !== "POST" ||
