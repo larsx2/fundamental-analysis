@@ -221,20 +221,24 @@ function FirstList({ contactGiven }: { readonly contactGiven: boolean }) {
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const fetchList = async () => {
-    setBusy(true);
     setProblem(null);
-    if (!contactGiven) {
-      if (name.trim() === "" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-        setProblem("Enter your name and an email address, such as name@example.com.");
-        setBusy(false);
-        return;
-      }
-      await saveContact({ data: { name: name.trim(), email: email.trim() } });
+    if (!contactGiven && (name.trim() === "" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))) {
+      setProblem("Enter your name and an email address, such as name@example.com.");
+      return;
     }
-    const answer = await fetchCompanyList();
-    if (!answer.ok) setProblem(answer.reason);
-    await queryClient.invalidateQueries({ queryKey: ["companies"] });
-    setBusy(false);
+    setBusy(true);
+    try {
+      if (!contactGiven) {
+        await saveContact({ data: { name: name.trim(), email: email.trim() } });
+      }
+      const answer = await fetchCompanyList();
+      if (!answer.ok) setProblem(answer.reason);
+      await queryClient.invalidateQueries({ queryKey: ["companies"] });
+    } catch {
+      setProblem("The tool could not fetch the list. Try again in a moment.");
+    } finally {
+      setBusy(false);
+    }
   };
   return (
     <section className="panel welcome mt-0" aria-labelledby="first-title">
@@ -477,6 +481,24 @@ function Finder({ line }: { readonly line: ReadonlyArray<ListedCompany> }) {
 
 function Failed({ companies }: { readonly companies: ReadonlyArray<ListedCompany> }) {
   const queryClient = useQueryClient();
+  const [problems, setProblems] = useState<Readonly<Record<number, string>>>({});
+  const tryAgain = async (cik: number) => {
+    setProblems((was) =>
+      Object.fromEntries(Object.entries(was).filter(([key]) => Number(key) !== cik)),
+    );
+    try {
+      const answer = await collectCompany({ data: { cik } });
+      if (answer.answer === "not covered" || answer.answer === "could not ask") {
+        setProblems((was) => ({ ...was, [cik]: answer.reason }));
+      }
+      await queryClient.invalidateQueries({ queryKey: ["companies"] });
+    } catch {
+      setProblems((was) => ({
+        ...was,
+        [cik]: "The tool could not start collecting. Try again in a moment.",
+      }));
+    }
+  };
   return (
     <section className="mt-12" aria-labelledby="failed-title">
       <h2 id="failed-title" className="m-0 mb-3 text-m font-semibold">
@@ -492,18 +514,15 @@ function Failed({ companies }: { readonly companies: ReadonlyArray<ListedCompany
                 <strong>{plainName(company.name)}</strong>
                 <span className="ticker">{company.ticker}</span>
               </div>
-              <div className="text-xs text-text-2">{company.failureReason}</div>
+              <div className="text-xs text-text-2" role="status">
+                {problems[company.cik] ?? company.failureReason}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 className="quiet-button"
-                onClick={async () => {
-                  await collectCompany({ data: { cik: company.cik } });
-                  await queryClient.invalidateQueries({
-                    queryKey: ["companies"],
-                  });
-                }}
+                onClick={() => void tryAgain(company.cik)}
               >
                 Try again
               </button>
