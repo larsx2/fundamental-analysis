@@ -28,7 +28,7 @@ export type AskState = {
   readonly done: boolean;
 };
 
-const empty: AskState = {
+export const empty: AskState = {
   lookups: [],
   steps: [],
   answer: null,
@@ -42,7 +42,7 @@ const empty: AskState = {
 const withStep = (steps: ReadonlyArray<Step>, step: Step) =>
   steps.some((each) => each.id === step.id) ? steps : [...steps, step];
 
-const apply = (state: AskState, event: AskEvent): AskState => {
+export const apply = (state: AskState, event: AskEvent): AskState => {
   switch (event.type) {
     case "reading":
       return {

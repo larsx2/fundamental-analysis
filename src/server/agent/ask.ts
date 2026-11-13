@@ -109,7 +109,7 @@ const readAnswer = (text: string): Answer | null => {
   }
 };
 
-const signedOutWords = /log ?in|sign(ed)? ?in|unauthori[sz]ed|401|auth/i;
+const signedOutWords = /\b(log ?in|sign(ed)? ?in|unauthori[sz]ed|401)\b|not authenticated/i;
 
 const failed = (cause: unknown): AskEvent => {
   const message = cause instanceof Error ? cause.message : String(cause);
@@ -197,7 +197,11 @@ export const toEvent = (event: ThreadEvent): AskEvent | null => {
       .split("\n")
       .map((line) => line.replaceAll("**", "").trim())
       .filter((line) => line !== "")
-      .join(". ");
+      .reduce(
+        (joined, line) =>
+          joined === "" ? line : `${joined}${/[.:?!]$/.test(joined) ? "" : "."} ${line}`,
+        "",
+      );
     return text === "" ? null : { type: "thinking", id: item.id, text };
   }
   return null;

@@ -107,5 +107,34 @@ describe("what Codex may use while it answers", () => {
     expect(Object.keys(settingsFor("http://x/api/lookup", "= not toml [").mcp_servers)).toEqual([
       "lookups",
     ]);
+const completed = (item: Record<string, unknown>) =>
+  ({ type: "item.completed", item }) as unknown as ThreadEvent;
+
+const failure = (message: string) =>
+  ({ type: "turn.failed", error: { message } }) as unknown as ThreadEvent;
+
+describe("what the reader sees of Codex's work", () => {
+  it("a reasoning summary reads as sentences", () => {
+    const text = "**Reading revenue**\n\nI will call the trend lookup.\nThen compare.";
+    expect(toEvent(completed({ id: "r1", type: "reasoning", text }))).toEqual({
+      type: "thinking",
+      id: "r1",
+      text: "Reading revenue. I will call the trend lookup. Then compare.",
+    });
+  });
+
+  it("only a sign-in failure is shown as one", () => {
+    expect(toEvent(failure("401 Unauthorized"))).toMatchObject({ signedOut: true });
+    expect(toEvent(failure("catalog index unavailable"))).toMatchObject({ signedOut: false });
+    expect(toEvent(failure("assigning request"))).toMatchObject({ signedOut: false });
+  });
+
+  it("a message that is not the answer's JSON becomes a thinking step, not an answer", () => {
+    const text = "  Let me check the trend.  ";
+    expect(toEvent(completed({ id: "m1", type: "agent_message", text }))).toEqual({
+      type: "thinking",
+      id: "m1",
+      text: "Let me check the trend.",
+    });
   });
 });
