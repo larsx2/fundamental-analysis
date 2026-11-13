@@ -49,5 +49,3 @@ export const yearParts = (year: StatementYear): ReadonlyArray<YearPart> =>
     const figure = figureOf(year, part.key);
     return { ...part, figure, value: valueOf(figure) };
   });
-
-export const revenueOf = (year: StatementYear) => valueOf(year.terms.revenue);
