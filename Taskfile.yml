@@ -89,7 +89,7 @@ tasks:
     cmd: bun run collect {{.CLI_ARGS}}
 
   screens:
-    desc: Compare pictures of the company screens for Apple, Costco and Microsoft with the saved ones
+    desc: Run the browser tests, and compare pictures of the company screens for Apple, Costco and Microsoft with the saved ones
     preconditions: [*needs-bun, *needs-install]
     cmd: bunx playwright test {{.CLI_ARGS}}
 

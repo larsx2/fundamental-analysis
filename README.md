@@ -123,7 +123,7 @@ Commands are run through [Task](https://taskfile.dev).
 | `task check`           | Looks for problems without changing any file                             |
 | `task fix`             | Applies the automatic fixes                                              |
 | `task test`            | Runs the tests                                                           |
-| `task screens`         | Compares pictures of the company screens with the saved ones             |
+| `task screens`         | Runs the browser tests, and compares pictures with the saved ones        |
 | `task screens:update`  | Saves new pictures of the company screens, after looking at what changed |
 | `task readme:pictures` | Takes the pictures in this README again                                  |
 | `task build`           | Builds the tool                                                          |
@@ -131,7 +131,7 @@ Commands are run through [Task](https://taskfile.dev).
 
 The rules behind these names are written at the top of [`Taskfile.yml`](./Taskfile.yml).
 
-On GitHub, every push to main and every pull request runs the same checks, tests and build. The picture tests run only with `task ci` on your own machine.
+On GitHub, every push to main and every pull request runs the same checks, tests and build, and runs the browser tests without comparing pictures. The pictures are compared only with `task ci` on your own machine, because they differ by operating system.
 
 ## How ideas become decisions
 

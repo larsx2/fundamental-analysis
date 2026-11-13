@@ -441,7 +441,7 @@ From the review by a financial adviser, a product manager and a designer on 11 N
 ### T33: Checks that run by themselves
 
 - [x] GitHub runs the same checks, tests and build as `task ci` on every push to main and every pull request, with read-only access, and stops a run when a newer push to the same branch arrives.
-- [ ] Run the picture tests there too, or write down why they stay on this computer.
+- [x] GitHub runs the browser tests without comparing the pictures, which stay a check on your own machine because they differ by operating system.
 
 ---
 

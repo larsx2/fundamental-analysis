@@ -68,8 +68,11 @@ const program = Effect.gen(function* () {
     `;
     yield* collect.reportedNumbers(company.cik);
   }
-  // Only the picture tests get made-up figures. The README pictures must show real ones.
+  // Only the browser tests get made-up figures and a made-up company that is not
+  // collected yet. The README pictures must show real ones.
   if (!madeUp) return;
+  yield* sql`INSERT INTO company (cik, name, list_position) VALUES (1, 'EXAMPLE CORP', 3)`;
+  yield* sql`INSERT INTO company_ticker (ticker, cik, list_position) VALUES ('EXMP', 1, 3)`;
   // Marked as fetched today, so the tool does not ask FRED for newer ones.
   for (let index = 0; index < 21 * 12 + 10; index++) {
     const year = 2005 + Math.floor(index / 12);
