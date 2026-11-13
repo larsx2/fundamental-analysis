@@ -171,7 +171,12 @@ export class Collect extends Context.Service<
               description_accession = ${filing.accession}
             WHERE cik = ${cik}
           `;
-        }).pipe(Effect.ignoreCause);
+        }).pipe(
+          Effect.ignoreCause({
+            log: "Warn",
+            message: `Could not read the business description of company ${cik}`,
+          }),
+        );
 
       return Collect.of({
         reportedNumbers,

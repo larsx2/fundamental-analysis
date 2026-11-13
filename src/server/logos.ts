@@ -157,7 +157,12 @@ export class Logos extends Context.Service<
           const image = new Uint8Array(yield* response.arrayBuffer);
           if (image.byteLength > largestPicture) return yield* store(cik, null);
           yield* store(cik, { image, type, source: file });
-        }).pipe(Effect.ignoreCause);
+        }).pipe(
+          Effect.ignoreCause({
+            log: "Warn",
+            message: `Could not fetch the logo of company ${cik}`,
+          }),
+        );
 
       const logo = (cik: number) =>
         sql<{ image: Uint8Array; type: string }>`

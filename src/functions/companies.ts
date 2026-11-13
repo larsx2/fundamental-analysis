@@ -99,7 +99,7 @@ const collectHomeCompanies = Effect.gen(function* () {
             ? collector.request(cik)
             : Effect.void,
         ),
-        Effect.ignore,
+        Effect.ignore({ log: "Warn", message: `Could not ask for company ${cik}` }),
       ),
     { discard: true },
   );

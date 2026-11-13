@@ -134,7 +134,9 @@ export class Collector extends Context.Service<
               UPDATE company SET
                 state = 'failed', failure_reason = ${reasonOf(cause)}, collect_step = NULL
               WHERE cik = ${cik}
-            `.pipe(Effect.ignore),
+            `.pipe(
+              Effect.ignore({ log: "Warn", message: `Could not mark company ${cik} as failed` }),
+            ),
           ),
         );
 
@@ -142,7 +144,12 @@ export class Collector extends Context.Service<
         Effect.gen(function* () {
           yield* collect.filings(cik);
           yield* collect.businessDescription(cik);
-        }).pipe(Effect.ignoreCause);
+        }).pipe(
+          Effect.ignoreCause({
+            log: "Warn",
+            message: `Could not add the filings of company ${cik}`,
+          }),
+        );
 
       // The ready company most overdue for a check, if any is due.
       const nextDueForCheck = Effect.gen(function* () {
@@ -205,7 +212,7 @@ export class Collector extends Context.Service<
       yield* Effect.forkScoped(
         logos.missing.pipe(
           Effect.flatMap((ciks) => Effect.forEach(ciks, logos.fetch, { discard: true })),
-          Effect.ignoreCause,
+          Effect.ignoreCause({ log: "Warn", message: "Could not fetch the missing logos" }),
         ),
       );
 
@@ -223,7 +230,11 @@ export class Collector extends Context.Service<
           Effect.flatMap((cik) =>
             cik === undefined ? Effect.succeed(false) : checkForNew(cik).pipe(Effect.as(true)),
           ),
-          Effect.catchCause(() => Effect.succeed(false)),
+          Effect.catchCause((cause) =>
+            Effect.logWarning("Could not check a company for new filings", cause).pipe(
+              Effect.as(false),
+            ),
+          ),
         );
         if (checked) return;
         const waited = yield* Queue.take(line).pipe(Effect.timeoutOption("1 hour"));

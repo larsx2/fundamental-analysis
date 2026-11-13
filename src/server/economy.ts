@@ -164,7 +164,11 @@ export class Economy extends Context.Service<
         if (Option.getOrNull(fetchedOn) !== day) {
           const done = yield* refresh.pipe(
             Effect.as(true),
-            Effect.catchCause(() => Effect.succeed(false)),
+            Effect.catchCause((cause) =>
+              Effect.logWarning("Could not fetch the economy figures", cause).pipe(
+                Effect.as(false),
+              ),
+            ),
           );
           if (done) yield* settings.set(fetchedOnKey, day);
         }
