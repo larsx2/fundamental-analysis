@@ -228,10 +228,19 @@ export class Collector extends Context.Service<
         if (Option.isSome(asked)) return yield* work(asked.value);
         const checked = yield* nextDueForCheck.pipe(
           Effect.flatMap((cik) =>
-            cik === undefined ? Effect.succeed(false) : checkForNew(cik).pipe(Effect.as(true)),
+            cik === undefined
+              ? Effect.succeed(false)
+              : checkForNew(cik).pipe(
+                  Effect.as(true),
+                  Effect.catchCause((cause) =>
+                    Effect.logWarning(`Could not check company ${cik} for new filings`, cause).pipe(
+                      Effect.as(false),
+                    ),
+                  ),
+                ),
           ),
           Effect.catchCause((cause) =>
-            Effect.logWarning("Could not check a company for new filings", cause).pipe(
+            Effect.logWarning("Could not find a company due for a check", cause).pipe(
               Effect.as(false),
             ),
           ),
