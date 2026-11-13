@@ -28,7 +28,7 @@ Every screen added is a screen to design, fill with data and keep correct. The f
 - **The Overview quotes the company.** Its description of the business is the opening of the company's own description in its annual report (10-K), with a link to the filing.
 - **Two kinds of corporate event.** The Timeline shows only the kinds the SEC's own labels identify without guessing: a change of chief executive or finance chief, and a completed acquisition or sale of a business.
 - **Economic context is in.** Interest rate, inflation and recessions, from the US central bank's free public data.
-- **History starts around 2009**, when filings began to be published in a form a program can read.
+- **History starts around 2009**, when filings began to be published in a form a program can read. Refined later: the earlier years the first machine-readable annual reports carry, back to about fiscal 2007, are shown. See [A term's definition wins over a filed figure, and every difference is shown](../adr/0006-definitions-win-differences-are-shown.md).
 - **No share prices.** The first version holds no share price or index data. Market capitalization, market context, event studies and valuation wait until a source anyone may use is found.
 
 ### Recommended: three places and one helper

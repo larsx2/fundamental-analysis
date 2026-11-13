@@ -405,7 +405,8 @@ From the review by a financial adviser, a product manager and a designer on 11 N
 
 **Depends on:** T12.
 
-- [ ] A renamed company shows as one history, with its earlier names.
+- [x] A renamed company's filings form one history, because everything is kept under its SEC number.
+- [ ] A renamed company shows its earlier names.
 - [ ] A reorganised company shows a note linking it to the company it came from.
 
 ### T30: Check for new filings
@@ -439,7 +440,8 @@ From the review by a financial adviser, a product manager and a designer on 11 N
 
 ### T33: Checks that run by themselves
 
-- [ ] `task ci` runs on every proposed change once the repository is hosted.
+- [x] GitHub runs the same checks, tests and build as `task ci` on every push to main and every pull request, with read-only access, and stops a run when a newer push to the same branch arrives.
+- [ ] Run the picture tests there too, or write down why they stay on this computer.
 
 ---
 

@@ -93,3 +93,9 @@ The new words are in the glossary under "Collecting a company".
 - If the tool is closed while a company is collecting, it should pick up where it left off. How is not yet worked out.
 - Whether to ship a starter list of suggested companies, as names only.
 - How the tool recognises a bank, an insurer or a property trust before collecting. The SEC gives every company an industry code, which is the likely answer.
+
+**Settled while building**
+
+- A company left waiting or collecting when the tool stops goes back in line the next time it starts.
+- There is no starter list. Five companies are always collected instead: see [Five companies are always collected](../adr/0009-five-companies-are-always-collected.md).
+- A bank, an insurer or a property trust is recognised by the industry code the SEC gives it, before anything is collected.

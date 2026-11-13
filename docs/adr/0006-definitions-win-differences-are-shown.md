@@ -9,7 +9,7 @@ When a company files a figure under a term's tag that breaks the term's own defi
 
 Operating income is taken as filed, because it is the audited line. Whatever lies between it and research and development plus selling, general and administrative is shown as other operating expenses, a calculated number, so every fiscal year adds up from revenue to operating income. Operating income is checked against the total operating expenses, or the total costs and expenses, the company reports, where it reports one.
 
-Every fiscal year that arrives in an audited annual report is shown, including the earlier years the first machine-readable reports carried, back to about fiscal 2007.
+Every fiscal year that arrives in an audited annual report is shown, including the earlier years the first machine-readable reports carried, back to about fiscal 2007. This moves the start of history set in [The first version shows fiscal years only, with no share prices and no agent](0005-first-version-limits.md) from around 2009.
 
 We chose this because it is what an investment adviser does with filed statements: keep years comparable by holding each term to one definition, trust the audited totals, and footnote every adjustment rather than hide it. It keeps the settled rule that nothing unsure is hidden.
 

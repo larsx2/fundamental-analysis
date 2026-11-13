@@ -56,7 +56,7 @@ To ask questions, sign in to ChatGPT once with `bunx codex login` in the tool's 
 
 ## Where it runs
 
-Entirely on your own machine. There is no account and no service to sign up for. The internet is used to collect a company's filings from the SEC and the economic figures that go with them, and to answer questions. Everything already collected works offline.
+Entirely on your own machine. There is no account and no service to sign up for. It refuses requests from other computers, and from other websites open in the same browser. The internet is used to collect a company's filings from the SEC and the economic figures that go with them, and to answer questions. Everything already collected works offline.
 
 Questions about a company are answered with your own ChatGPT subscription, through the Codex that comes with the tool. Each question, and the figures the tool looks up for it, goes to OpenAI; the collected data stays on your machine.
 
@@ -130,6 +130,8 @@ Commands are run through [Task](https://taskfile.dev).
 | `task ci`              | Runs everything that must pass before work is handed over                |
 
 The rules behind these names are written at the top of [`Taskfile.yml`](./Taskfile.yml).
+
+On GitHub, every push to main and every pull request runs the same checks, tests and build. The picture tests run only with `task ci` on your own machine.
 
 ## How ideas become decisions
 
