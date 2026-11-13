@@ -1,8 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { Effect, Option, Schema } from "effect";
-import { Collector } from "../server/collector";
-import { Companies } from "../server/companies";
+import { Collector, collectHomeCompanies } from "../server/collector";
+import { Companies, type CompanyState } from "../server/companies";
 import { askedFor, knownCompanies, latestFiscalYear } from "../server/company-view";
 import { companyNamedIn } from "../server/named-company";
 import { runtime } from "../server/runtime";
@@ -25,7 +25,7 @@ export type ListedCompany = {
   readonly cik: number;
   readonly name: string;
   readonly ticker: string;
-  readonly state: "waiting" | "collecting" | "ready" | "failed";
+  readonly state: Exclude<CompanyState, "not_collected">;
   readonly asOf: string | null;
   readonly lastCheckedOn: string | null;
   readonly failureReason: string | null;
@@ -90,23 +90,6 @@ export const summariesQuery = (ciks: ReadonlyArray<number>) =>
     queryFn: () => getSummaries({ data: { ciks: [...ciks] } }),
   });
 
-const collectHomeCompanies = Effect.gen(function* () {
-  const collector = yield* Collector;
-  yield* Effect.forEach(
-    homeCompanies,
-    (cik) =>
-      collector.status(cik).pipe(
-        Effect.flatMap((company) =>
-          Option.isSome(company) && company.value.state === "not_collected"
-            ? collector.request(cik)
-            : Effect.void,
-        ),
-        Effect.ignore({ log: "Warn", message: `Could not ask for company ${cik}` }),
-      ),
-    { discard: true },
-  );
-});
-
 const getRevenueHistory = createServerFn({ method: "GET" }).handler(() => {
   runtime.runFork(collectHomeCompanies);
   return runtime.runPromise(
@@ -144,7 +127,7 @@ export type CompanyMatch = {
   readonly cik: number;
   readonly name: string;
   readonly tickers: ReadonlyArray<string>;
-  readonly state: "not_collected" | "waiting" | "collecting" | "ready" | "failed";
+  readonly state: CompanyState;
 };
 
 const findCompanies = createServerFn({ method: "GET" })

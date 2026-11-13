@@ -1,9 +1,5 @@
 import { Option } from "effect";
-
-const dayInMilliseconds = 24 * 60 * 60 * 1000;
-
-const daysBetween = (start: string, end: string) =>
-  Math.round((Date.parse(end) - Date.parse(start)) / dayInMilliseconds);
+import { dayInMilliseconds, daysBetween } from "./days";
 
 // A fiscal year is 52 or 53 weeks, or a calendar year: 363 to 370 days
 // between its first and last day. The margin allows for odd calendars.

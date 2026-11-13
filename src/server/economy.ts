@@ -1,9 +1,10 @@
-import { Clock, Context, Data, Effect, Layer, Option, Schema } from "effect";
+import { Context, Data, Effect, Layer, Option, Schema } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import { SqlClient } from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
 import * as SqlSchema from "effect/sql/SqlSchema";
+import { today } from "./days";
 import { Settings } from "./settings";
 
 // The US central bank's public data, through the St. Louis Fed's FRED
@@ -153,10 +154,6 @@ export class Economy extends Context.Service<
           FROM economy_month ORDER BY month
         `,
       });
-
-      const today = Clock.currentTimeMillis.pipe(
-        Effect.map((now) => new Date(now).toLocaleDateString("en-CA")),
-      );
 
       const attempt = yield* refresh.pipe(
         Effect.as(true),

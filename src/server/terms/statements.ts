@@ -1,4 +1,5 @@
 import type { CheckedFigure, Figure } from "../../shared/figures";
+import { dayInMilliseconds } from "../days";
 import {
   chooseTerms,
   gap,
@@ -42,7 +43,6 @@ export type StatementYear = {
 
 export const balanceCheck = "Assets should equal liabilities plus equity.";
 
-const dayInMilliseconds = 24 * 60 * 60 * 1000;
 const daysApart = (a: string, b: string) =>
   Math.abs(Date.parse(a) - Date.parse(b)) / dayInMilliseconds;
 

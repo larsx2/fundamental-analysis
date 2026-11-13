@@ -1,9 +1,7 @@
 import { Clock, Context, Data, Effect, Layer, Schema } from "effect";
-import { annualReportForms } from "./filings";
+import { dayInMilliseconds } from "./days";
+import { annualReportForms, submissionsUrl } from "./filings";
 import { Sec, type SecError } from "./sec";
-
-export const submissionsUrl = (cik: number) =>
-  `https://data.sec.gov/submissions/CIK${String(cik).padStart(10, "0")}.json`;
 
 const Submissions = Schema.Struct({
   name: Schema.String,
@@ -26,7 +24,6 @@ const otherAnnualReports = ["20-F", "40-F"];
 // active company has filed one within the last fifteen months. Three more
 // months leave room for late filers.
 const activeWindowDays = 18 * 30;
-const dayMillis = 24 * 60 * 60 * 1000;
 
 const inRange = (code: number, from: number, to: number) => code >= from && code <= to;
 
@@ -73,7 +70,7 @@ export const coverageOf = (company: {
       .map((filing) => filing.date)
       .sort()
       .at(-1) ?? "";
-  const age = (company.today.getTime() - Date.parse(newest)) / dayMillis;
+  const age = (company.today.getTime() - Date.parse(newest)) / dayInMilliseconds;
   if (!(age <= activeWindowDays)) {
     return {
       covered: false,

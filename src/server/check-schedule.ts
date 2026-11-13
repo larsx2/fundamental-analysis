@@ -1,7 +1,4 @@
-const dayInMilliseconds = 24 * 60 * 60 * 1000;
-
-const daysBetween = (from: string, to: string) =>
-  Math.round((Date.parse(to) - Date.parse(from)) / dayInMilliseconds);
+import { daysBetween } from "./days";
 
 // Every ready company is checked at least once a month, because current
 // reports and corrected annual reports can arrive at any time.

@@ -1,8 +1,9 @@
-import { Clock, Context, Effect, Layer, Option, Schema } from "effect";
+import { Context, Effect, Layer, Option, Schema } from "effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import { SqlClient } from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
+import { today } from "./days";
 
 // Logos are trademarks, so none are shipped. Wikidata, the open database
 // behind Wikipedia, records each company's SEC number (property P5531), its
@@ -127,12 +128,12 @@ export class Logos extends Context.Service<
 
       const store = (cik: number, found: (Logo & { readonly source: string }) | null) =>
         Effect.gen(function* () {
-          const today = new Date(yield* Clock.currentTimeMillis).toLocaleDateString("en-CA");
+          const day = yield* today;
           yield* sql`
             INSERT INTO company_logo (cik, image, type, source, fetched_on)
             VALUES (
               ${cik}, ${found?.image ?? null}, ${found?.type ?? null}, ${found?.source ?? null},
-              ${today}
+              ${day}
             )
             ON CONFLICT (cik) DO UPDATE SET
               image = excluded.image, type = excluded.type, source = excluded.source,

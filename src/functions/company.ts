@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { Effect, Schema } from "effect";
+import type { CompanyState } from "../server/companies";
 import { companyDetails, findCompany } from "../server/company-view";
 import { Economy, fredPage, fredSeries } from "../server/economy";
 import type { CorporateEvent } from "../server/filings";
@@ -13,7 +14,7 @@ export type CompanyView = {
   readonly cik: number;
   readonly name: string;
   readonly ticker: string;
-  readonly state: "not_collected" | "waiting" | "collecting" | "ready" | "failed";
+  readonly state: CompanyState;
   readonly asOf: string | null;
   readonly lastCheckedOn: string | null;
   readonly failureReason: string | null;

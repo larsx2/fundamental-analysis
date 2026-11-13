@@ -16,12 +16,14 @@ import * as SqlSchema from "effect/sql/SqlSchema";
 import { isDueForCheck } from "./check-schedule";
 import { Collect } from "./collect";
 import { CompanyState } from "./companies";
+import { today } from "./days";
 import { Logos } from "./logos";
 import { CoverageCheck, type UnexpectedSubmissions } from "./coverage";
 import { annualReportForms } from "./filings";
 import { ReportedNumbers } from "./reported-numbers";
 import type { SecError } from "./sec";
 import { statementsFor } from "./terms/terms";
+import { homeCompanies } from "../shared/home-companies";
 
 const CompanyStatus = Schema.Struct({
   cik: Schema.Int,
@@ -113,10 +115,6 @@ export class Collector extends Context.Service<
           FROM company WHERE cik = ${cik}
         `,
       });
-
-      const today = Clock.currentTimeMillis.pipe(
-        Effect.map((now) => new Date(now).toLocaleDateString("en-CA")),
-      );
 
       const step = (cik: number, number: number) =>
         sql`UPDATE company SET collect_step = ${number} WHERE cik = ${cik}`;
@@ -331,3 +329,20 @@ export class Collector extends Context.Service<
     }),
   );
 }
+
+export const collectHomeCompanies = Effect.gen(function* () {
+  const collector = yield* Collector;
+  yield* Effect.forEach(
+    homeCompanies,
+    (cik) =>
+      collector.status(cik).pipe(
+        Effect.flatMap((company) =>
+          Option.isSome(company) && company.value.state === "not_collected"
+            ? collector.request(cik)
+            : Effect.void,
+        ),
+        Effect.ignore({ log: "Warn", message: `Could not ask for company ${cik}` }),
+      ),
+    { discard: true },
+  );
+});
