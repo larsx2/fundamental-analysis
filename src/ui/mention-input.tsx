@@ -263,7 +263,7 @@ export function MentionInput({
       ghostAt.height !== next.height
     )
       setGhostAt(next);
-  });
+  }, [ghost, word, ghostAt]);
 
   const detect = () => {
     const element = editor.current;

@@ -1,5 +1,6 @@
 import { scaleUtc } from "d3-scale";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { monthName, rate } from "../../shared/format";
 import { useChartTip } from "../chart-tip";
 import type { ReadyCompany } from "../company-frame";
@@ -54,11 +55,18 @@ export function Rows({
   const cursorX = x(middle(month));
 
   useLayoutEffect(() => {
-    if (rows.current !== null && rows.current.offsetHeight !== height)
-      setHeight(rows.current.offsetHeight);
-    const top = economyRow.current?.offsetTop ?? 0;
-    if (top !== economyTop) setEconomyTop(top);
-  });
+    const element = rows.current;
+    if (element === null) return;
+    const measure = () => {
+      setHeight(element.offsetHeight);
+      setEconomyTop(economyRow.current?.offsetTop ?? 0);
+    };
+    measure();
+    // Drawn again before the next paint, so the shading never lags the rows.
+    const observer = new ResizeObserver(() => flushSync(measure));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [mounted]);
 
   const updateEdges = () => {
     const element = scroller.current;

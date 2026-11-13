@@ -28,7 +28,7 @@ const send = async (lines: ReadonlyArray<string>) => {
     stdout: "pipe",
     stderr: "ignore",
   });
-  for (const line of lines) bridge.stdin.write(`${line}\n`);
+  for (const line of lines) await bridge.stdin.write(`${line}\n`);
   await bridge.stdin.end();
   const replies = await new Response(bridge.stdout).text();
   return replies

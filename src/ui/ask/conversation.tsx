@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { companiesQuery } from "../../functions/companies";
 import { plainName, shortName } from "../logo-tile";
 import { Screen } from "../screen";
@@ -37,7 +37,7 @@ export function Conversation({
   const navigate = useNavigate();
   const threads = useThreads();
   const thread = t === undefined ? undefined : threads.find((each) => each.id === t);
-  const turns = thread?.turns ?? [];
+  const turns = useMemo(() => thread?.turns ?? [], [thread]);
   const pending = q ?? "";
   const asked = useLocation({ select: (location) => location.state.asked === true });
   const [confirmed, setConfirmed] = useState<string | null>(null);
@@ -46,21 +46,25 @@ export function Conversation({
     ...namedCompanyQuery(pending),
     enabled: pending !== "" && c.length === 0,
   });
-  const pendingCompanies: ReadonlyArray<Company> =
-    c.length > 0
-      ? c.map((ticker) => {
-          const found = listed?.companies.find(
-            (each) => each.ticker.toUpperCase() === ticker.toUpperCase(),
-          );
-          return found === undefined
-            ? { ticker, cik: 0, name: ticker }
-            : { ticker: found.ticker, cik: found.cik, name: found.name };
-        })
-      : named.data?.state === "ready"
-        ? [{ ticker: named.data.ticker, cik: named.data.cik, name: named.data.name }]
-        : start === null
-          ? []
-          : [start];
+  const namedCompany = named.data;
+  const pendingCompanies = useMemo(
+    (): ReadonlyArray<Company> =>
+      c.length > 0
+        ? c.map((ticker) => {
+            const found = listed?.companies.find(
+              (each) => each.ticker.toUpperCase() === ticker.toUpperCase(),
+            );
+            return found === undefined
+              ? { ticker, cik: 0, name: ticker }
+              : { ticker: found.ticker, cik: found.cik, name: found.name };
+          })
+        : namedCompany?.state === "ready"
+          ? [{ ticker: namedCompany.ticker, cik: namedCompany.cik, name: namedCompany.name }]
+          : start === null
+            ? []
+            : [start],
+    [c, listed, namedCompany, start],
+  );
   const placed = pending === "" || (c.length > 0 ? listed !== undefined : !named.isPending);
   const run = pending !== "" && (asked || confirmed === pending) && placed;
   const earlier = turns

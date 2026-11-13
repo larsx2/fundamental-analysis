@@ -1,5 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Fragment, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  type ReactNode,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { allTerms, type GlossaryTerm, glossary } from "../glossary/glossary";
 import { Icon } from "../ui/icons";
 import { forgetLearnedTerms, useLearnedTerms } from "../ui/learned-terms";
@@ -128,12 +136,14 @@ function GlossaryPage() {
     });
   };
 
+  const showFromHash = useEffectEvent(() => {
+    const slug = decodeURIComponent(location.hash.slice(1));
+    if (slug !== "") show(slug, { focus: false, push: false });
+  });
+
   useEffect(() => {
     document.title = "Glossary";
-    const fromHash = () => {
-      const slug = decodeURIComponent(location.hash.slice(1));
-      if (slug !== "") show(slug, { focus: false, push: false });
-    };
+    const fromHash = () => showFromHash();
     fromHash();
     window.addEventListener("hashchange", fromHash);
     window.addEventListener("popstate", fromHash);

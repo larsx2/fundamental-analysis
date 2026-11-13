@@ -57,7 +57,10 @@ globalThis.fetch = Object.assign(
 note(`outside requests are answered by the fake in process ${process.pid}`);
 
 for (const kind of [Server, HttpServer]) {
-  const listen = kind.prototype.listen;
+  const listen = Reflect.get(kind.prototype, "listen") as (
+    this: Server,
+    ...args: Array<unknown>
+  ) => Server;
   kind.prototype.listen = function (this: Server, ...args: Array<unknown>) {
     this.once("listening", () => {
       const address = this.address();
@@ -65,6 +68,6 @@ for (const kind of [Server, HttpServer]) {
         note(`listening on port ${address.port} with the fake in process ${process.pid}`);
       }
     });
-    return Reflect.apply(listen, this, args);
+    return listen.apply(this, args);
   } as typeof listen;
 }

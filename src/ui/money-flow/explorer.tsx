@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { StatementYear } from "../../functions/company";
 import { findTerm } from "../../glossary/glossary";
 import { Icon } from "../icons";
@@ -37,10 +37,8 @@ export function MoneyExplorer({
   const [zoom, setZoom] = useState(0);
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<Record<Lens, string>>(home);
-  const hosts = {
-    profit: useRef<HTMLDivElement>(null),
-    cash: useRef<HTMLDivElement>(null),
-  };
+  const profitHost = useRef<HTMLDivElement>(null);
+  const cashHost = useRef<HTMLDivElement>(null);
   const flows = useRef<Partial<Record<Lens, Flow>>>({});
   const swept = useRef(new Set<Lens>());
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -78,9 +76,14 @@ export function MoneyExplorer({
     setOpen(true);
   };
 
+  const valuesNow = useEffectEvent((each: Lens) => current[each] ?? empty(each));
+
   useEffect(() => {
+    const built: Partial<Record<Lens, Flow>> = {};
+    const sweptLenses = swept.current;
+    flows.current = built;
     for (const each of lenses) {
-      const host = hosts[each].current;
+      const host = (each === "profit" ? profitHost : cashHost).current;
       if (host === null) continue;
       const spec: FlowSpec = {
         nodes: partsOf(each),
@@ -99,10 +102,10 @@ export function MoneyExplorer({
             )
             .join(", "),
       };
-      flows.current[each] = createFlow(
+      built[each] = createFlow(
         host,
         spec,
-        current[each] ?? empty(each),
+        valuesNow(each),
         {
           onPick: (id) => pick.current(id),
         },
@@ -110,9 +113,9 @@ export function MoneyExplorer({
       );
     }
     return () => {
-      for (const each of lenses) flows.current[each]?.destroy();
+      for (const each of lenses) built[each]?.destroy();
       flows.current = {};
-      swept.current.clear();
+      sweptLenses.clear();
     };
   }, [still, canHover]);
 
@@ -239,7 +242,11 @@ export function MoneyExplorer({
               data-off={each === lens ? undefined : ""}
               inert={each !== lens}
             >
-              <div ref={hosts[each]} id={`flow-${each}`} className="flow-host" />
+              <div
+                ref={each === "profit" ? profitHost : cashHost}
+                id={`flow-${each}`}
+                className="flow-host"
+              />
             </div>
           ))}
           {noCash && (

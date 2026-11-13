@@ -201,7 +201,7 @@ export function RevenueExhibit() {
     return () => {
       for (const animation of running) animation.cancel();
     };
-  }, [shape, still]);
+  }, [shape, still, width]);
 
   if (data !== undefined && companies.length === 0) return null;
 

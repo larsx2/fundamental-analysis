@@ -107,6 +107,7 @@ export const useAsk = (
   const running = useRef<AbortController | null>(null);
   const context = useRef(earlier);
   context.current = earlier;
+  const tickerList = tickers.join(",");
 
   const stop = useCallback(() => {
     if (running.current === null || running.current.signal.aborted) return;
@@ -135,7 +136,12 @@ export const useAsk = (
         const response = await fetch("/api/ask", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ tickers, question, year, earlier: context.current }),
+          body: JSON.stringify({
+            tickers: tickerList === "" ? [] : tickerList.split(","),
+            question,
+            year,
+            earlier: context.current,
+          }),
           signal: controller.signal,
         });
         if (!response.ok || response.body === null) {
@@ -168,7 +174,7 @@ export const useAsk = (
       }
     })();
     return () => controller.abort();
-  }, [tickers.join(","), question, year]);
+  }, [tickerList, question, year]);
 
   return { state, stop };
 };

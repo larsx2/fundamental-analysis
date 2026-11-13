@@ -18,12 +18,15 @@ const attempt = (run: () => LookupResult) =>
     Effect.catch((problem) => Effect.succeed<LookupReply>({ error: problem.message })),
   );
 
+const textOf = (value: unknown) =>
+  typeof value === "string" ? value : typeof value === "number" ? String(value) : "";
+
 export const lookUp = (name: string, input: unknown) =>
   Effect.gen(function* () {
     const args =
       typeof input === "object" && input !== null ? (input as Record<string, unknown>) : {};
-    if (name === "glossary") return yield* attempt(() => glossaryLookup(String(args.term ?? "")));
-    const ticker = String(args.ticker ?? "").trim();
+    if (name === "glossary") return yield* attempt(() => glossaryLookup(textOf(args.term)));
+    const ticker = textOf(args.ticker).trim();
     const row = yield* findCompany(ticker);
     if (row === null) {
       return {

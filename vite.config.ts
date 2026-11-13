@@ -21,6 +21,7 @@ export default defineConfig({
   },
   lint: {
     ...recommended,
+    plugins: [...(recommended.plugins ?? []), "typescript", "react"],
     ignorePatterns: ["src/routeTree.gen.ts"],
     options: {
       typeAware: true,
@@ -31,6 +32,14 @@ export default defineConfig({
       ...recommended.rules,
       // Unstable Effect modules are used on purpose, with exact versions fixed.
       "effecttsgo/unstable-api-usage": "off",
+      "react/rules-of-hooks": "error",
+      "react/exhaustive-deps": "error",
+      "typescript/no-floating-promises": "error",
+      "typescript/no-explicit-any": "error",
+      // These three belong to the React Compiler, which this project does not use.
+      "react/refs": "off",
+      "react/set-state-in-effect": "off",
+      "react/immutability": "off",
     },
   },
   test: {
