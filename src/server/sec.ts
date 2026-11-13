@@ -9,6 +9,8 @@ export const gapBetweenRequests = Duration.millis(125);
 
 export const retries = 4;
 
+const requestLimit = Duration.minutes(2);
+
 export class MissingSecContact extends Data.TaggedError("MissingSecContact")<{}> {
   override get message() {
     return "The SEC asks every program that reads its data for a name and an email address. Give them in the dialog, or set SEC_CONTACT_NAME and SEC_CONTACT_EMAIL.";
@@ -100,12 +102,18 @@ export class Sec extends Context.Service<
                 ),
               ),
             )
-            .pipe(Effect.mapError((cause) => new WorthRetrying({ cause })));
+            .pipe(
+              Effect.timeout(requestLimit),
+              Effect.mapError((cause) => new WorthRetrying({ cause })),
+            );
 
           const status = response.status;
           if (status === 200) {
             const body = as === "json" ? response.json : response.text;
-            return yield* body.pipe(Effect.mapError((cause) => new WorthRetrying({ cause })));
+            return yield* body.pipe(
+              Effect.timeout(requestLimit),
+              Effect.mapError((cause) => new WorthRetrying({ cause })),
+            );
           }
           if (status === 404) return yield* new SecNotFound({ url });
           if (status === 429 || status >= 500) {

@@ -12,25 +12,34 @@ const contact = "Test Person test@example.com";
 
 type Seen = { at: number; userAgent: string | undefined };
 
-const standIn = (seen: Array<Seen>, answer: (n: number) => number) =>
+type Answer = number | "silence" | "stalled body";
+
+const standIn = (seen: Array<Seen>, answer: (n: number) => Answer) =>
   Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
       Effect.gen(function* () {
-        const status = answer(seen.length);
+        const next = answer(seen.length);
         seen.push({
           at: yield* Clock.currentTimeMillis,
           userAgent: request.headers["user-agent"],
         });
+        if (next === "silence") return yield* Effect.never;
+        const body =
+          next === "stalled body"
+            ? new ReadableStream({
+                start: (controller) => controller.enqueue(new TextEncoder().encode("{")),
+              })
+            : JSON.stringify({ ok: true });
         return HttpClientResponse.fromWeb(
           request,
-          new Response(JSON.stringify({ ok: true }), { status }),
+          new Response(body, { status: next === "stalled body" ? 200 : next }),
         );
       }),
     ),
   );
 
-const setup = (seen: Array<Seen>, answer: (n: number) => number, withContact = true) => {
+const setup = (seen: Array<Seen>, answer: (n: number) => Answer, withContact = true) => {
   const services = Settings.layer.pipe(
     Layer.provideMerge(databaseLayer(":memory:")),
     Layer.merge(standIn(seen, answer)),
@@ -158,6 +167,30 @@ describe("Sec", () => {
       const exit = yield* runWithClock(sec.getJson(url));
       expect(exit).toStrictEqual(Exit.fail(expect.objectContaining({ _tag: "SecRefused" })));
       expect(seen).toHaveLength(1);
+    }).pipe(Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))));
+  });
+
+  it.effect("a request the SEC never answers is given up on and tried again", () => {
+    const seen: Array<Seen> = [];
+    const { services, giveContact } = setup(seen, (n) => (n === 0 ? "silence" : 200));
+    return Effect.gen(function* () {
+      yield* giveContact;
+      const sec = yield* Sec;
+      const exit = yield* runWithClock(sec.getJson(url));
+      expect(exit).toStrictEqual(Exit.succeed({ ok: true }));
+      expect(seen).toHaveLength(2);
+    }).pipe(Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))));
+  });
+
+  it.effect("a body that stops arriving is tried again", () => {
+    const seen: Array<Seen> = [];
+    const { services, giveContact } = setup(seen, (n) => (n === 0 ? "stalled body" : 200));
+    return Effect.gen(function* () {
+      yield* giveContact;
+      const sec = yield* Sec;
+      const exit = yield* runWithClock(sec.getJson(url));
+      expect(exit).toStrictEqual(Exit.succeed({ ok: true }));
+      expect(seen).toHaveLength(2);
     }).pipe(Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))));
   });
 });
