@@ -116,7 +116,7 @@ export function Side({
         </dl>
         <p className="side-note">
           {kinds.some((kind) => figureOf(span, kind.key).kind === "gap") &&
-            `A gap means ${name} did not report that line on its own this year. `}
+            `A gap means ${name} did not report that line on its own this fiscal year. `}
           {cashSource !== undefined && cashSource.kind === "reported" && (
             <>
               From the <Term name="Cash flow statement">cash flow statement</Term> in the annual

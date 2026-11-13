@@ -105,7 +105,7 @@ export const catalog = [
   {
     name: "context",
     description:
-      "What was happening around the company: the interest rate, inflation and recessions over its last five fiscal years, its corporate events, and how revenue and net income changed in recession years and years of rising rates.",
+      "What was happening around the company: the interest rate, inflation and recessions over its last five fiscal years, its corporate events, and how revenue and net income changed in recession years and years when the interest rate rose.",
     inputSchema: {
       type: "object",
       properties: { ticker },

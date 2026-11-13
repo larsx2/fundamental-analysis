@@ -7,7 +7,7 @@ const readingNames: Record<string, string> = {
   dollar: "Where each dollar went",
   cash: "Net income and free cash flow",
   balance: "The balance sheet",
-  uses_of_cash: "Uses of cash",
+  uses_of_cash: "Capital allocation",
   returns: "Operating income, debt and equity",
   context: "The economy and corporate events",
   marks: "Marks on every figure",

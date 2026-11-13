@@ -96,7 +96,9 @@ function MoneyFlow() {
                   onClick={() => setCompare((was) => !was)}
                 >
                   Compare with{" "}
-                  {previous === undefined ? "the year before" : `fiscal ${previous.fiscalYear}`}
+                  {previous === undefined
+                    ? "the fiscal year before"
+                    : `fiscal ${previous.fiscalYear}`}
                 </button>
               </>
             )}
@@ -152,7 +154,7 @@ const verdict = (year: StatementYear) => {
     .filter((part) => part.value !== null && part.value > 0)
     .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))[0];
   if (largest === undefined || revenue === null || largest.value === null) return "";
-  return `${largest.name} is the largest part this year, at ${percent(largest.value / revenue)} of revenue.`;
+  return `${largest.name} is the largest part this fiscal year, at ${percent(largest.value / revenue)} of revenue.`;
 };
 
 function Hero({ name, year }: { readonly name: string; readonly year: StatementYear }) {

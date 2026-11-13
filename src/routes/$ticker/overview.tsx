@@ -102,7 +102,7 @@ const grewText = (now: number | null, then: number | null) => {
 const netIncomeMove = (now: number | null, then: number | null) => {
   if (now === null || then === null) return null;
   if (now > 0 && then > 0) return grewText(now, then);
-  if (now > 0) return "turned from a loss to a profit";
+  if (now > 0) return "turned positive after a loss";
   if (then > 0) return "turned to a loss";
   return "was a loss again";
 };
@@ -122,7 +122,7 @@ const growthLine = (range: ReadonlyArray<StatementYear>): ReactNode => {
     netRate !== null
       ? `net income at ${netRate}`
       : netThen !== null && netNow !== null && netThen <= 0 && netNow > 0
-        ? `net income went from a loss of ${money(-netThen)} to a profit of ${money(netNow)}`
+        ? `net income went from a loss of ${money(-netThen)} to ${money(netNow)}`
         : netNow !== null && netNow <= 0
           ? `net income was a loss of ${money(-netNow)} in fiscal ${last.fiscalYear}`
           : null;

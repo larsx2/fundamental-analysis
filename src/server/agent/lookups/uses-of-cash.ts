@@ -35,7 +35,8 @@ export const usesOfCash = (data: CompanyData): LookupResult => {
     return { use, total, known: known.length };
   });
   const largest = [...totals].filter((each) => each.known > 0).sort((a, b) => b.total - a.total)[0];
-  if (largest !== undefined) figures[`Largest use of cash, ${span(list)}`] = largest.use.name;
+  if (largest !== undefined)
+    figures[`Largest part of capital allocation, ${span(list)}`] = largest.use.name;
   const compensation = list.map((year) => valueOf(year.terms.stockBasedCompensation));
   const paidInShares = compensation.filter((value): value is number => value !== null);
   if (paidInShares.length > 0) {
@@ -53,7 +54,7 @@ export const usesOfCash = (data: CompanyData): LookupResult => {
   );
   return {
     lookup: "uses_of_cash",
-    title: `Uses of cash, ${span(list)}`,
+    title: `Capital allocation, ${span(list)}`,
     detail: `${list.length * uses.length} figures from the cash flow statement`,
     figures,
     notes,

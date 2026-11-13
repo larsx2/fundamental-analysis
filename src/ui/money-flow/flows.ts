@@ -72,7 +72,7 @@ export const cashParts: ReadonlyArray<Part> = [
   part("profit", 0, "Net income", "var(--color-part-kept)"),
   part("wear", 0, "Depreciation and amortization", "var(--color-bar-neutral)"),
   part("shares", 0, "Stock-based compensation", "var(--color-bar-neutral)"),
-  part("otherIn", 0, "Other cash from operations", "var(--color-bar-neutral)", {
+  part("otherIn", 0, "Other operating cash flow", "var(--color-bar-neutral)", {
     term: "Operating cash flow",
     about:
       "Cash the business brought in beyond net income and the costs that use no cash, mostly from paying suppliers later than customers pay.",
@@ -81,7 +81,7 @@ export const cashParts: ReadonlyArray<Part> = [
     term: "Cash",
     lowerIsBetter: true,
     about:
-      "The company paid out more than its business brought in this year, so the difference came from cash it already held.",
+      "The company paid out more than its business brought in this fiscal year, so the difference came from cash it already held.",
   }),
   part("pool", 1, "Cash to use", "", {
     total: true,
@@ -103,7 +103,7 @@ export const cashParts: ReadonlyArray<Part> = [
     hero: true,
     term: "Capital allocation",
     about:
-      "What remained after capital expenditure, acquisitions, payouts to owners and debt repaid, before other investing and borrowing.",
+      "What remained after capital expenditure, acquisitions, dividends, share buybacks and debt repaid, before other investing and borrowing.",
   }),
 ];
 

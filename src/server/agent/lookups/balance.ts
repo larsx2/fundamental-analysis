@@ -28,10 +28,11 @@ export const balance = (data: CompanyData, input: { readonly fiscalYear: number 
     "Cash leaves out short-term investments, which the tool does not collect, so cash may read low and net debt high.",
   ];
   if (debt !== null && flow !== null && debt > 0 && flow > 0) {
-    figures["One year of operating cash flow covers its debt"] =
+    figures["One fiscal year of operating cash flow covers its debt"] =
       `${(flow / debt).toFixed(1)} times`;
     figures["Its debt equals this many years of operating cash flow"] = (debt / flow).toFixed(1);
-    if (debt < flow) notes.push("Its debt is less than one year of its operating cash flow.");
+    if (debt < flow)
+      notes.push("Its debt is less than one fiscal year of its operating cash flow.");
   }
   if (netDebt !== null && netDebt < 0) notes.push("It held more cash than debt.");
   return {
