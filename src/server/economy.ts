@@ -90,7 +90,7 @@ export class Economy extends Context.Service<
   Economy,
   {
     // Fetches again at most once a day. When fetching fails, the months
-    // already held are kept.
+    // already held are kept, and the next try waits ten minutes.
     readonly months: Effect.Effect<
       {
         readonly months: ReadonlyArray<EconomyMonth>;
@@ -158,18 +158,19 @@ export class Economy extends Context.Service<
         Effect.map((now) => new Date(now).toLocaleDateString("en-CA")),
       );
 
+      const attempt = yield* refresh.pipe(
+        Effect.as(true),
+        Effect.catchCause((cause) =>
+          Effect.logWarning("Could not fetch the economy figures", cause).pipe(Effect.as(false)),
+        ),
+        Effect.cachedWithTTL("10 minutes"),
+      );
+
       const months = Effect.gen(function* () {
         const day = yield* today;
         const fetchedOn = yield* settings.get(fetchedOnKey);
         if (Option.getOrNull(fetchedOn) !== day) {
-          const done = yield* refresh.pipe(
-            Effect.as(true),
-            Effect.catchCause((cause) =>
-              Effect.logWarning("Could not fetch the economy figures", cause).pipe(
-                Effect.as(false),
-              ),
-            ),
-          );
+          const done = yield* attempt;
           if (done) yield* settings.set(fetchedOnKey, day);
         }
         const rows = yield* stored(undefined);
