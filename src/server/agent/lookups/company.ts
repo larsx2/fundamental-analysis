@@ -26,6 +26,11 @@ export const company = (data: CompanyData): LookupResult => {
       ...(opening === null
         ? ["The business description is not collected for this company."]
         : [`Opening of its business description, in its own words: ${opening}`]),
+      ...(data.unexpectedNumbers === 0
+        ? []
+        : [
+            `${data.unexpectedNumbers === 1 ? "One number" : `${data.unexpectedNumbers} numbers`} the SEC holds for ${data.name} came in a shape the tool cannot read, so ${data.unexpectedNumbers === 1 ? "it was" : "they were"} left out.`,
+          ]),
       ...notCollected.map((each) => `The tool does not collect ${each}.`),
       "The tool makes no forecasts and gives no advice on buying or selling.",
     ],

@@ -14,7 +14,7 @@ import { SqlClient } from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
 import * as SqlSchema from "effect/sql/SqlSchema";
 import { isDueForCheck } from "./check-schedule";
-import { Collect } from "./collect";
+import { Collect, type UnexpectedNumber } from "./collect";
 import { CompanyState } from "./companies";
 import { today } from "./days";
 import { Logos } from "./logos";
@@ -116,6 +116,17 @@ export class Collector extends Context.Service<
         `,
       });
 
+      const noteUnexpected = (cik: number, unexpected: ReadonlyArray<UnexpectedNumber>) =>
+        Effect.gen(function* () {
+          yield* sql`UPDATE company SET unexpected_numbers = ${unexpected.length} WHERE cik = ${cik}`;
+          if (unexpected.length > 0) {
+            yield* Effect.logWarning(
+              `${unexpected.length} numbers from the SEC for company ${cik} came in a shape the tool cannot read and were left out`,
+              unexpected.slice(0, 3),
+            );
+          }
+        });
+
       const step = (cik: number, number: number) =>
         sql`UPDATE company SET collect_step = ${number} WHERE cik = ${cik}`;
 
@@ -124,7 +135,7 @@ export class Collector extends Context.Service<
           yield* sql`UPDATE company SET state = 'collecting', collect_step = 1 WHERE cik = ${cik}`;
           yield* collect.filings(cik);
           yield* step(cik, 2);
-          yield* collect.reportedNumbers(cik);
+          yield* noteUnexpected(cik, (yield* collect.reportedNumbers(cik)).unexpected);
           const years = yield* statementsFor(cik).pipe(
             Effect.provideService(ReportedNumbers, reported),
           );
@@ -197,7 +208,7 @@ export class Collector extends Context.Service<
           if (Option.isNone(company) || company.value.state !== "ready") return;
           const added = yield* collect.newFilings(cik);
           if (added.some((filing) => annualReportForms.has(filing.form))) {
-            yield* collect.reportedNumbers(cik);
+            yield* noteUnexpected(cik, (yield* collect.reportedNumbers(cik)).unexpected);
           }
           yield* collect.addFilings(cik, added);
           if (added.some((filing) => filing.form === "10-K" || filing.form === "10-KT")) {
@@ -318,7 +329,8 @@ export class Collector extends Context.Service<
                 UPDATE company SET
                   state = 'not_collected', failure_reason = NULL, as_of = NULL,
                   last_checked_on = NULL, requested_at = NULL, filings_from = NULL,
-                  description = NULL, description_accession = NULL, collect_step = NULL
+                  description = NULL, description_accession = NULL, collect_step = NULL,
+                  unexpected_numbers = NULL
                 WHERE cik = ${cik}
               `;
             }),

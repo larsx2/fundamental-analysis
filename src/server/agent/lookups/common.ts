@@ -21,6 +21,7 @@ export type CompanyData = {
     readonly filedOn: string;
   } | null;
   readonly months: ReadonlyArray<EconomyMonth>;
+  readonly unexpectedNumbers: number;
 };
 
 export class LookupProblem extends Data.TaggedError("LookupProblem")<{

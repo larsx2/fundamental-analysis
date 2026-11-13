@@ -48,6 +48,7 @@ export const lookUp = (name: string, input: unknown) =>
           events: details.events,
           description: details.description,
           months,
+          unexpectedNumbers: row.unexpectedNumbers ?? 0,
         },
         name,
         args,

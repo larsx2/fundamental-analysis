@@ -19,6 +19,7 @@ const CompanyRow = Schema.Struct({
   filingsFrom: Schema.NullOr(Schema.String),
   description: Schema.NullOr(Schema.String),
   descriptionAccession: Schema.NullOr(Schema.String),
+  unexpectedNumbers: Schema.NullOr(Schema.Int),
 });
 export type CompanyRow = typeof CompanyRow.Type;
 
@@ -30,7 +31,7 @@ const columns = (sql: SqlClient) => sql`
   c.failure_reason AS "failureReason", c.not_covered_reason AS "notCoveredReason",
   c.collect_step AS "collectStep", c.requested_at AS "requestedAt",
   c.filings_from AS "filingsFrom", c.description,
-  c.description_accession AS "descriptionAccession"
+  c.description_accession AS "descriptionAccession", c.unexpected_numbers AS "unexpectedNumbers"
 `;
 
 export const companyByTicker = (ticker: string) =>

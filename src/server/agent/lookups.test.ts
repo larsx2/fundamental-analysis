@@ -27,6 +27,7 @@ const companyData = (company: Company) =>
       events: [],
       description: null,
       months: [],
+      unexpectedNumbers: 0,
     } satisfies CompanyData;
   }).pipe(
     Effect.provide(
@@ -47,6 +48,23 @@ const companyData = (company: Company) =>
   );
 
 describe("the agent's lookups, from trimmed SEC data", () => {
+  it.effect("tells the agent how many of the SEC.s numbers could not be read", () =>
+    Effect.gen(function* () {
+      const data = yield* companyData("apple");
+      const notes = (unexpectedNumbers: number) =>
+        runLookup({ ...data, unexpectedNumbers }, "company", { ticker: "AAPL" }).notes.filter(
+          (note) => note.includes("cannot read"),
+        );
+      expect(notes(0)).toEqual([]);
+      expect(notes(1)).toEqual([
+        "One number the SEC holds for apple came in a shape the tool cannot read, so it was left out.",
+      ]);
+      expect(notes(2)).toEqual([
+        "2 numbers the SEC holds for apple came in a shape the tool cannot read, so they were left out.",
+      ]);
+    }),
+  );
+
   // Apple's annual report for fiscal 2023: revenue $383,285 million, down from $394,328 million.
   it.effect("writes Apple's revenue and its change exactly as the annual report gives them", () =>
     Effect.gen(function* () {

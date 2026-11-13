@@ -15,6 +15,7 @@ const microsoft = 2;
 const costco = 3;
 const jpmorgan = 4;
 const noRevenue = 5;
+const oddShapes = 6;
 
 type Event = `${"start" | "end" | "check"} ${number}`;
 
@@ -72,7 +73,14 @@ const services = (
               VALUES (${`a-${cik}`}, ${cik}, 'us-gaap', ${tag}, 'USD', '2024-09-29', '2025-09-27', 2025, 1)
             `;
             events.push(`end ${cik}`);
-            return { filings: 1, numbers: 1, unexpected: [] };
+            const odd = {
+              taxonomy: "us-gaap",
+              tag: "Revenues",
+              unit: "USD",
+              entry: {},
+              reason: "no end",
+            };
+            return { filings: 1, numbers: 1, unexpected: cik === oddShapes ? [odd, odd] : [] };
           }),
       });
     }),
@@ -208,6 +216,26 @@ describe("Collector", () => {
         collector.status(cik).pipe(Effect.map((company) => Option.getOrThrow(company).state)),
       );
       expect(states).toEqual(["ready", "ready", "not_collected"]);
+    }).pipe(Effect.provide(services([]))),
+  );
+
+  it.live("keeps the count of numbers that came in a shape the tool cannot read", () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient;
+      yield* seed([[oddShapes], [apple]]);
+      const collector = yield* startCollector;
+      yield* collector.request(oddShapes);
+      yield* collector.request(apple);
+      yield* waitUntil(collector, oddShapes, ["ready"]);
+      yield* waitUntil(collector, apple, ["ready"]);
+      const counts = yield* sql<{ cik: number; unexpected: number | null }>`
+        SELECT cik, unexpected_numbers AS unexpected FROM company WHERE cik IN (${oddShapes}, ${apple})
+        ORDER BY cik
+      `;
+      expect(counts).toEqual([
+        { cik: apple, unexpected: 0 },
+        { cik: oddShapes, unexpected: 2 },
+      ]);
     }).pipe(Effect.provide(services([]))),
   );
 
