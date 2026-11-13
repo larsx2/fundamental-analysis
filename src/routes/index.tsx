@@ -1,16 +1,15 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
-import { companiesQuery, type NamedCompany } from "../functions/companies";
+import { companiesQuery } from "../functions/companies";
 import { namedCompanyQuery } from "../ui/ask/named-company";
-import { allTerms, type GlossaryTerm } from "../glossary/glossary";
 import { RevenueExhibit } from "../ui/home/revenue-exhibit";
 import { HomeBackdrop } from "../ui/home/backdrop";
+import { companyOf, understand, type Understood, wordsOf } from "../ui/home/understand";
 import { plainName, shortName } from "../ui/logo-tile";
 import { type Mention, MentionInput } from "../ui/mention-input";
 import { Clears, usePrefill } from "../ui/prefill";
 import { useStill } from "../ui/motion";
-import type { CompanyScreen } from "../ui/palette";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -24,74 +23,39 @@ const examples = [
 const resting = "Ask about a company, a number or a word";
 const headline = "Follow the money.";
 
-const byLength = [...allTerms].sort((a, b) => b.name.length - a.name.length);
-
-const findTerm = (text: string) => {
-  const lower = text.toLowerCase();
-  return (
-    byLength.find((term) =>
-      new RegExp(
-        `(^|[^a-z])${term.name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}s?([^a-z]|$)`,
-      ).test(lower),
-    ) ?? null
-  );
-};
-
-type Destination = {
-  screen: CompanyScreen;
-  label: string;
-  tab?: "balance" | "cash";
-};
-
-// Which screen a question is about, from its words and the term it names.
-const screenFor = (text: string, term: GlossaryTerm | null): Destination => {
-  const lower = text.toLowerCase();
-  if (
-    /balance sheet|assets|liabilit|debt|cash flow|statement/.test(lower) ||
-    (term !== null && term.section >= 5 && term.section <= 6)
-  ) {
-    const cash = /cash flow|capital expenditure|free cash/.test(lower) || term?.section === 6;
-    const balance = /balance|asset|liabilit|equity|debt|cash\b/.test(lower) || term?.section === 5;
-    return {
-      screen: "statements",
-      label: "the statements",
-      ...(cash ? { tab: "cash" } : balance ? { tab: "balance" } : {}),
-    };
+const sayFor = (understood: Understood): ReactNode => {
+  switch (understood.kind) {
+    case "term":
+      return (
+        <>
+          Opens <strong>{understood.term.name}</strong> in the glossary
+        </>
+      );
+    case "ask":
+      return (
+        <>
+          Asks about <strong>{shortName(understood.company.name)}</strong>
+        </>
+      );
+    case "screen":
+      return (
+        <>
+          Opens <strong>{shortName(understood.company.name)}</strong>,{" "}
+          {understood.destination.label}
+          {understood.year === null ? "" : `, fiscal ${understood.year}`}
+        </>
+      );
+    case "collect":
+      return (
+        <>
+          <strong>{plainName(understood.company.name)}</strong> is not collected yet. Opens
+          Companies to collect it
+        </>
+      );
+    case "nothing":
+      return "Try a company, a ticker or a word from the glossary";
   }
-  if (
-    /money go|spend|spent|each dollar|where does|cost|margin|keep|kept/.test(lower) ||
-    term?.section === 4
-  ) {
-    return { screen: "where-the-money-goes", label: "where the money goes" };
-  }
-  if (
-    /happen|timeline|history|event|buyback|dividend|acquisi|interest rate|inflation|recession|do with/.test(
-      lower,
-    ) ||
-    (term !== null && term.section >= 9 && term.section <= 10)
-  ) {
-    return { screen: "timeline", label: "the timeline" };
-  }
-  return { screen: "overview", label: "the overview" };
 };
-
-const isQuestion = (text: string) =>
-  /\?\s*$|^(is|are|does|do|did|has|have|how|why|where|what|which|when|can|should|could|will)\b/i.test(
-    text,
-  );
-
-type Understood =
-  | { kind: "term"; term: GlossaryTerm; say: ReactNode }
-  | {
-      kind: "screen";
-      company: NamedCompany;
-      destination: Destination;
-      year: number | null;
-      say: ReactNode;
-    }
-  | { kind: "ask"; company: NamedCompany; say: ReactNode }
-  | { kind: "collect"; company: NamedCompany; say: ReactNode }
-  | { kind: "nothing"; say: ReactNode };
 
 function Home() {
   const navigate = useNavigate();
@@ -110,87 +74,27 @@ function Home() {
   });
   const mentioned = mentions[0];
   const trimmed = text.trim();
-  const term = findTerm(trimmed);
-  const asksMeaning =
-    /^(what('s| is| are| does)|define|meaning of|explain)\b/i.test(trimmed) && term !== null;
+  const { term, asksMeaning } = wordsOf(trimmed);
   const { data: named, isFetching } = useQuery({
     ...namedCompanyQuery(trimmed),
     enabled: trimmed.length >= 2 && !asksMeaning && mentioned === undefined,
     placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
-  const company: NamedCompany | null =
-    mentioned !== undefined
-      ? {
-          ...mentioned,
-          state: ready.some((each) => each.cik === mentioned.cik) ? "ready" : "not_collected",
-        }
-      : asksMeaning || trimmed === ""
-        ? null
-        : (named ?? null);
+  const company = companyOf(mentioned, ready, named, asksMeaning, trimmed);
 
   useEffect(() => {
     document.title = "Follow the money";
   }, []);
 
-  const yearMatch = /\b(20[0-4]\d)\b/.exec(trimmed);
-  const understood: Understood | null =
-    trimmed === ""
-      ? null
-      : term !== null && mentioned === undefined && (company === null || asksMeaning)
-        ? {
-            kind: "term",
-            term,
-            say: (
-              <>
-                Opens <strong>{term.name}</strong> in the glossary
-              </>
-            ),
-          }
-        : company !== null && company.state === "ready" && isQuestion(trimmed)
-          ? {
-              kind: "ask",
-              company,
-              say: (
-                <>
-                  Asks about <strong>{shortName(company.name)}</strong>
-                </>
-              ),
-            }
-          : company !== null && company.state === "ready"
-            ? (() => {
-                const destination = screenFor(trimmed, term);
-                const year = yearMatch === null ? null : Number(yearMatch[1]);
-                return {
-                  kind: "screen" as const,
-                  company,
-                  destination,
-                  year,
-                  say: (
-                    <>
-                      Opens <strong>{shortName(company.name)}</strong>, {destination.label}
-                      {year === null ? "" : `, fiscal ${year}`}
-                    </>
-                  ),
-                };
-              })()
-            : company !== null
-              ? {
-                  kind: "collect",
-                  company,
-                  say: (
-                    <>
-                      <strong>{plainName(company.name)}</strong> is not collected yet. Opens
-                      Companies to collect it
-                    </>
-                  ),
-                }
-              : isFetching
-                ? null
-                : {
-                    kind: "nothing",
-                    say: "Try a company, a ticker or a word from the glossary",
-                  };
+  const understood = understand({
+    trimmed,
+    term,
+    asksMeaning,
+    mentioned: mentioned !== undefined,
+    company,
+    isFetching,
+  });
 
   const go = () => {
     if (understood === null) return;
@@ -388,7 +292,7 @@ function Home() {
             {understood !== null && (
               <>
                 {canGo && <kbd>{"↵"}</kbd>}
-                <span>{understood.say}</span>
+                <span>{sayFor(understood)}</span>
                 {prefill.pending && <Clears />}
               </>
             )}
