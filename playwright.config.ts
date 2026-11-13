@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-// Pictures of the money flow for the three slice companies, from a database
+// Pictures of the company screens for the three slice companies, from a database
 // built out of the committed extracts. A change that moves a pixel fails here
 // until the pictures are looked at and saved again with `task screens:update`.
 export default defineConfig({

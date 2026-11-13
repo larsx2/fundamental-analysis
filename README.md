@@ -113,21 +113,21 @@ It is open source under the [MIT licence](./LICENSE). The typefaces, Inter and N
 
 Commands are run through [Task](https://taskfile.dev).
 
-| Command                | What it does                                                        |
-| ---------------------- | ------------------------------------------------------------------- |
-| `task`                 | Lists every task                                                    |
-| `task doctor`          | Checks the tools the project needs, without changing anything       |
-| `task init`            | Installs what the project depends on                                |
-| `task dev`             | Starts the tool at http://127.0.0.1:4100                            |
-| `task collect -- AAPL` | Collects one company from the SEC and prints where its money goes   |
-| `task check`           | Looks for problems without changing any file                        |
-| `task fix`             | Applies the automatic fixes                                         |
-| `task test`            | Runs the tests                                                      |
-| `task screens`         | Compares pictures of the money flow with the saved ones             |
-| `task screens:update`  | Saves new pictures of the money flow, after looking at what changed |
-| `task readme:pictures` | Takes the pictures in this README again                             |
-| `task build`           | Builds the tool                                                     |
-| `task ci`              | Runs everything that must pass before work is handed over           |
+| Command                | What it does                                                             |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `task`                 | Lists every task                                                         |
+| `task doctor`          | Checks the tools the project needs, without changing anything            |
+| `task init`            | Installs what the project depends on                                     |
+| `task dev`             | Starts the tool at http://127.0.0.1:4100                                 |
+| `task collect -- AAPL` | Collects one company from the SEC and prints where its money goes        |
+| `task check`           | Looks for problems without changing any file                             |
+| `task fix`             | Applies the automatic fixes                                              |
+| `task test`            | Runs the tests                                                           |
+| `task screens`         | Compares pictures of the company screens with the saved ones             |
+| `task screens:update`  | Saves new pictures of the company screens, after looking at what changed |
+| `task readme:pictures` | Takes the pictures in this README again                                  |
+| `task build`           | Builds the tool                                                          |
+| `task ci`              | Runs everything that must pass before work is handed over                |
 
 The rules behind these names are written at the top of [`Taskfile.yml`](./Taskfile.yml).
 

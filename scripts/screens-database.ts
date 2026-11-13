@@ -64,6 +64,23 @@ const program = Effect.gen(function* () {
     `;
     yield* collect.reportedNumbers(company.cik);
   }
+  // Made-up economy months, so the timeline's pictures never depend on FRED.
+  // Marked as fetched today, so the tool does not ask FRED for newer ones.
+  for (let index = 0; index < 21 * 12 + 10; index++) {
+    const year = 2005 + Math.floor(index / 12);
+    const month = `${year}-${String((index % 12) + 1).padStart(2, "0")}`;
+    const interestRate = Math.round((2.5 + 2.5 * Math.sin(index / 20)) * 100) / 100;
+    const inflation = Math.round((2.5 + 1.5 * Math.cos(index / 15)) * 10) / 10;
+    const recession = (index >= 35 && index < 54) || (index >= 182 && index < 185) ? 1 : 0;
+    yield* sql`
+      INSERT INTO economy_month (month, interest_rate, inflation, recession)
+      VALUES (${month}, ${interestRate}, ${inflation}, ${recession})
+    `;
+  }
+  yield* sql`
+    INSERT INTO setting (key, value)
+    VALUES ('economy-fetched-on', ${new Date().toLocaleDateString("en-CA")})
+  `;
 });
 
 const sec = Layer.succeed(

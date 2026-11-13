@@ -89,12 +89,12 @@ tasks:
     cmd: bun run collect {{.CLI_ARGS}}
 
   screens:
-    desc: Compare pictures of the money flow for Apple, Costco and Microsoft with the saved ones
+    desc: Compare pictures of the company screens for Apple, Costco and Microsoft with the saved ones
     preconditions: [*needs-bun, *needs-install]
     cmd: bunx playwright test {{.CLI_ARGS}}
 
   screens:update:
-    desc: Save new pictures of the money flow, after looking at what changed
+    desc: Save new pictures of the company screens, after looking at what changed
     preconditions: [*needs-bun, *needs-install]
     cmd: bunx playwright test --update-snapshots
 
