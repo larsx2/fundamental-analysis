@@ -2,7 +2,7 @@ import { Clock, Context, Data, Duration, Effect, Layer, Option, Schedule, Semaph
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import { SqlClient } from "effect/sql/SqlClient";
-import { Settings, secContactKey } from "./settings";
+import { Settings, secContactKey, secContactText } from "./settings";
 
 // The SEC allows at most ten requests per second. This keeps to eight.
 export const gapBetweenRequests = Duration.millis(125);
@@ -11,7 +11,7 @@ export const retries = 4;
 
 export class MissingSecContact extends Data.TaggedError("MissingSecContact")<{}> {
   override get message() {
-    return "The SEC asks every program that reads its data for a name and an email address. Give them before collecting.";
+    return "The SEC asks every program that reads its data for a name and an email address. Give them in the dialog, or set SEC_CONTACT_NAME and SEC_CONTACT_EMAIL.";
   }
 }
 
@@ -78,6 +78,7 @@ export class Sec extends Context.Service<
 
       const contact = settings.get(secContactKey).pipe(
         Effect.orDie,
+        Effect.map(secContactText),
         Effect.flatMap(
           Option.match({
             onNone: () => Effect.fail(new MissingSecContact()),

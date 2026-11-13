@@ -23,6 +23,26 @@ Entirely on your own machine. There is no account and no service to sign up for.
 
 Questions about a company are answered with your own ChatGPT subscription, through the Codex that comes with the tool. Sign in once with `bunx codex login` in the tool's folder. Each question, and the figures the tool looks up for it, goes to OpenAI; the collected data stays on your machine.
 
+## Your contact details for the SEC
+
+The SEC asks every program that reads its data to name the person sending the requests. The tool asks for a name and an email address the first time it fetches the company list, keeps them on this computer, and sends them only to the SEC.
+
+To give them without that dialog, for example on a machine that runs the tool unattended, set both:
+
+```sh
+export SEC_CONTACT_NAME="Your Name"
+export SEC_CONTACT_EMAIL="you@example.com"
+```
+
+Bun also reads them from a `.env` file in this folder, which is never committed:
+
+```
+SEC_CONTACT_NAME=Your Name
+SEC_CONTACT_EMAIL=you@example.com
+```
+
+Both are needed together. The dialog wins over the environment: details given or changed there are the ones the tool uses.
+
 ## What it is not
 
 - It gives no advice on what to buy or sell.

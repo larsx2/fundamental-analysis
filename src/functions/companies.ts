@@ -5,22 +5,19 @@ import { Collector } from "../server/collector";
 import { Companies } from "../server/companies";
 import { askedFor, knownCompanies, latestFiscalYear } from "../server/company-view";
 import { runtime } from "../server/runtime";
-import { Settings, secContactKey } from "../server/settings";
+import {
+  contactOf,
+  contactText,
+  Settings,
+  secContactKey,
+  secContactText,
+} from "../server/settings";
 import { statementsFor } from "../server/terms/terms";
 import { summarise } from "../shared/company-summary";
 import { valueOf } from "../shared/figures";
 import { homeCompanies } from "../shared/home-companies";
 
 export type { CompanySummary } from "../shared/company-summary";
-
-const contactOf = (text: string | null) => {
-  if (text === null) return null;
-  const words = text.trim().split(/\s+/);
-  const email = words.at(-1) ?? "";
-  return email.includes("@")
-    ? { name: words.slice(0, -1).join(" "), email }
-    : { name: text.trim(), email: "" };
-};
 
 export type ListedCompany = {
   readonly cik: number;
@@ -56,7 +53,10 @@ const getCompanies = createServerFn({ method: "GET" }).handler(() =>
       }
       return {
         known: yield* knownCompanies,
-        contact: contactOf(Option.getOrNull(yield* settings.get(secContactKey))),
+        contact: Option.match(secContactText(yield* settings.get(secContactKey)), {
+          onNone: () => null,
+          onSome: contactOf,
+        }),
         companies: listed,
       };
     }),
@@ -177,7 +177,7 @@ export const saveContact = createServerFn({ method: "POST" })
     runtime.runPromise(
       Effect.gen(function* () {
         const settings = yield* Settings;
-        yield* settings.set(secContactKey, `${data.name.trim()} ${data.email.trim()}`);
+        yield* settings.set(secContactKey, contactText(data));
       }),
     ),
   );
