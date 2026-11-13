@@ -19,7 +19,9 @@ import { CompanyState } from "./companies";
 import { Logos } from "./logos";
 import { CoverageCheck, type UnexpectedSubmissions } from "./coverage";
 import { annualReportForms } from "./filings";
+import { ReportedNumbers } from "./reported-numbers";
 import type { SecError } from "./sec";
+import { statementsFor } from "./terms/terms";
 
 const CompanyStatus = Schema.Struct({
   cik: Schema.Int,
@@ -54,6 +56,14 @@ export class StillCollecting extends Data.TaggedError("StillCollecting")<{
   }
 }
 
+export class NoRevenue extends Data.TaggedError("NoRevenue")<{
+  readonly cik: number;
+}> {
+  override get message() {
+    return "Its annual reports (10-K) give no revenue the tool can read, so it has no fiscal years to show.";
+  }
+}
+
 const reasonOf = (cause: Cause.Cause<unknown>) => {
   const error = Cause.squash(cause);
   return error instanceof Error ? error.message : String(error);
@@ -83,6 +93,7 @@ export class Collector extends Context.Service<
       const collect = yield* Collect;
       const coverage = yield* CoverageCheck;
       const logos = yield* Logos;
+      const reported = yield* ReportedNumbers;
       // A company goes in line to be collected in full, or, when it was ready
       // before the tool kept filings, only for its filings and description.
       const line = yield* Queue.unbounded<{ readonly cik: number; readonly full: boolean }>();
@@ -116,6 +127,10 @@ export class Collector extends Context.Service<
           yield* collect.filings(cik);
           yield* step(cik, 2);
           yield* collect.reportedNumbers(cik);
+          const years = yield* statementsFor(cik).pipe(
+            Effect.provideService(ReportedNumbers, reported),
+          );
+          if (years.length === 0) return yield* new NoRevenue({ cik });
           yield* step(cik, 3);
           yield* collect.businessDescription(cik);
           yield* logos.fetch(cik);

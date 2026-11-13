@@ -8,11 +8,13 @@ import { Logos } from "./logos";
 import { CoverageCheck } from "./coverage";
 import { databaseLayer } from "./database";
 import type { CompanyFiling } from "./filings";
+import { ReportedNumbers } from "./reported-numbers";
 
 const apple = 1;
 const microsoft = 2;
 const costco = 3;
 const jpmorgan = 4;
+const noRevenue = 5;
 
 type Event = `${"start" | "end" | "check"} ${number}`;
 
@@ -63,10 +65,11 @@ const services = (
               INSERT INTO filing (accession, cik, form, filed_on)
               VALUES (${`a-${cik}`}, ${cik}, '10-K', '2025-10-31')
             `;
+            const tag = cik === noRevenue ? "NetIncomeLoss" : "Revenues";
             yield* sql`
               INSERT INTO reported_number
                 (accession, cik, taxonomy, tag, unit, start_on, end_on, fiscal_year, value)
-              VALUES (${`a-${cik}`}, ${cik}, 'us-gaap', 'Revenues', 'USD', '2024-09-29', '2025-09-27', 2025, 1)
+              VALUES (${`a-${cik}`}, ${cik}, 'us-gaap', ${tag}, 'USD', '2024-09-29', '2025-09-27', 2025, 1)
             `;
             events.push(`end ${cik}`);
             return { filings: 1, numbers: 1, unexpected: [] };
@@ -93,7 +96,7 @@ const services = (
       missing: Effect.succeed([]),
     }),
   );
-  return Layer.mergeAll(collect, coverage, logos).pipe(
+  return Layer.mergeAll(collect, coverage, logos, ReportedNumbers.layer).pipe(
     Layer.provideMerge(databaseLayer(":memory:")),
   );
 };
@@ -181,6 +184,19 @@ describe("Collector", () => {
       const ready = yield* waitUntil(collector, apple, ["ready"]);
       expect(ready.failureReason).toBeNull();
     }).pipe(Effect.provide(services([], new Set([apple])))),
+  );
+
+  it.live("a company whose annual reports give no revenue fails with the reason", () =>
+    Effect.gen(function* () {
+      yield* seed([[noRevenue]]);
+      const collector = yield* startCollector;
+      yield* collector.request(noRevenue);
+      const company = yield* waitUntil(collector, noRevenue, ["ready", "failed"]);
+      expect([company.state, company.failureReason]).toEqual([
+        "failed",
+        "Its annual reports (10-K) give no revenue the tool can read, so it has no fiscal years to show.",
+      ]);
+    }).pipe(Effect.provide(services([]))),
   );
 
   it.live("a company left waiting or collecting is collected when the tool starts again", () =>
