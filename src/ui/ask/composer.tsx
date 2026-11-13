@@ -6,7 +6,7 @@ import { questions, topics } from "../../shared/questions";
 import { useAskToCollect } from "../collect-dialog";
 import { plainName, shortName } from "../logo-tile";
 import { type Mention, MentionInput } from "../mention-input";
-import { inWords } from "../format";
+import { inWords } from "../../shared/format";
 import { Clears, usePrefill } from "../prefill";
 import { namedCompanyQuery } from "./named-company";
 

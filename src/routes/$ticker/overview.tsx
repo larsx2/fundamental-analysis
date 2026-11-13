@@ -27,12 +27,12 @@ import {
   signedPercent,
   signedPoints,
   yearOverYear,
-} from "../../ui/format";
+} from "../../shared/format";
 import { shortName } from "../../ui/logo-tile";
 import { GapMark, Marks } from "../../ui/marks";
-import { yearParts } from "../../ui/money-flow/parts";
+import { yearParts } from "../../shared/money-flow-parts";
 import { glide, useMounted, useStill, useWidth } from "../../ui/motion";
-import { type FigureKey, figureOf } from "../../ui/own-figure";
+import { type FigureKey, figureOf } from "../../shared/figure-keys";
 import { Segmented } from "../../ui/segmented";
 import { Term } from "../../ui/term";
 

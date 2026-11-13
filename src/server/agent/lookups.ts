@@ -16,10 +16,10 @@ import {
   signedPoints,
   yearEndInWords,
   yearOverYear,
-} from "../../ui/format";
-import { isDoubtful } from "../../ui/marks";
-import { yearParts } from "../../ui/money-flow/parts";
-import { type FigureKey, figureOf, keyOfTerm, ratioKeys } from "../../ui/own-figure";
+} from "../../shared/format";
+import { isDoubtful } from "../../shared/figures";
+import { yearParts } from "../../shared/money-flow-parts";
+import { type FigureKey, figureOf, keyOfTerm, ratioKeys } from "../../shared/figure-keys";
 import type { EconomyMonth } from "../economy";
 import type { CorporateEvent } from "../filings";
 import type { StatementYear } from "../terms/statements";

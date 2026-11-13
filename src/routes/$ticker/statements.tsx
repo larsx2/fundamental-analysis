@@ -24,12 +24,14 @@ import {
   signedPercent,
   signedPoints,
   yearOverYear,
-} from "../../ui/format";
+} from "../../shared/format";
 import { Icon } from "../../ui/icons";
 import { shortName } from "../../ui/logo-tile";
-import { DoubtfulMark, GapMark, isDoubtful } from "../../ui/marks";
+import { isDoubtful } from "../../shared/figures";
+import { DoubtfulMark, GapMark } from "../../ui/marks";
 import { useMediaQuery, useMounted, useWidth } from "../../ui/motion";
-import { type FigureKey, FigureNotes, figureOf, formatValue, ratioKeys } from "../../ui/own-figure";
+import { type FigureKey, figureOf, formatValue, ratioKeys } from "../../shared/figure-keys";
+import { FigureNotes } from "../../ui/own-figure";
 import {
   labelOf,
   type Row,

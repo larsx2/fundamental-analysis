@@ -1,5 +1,5 @@
 import type { StatementYear } from "../../functions/company";
-import { moneyShort } from "../format";
+import { moneyShort } from "../../shared/format";
 import { cents, type Lens, nameOf, partsOf, termOf, valuesOf } from "./flows";
 
 export type Tone = "better" | "worse" | "";

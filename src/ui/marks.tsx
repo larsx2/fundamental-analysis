@@ -1,4 +1,4 @@
-import type { CheckedFigure } from "../shared/figures";
+import { type CheckedFigure, isDoubtful } from "../shared/figures";
 
 export function GapMark() {
   return <span className="mark gap">gap</span>;
@@ -15,9 +15,6 @@ export function DoubtfulMark() {
     </span>
   );
 }
-
-export const isDoubtful = (figure: CheckedFigure) =>
-  figure.doubtful !== null || (figure.kind === "calculated" && figure.setAside !== null);
 
 // The quiet marks for one figure: nothing for a plain reported number.
 export function Marks({ figure }: { readonly figure: CheckedFigure | undefined }) {

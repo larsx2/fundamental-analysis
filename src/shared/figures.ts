@@ -37,3 +37,6 @@ export const valueOf = (figure: Figure | undefined) =>
   figure === undefined || figure.kind === "gap" ? null : figure.value;
 
 export const gapFigure: CheckedFigure = { kind: "gap", doubtful: null };
+
+export const isDoubtful = (figure: CheckedFigure) =>
+  figure.doubtful !== null || (figure.kind === "calculated" && figure.setAside !== null);

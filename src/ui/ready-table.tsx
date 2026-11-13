@@ -5,7 +5,7 @@ import { line } from "d3-shape";
 import { motion } from "motion/react";
 import { type MouseEvent, useRef, useState } from "react";
 import { type CompanySummary, type ListedCompany, summariesQuery } from "../functions/companies";
-import { longDate, money, moneyShort, percent } from "./format";
+import { longDate, money, moneyShort, percent } from "../shared/format";
 import { Icon } from "./icons";
 import { LogoTile, plainName, shortName } from "./logo-tile";
 import { glide, useStill } from "./motion";

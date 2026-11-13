@@ -1,4 +1,4 @@
-import { longDate } from "../format";
+import { longDate } from "../../shared/format";
 import type { AskState, LookupRead } from "./use-ask";
 
 const readingNames: Record<string, string> = {

@@ -1,10 +1,10 @@
 import type { StatementYear } from "../../functions/company";
 import { type CheckedFigure, valueOf } from "../../shared/figures";
-import { moneyShort, percent, signedPercent, yearOverYear } from "../format";
+import { moneyShort, percent, signedPercent, yearOverYear } from "../../shared/format";
 import { Marks } from "../marks";
-import { type FigureKey, figureOf } from "../own-figure";
+import { type FigureKey, figureOf } from "../../shared/figure-keys";
 import { Term } from "../term";
-import { parts } from "./parts";
+import { parts } from "../../shared/money-flow-parts";
 
 const rows: ReadonlyArray<{
   readonly key: FigureKey;

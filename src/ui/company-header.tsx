@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { type CSSProperties, useRef } from "react";
-import { longDate, yearEndInWords } from "./format";
+import { longDate, yearEndInWords } from "../shared/format";
 import { LogoTile, plainName, shortName } from "./logo-tile";
 import { useOpenPalette } from "./palette";
 import { Term } from "./term";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { inWords, lowerFirst } from "../format";
+import { inWords, lowerFirst } from "../../shared/format";
 import { LogoTile, plainName, shortName } from "../logo-tile";
 import type { AskState, LookupRead } from "./use-ask";
 

@@ -29,11 +29,11 @@ import {
   monthName,
   monthShort,
   rate,
-} from "../../ui/format";
+} from "../../shared/format";
 import { shortName } from "../../ui/logo-tile";
 import { GapMark } from "../../ui/marks";
 import { useMounted, useWidth } from "../../ui/motion";
-import { type FigureKey, figureOf } from "../../ui/own-figure";
+import { type FigureKey, figureOf } from "../../shared/figure-keys";
 import { useStickyTop } from "../../ui/sticky";
 import { Term } from "../../ui/term";
 

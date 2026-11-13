@@ -12,7 +12,7 @@ import {
   useState,
 } from "react";
 import { companiesQuery } from "../functions/companies";
-import { longDate } from "./format";
+import { longDate } from "../shared/format";
 import { Icon, type IconName } from "./icons";
 import { LogoTile, plainName } from "./logo-tile";
 

@@ -1,4 +1,4 @@
-import type { FigureKey } from "../own-figure";
+import type { FigureKey } from "../../shared/figure-keys";
 
 export type Tab = "income" | "balance" | "cash";
 export type Unit = "money" | "percent" | "perShare";

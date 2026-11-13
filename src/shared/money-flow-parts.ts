@@ -1,6 +1,6 @@
-import type { StatementYear } from "../../functions/company";
-import { type CheckedFigure, valueOf } from "../../shared/figures";
-import { type FigureKey, figureOf } from "../own-figure";
+import type { StatementYear } from "../server/terms/statements";
+import { type FigureKey, figureOf } from "./figure-keys";
+import { type CheckedFigure, valueOf } from "./figures";
 
 // The six parts of a dollar of revenue, always in the same colours.
 export const parts = [

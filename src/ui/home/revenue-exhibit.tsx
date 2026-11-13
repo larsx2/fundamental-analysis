@@ -4,7 +4,7 @@ import { scaleLinear } from "d3-scale";
 import { curveBumpX, line } from "d3-shape";
 import { type CSSProperties, useLayoutEffect, useRef, useState } from "react";
 import { revenueHistoryQuery, type RevenueHistory } from "../../functions/companies";
-import { axisMoney, moneyShort } from "../format";
+import { axisMoney, moneyShort } from "../../shared/format";
 import { LogoTile, plainName, shortName } from "../logo-tile";
 import { useStill } from "../motion";
 

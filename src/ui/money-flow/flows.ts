@@ -1,6 +1,6 @@
 import type { StatementYear } from "../../functions/company";
 import { valueOf } from "../../shared/figures";
-import { moneyShort } from "../format";
+import { moneyShort } from "../../shared/format";
 import {
   columnsHeight,
   fitScale,

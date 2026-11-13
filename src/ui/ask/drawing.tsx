@@ -4,7 +4,7 @@ import { curveMonotoneX, line as lineShape } from "d3-shape";
 import { type ReactNode, useId, useRef } from "react";
 import type { Drawing, Series, Shade, Unit } from "../../shared/lookups";
 import { useChartTip } from "../chart-tip";
-import { longDate, money, moneyShort, percent, perShare, signedPercent } from "../format";
+import { longDate, money, moneyShort, percent, perShare, signedPercent } from "../../shared/format";
 import { CalculatedMark, DoubtfulMark, GapMark } from "../marks";
 import { useWidth } from "../motion";
 import { Term } from "../term";
