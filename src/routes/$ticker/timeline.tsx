@@ -71,16 +71,15 @@ function Timeline() {
   };
   const monthData = months.find((each) => each.month === month) ?? null;
 
-  const allocation = (each: StatementYear, key: FigureKey) => figureOf(each, key);
   const name = shortName(view.name);
   const reported = kinds.filter(
-    (kind) => kind.key !== "debtRaised" && allocation(year, kind.key).kind !== "gap",
+    (kind) => kind.key !== "debtRaised" && figureOf(year, kind.key).kind !== "gap",
   );
   const largest = reported.reduce<(typeof kinds)[number] | null>((best, kind) => {
-    const value = valueOf(allocation(year, kind.key)) ?? 0;
-    return best === null || value > (valueOf(allocation(year, best.key)) ?? 0) ? kind : best;
+    const value = valueOf(figureOf(year, kind.key)) ?? 0;
+    return best === null || value > (valueOf(figureOf(year, best.key)) ?? 0) ? kind : best;
   }, null);
-  const total = (key: FigureKey) => sum(years, (each) => valueOf(allocation(each, key)) ?? 0);
+  const total = (key: FigureKey) => sum(years, (each) => valueOf(figureOf(each, key)) ?? 0);
 
   return (
     <CompanyFrame
@@ -114,7 +113,7 @@ function Timeline() {
               The largest part of its <Term name="Capital allocation">
                 capital allocation
               </Term> was{" "}
-              <strong>{money(valueOf(allocation(year, largest.key)) ?? 0)}</strong> on{" "}
+              <strong>{money(valueOf(figureOf(year, largest.key)) ?? 0)}</strong> on{" "}
               {largest.inline}.
             </>
           )}

@@ -5,8 +5,8 @@ import { valueOf } from "../../shared/figures";
 import { axisMoney, capitalise, money } from "../../shared/format";
 import { GapMark } from "../marks";
 import { Term } from "../term";
-import { barBox, type Frame, isChosen, pad, Ticks, TimelineHead } from "./chart-parts";
-import { colors, kinds } from "./kinds";
+import { colors, barBox, type Frame, isChosen, pad, Ticks, TimelineHead } from "./chart-parts";
+import { kinds } from "./kinds";
 
 const stripHeight = 52;
 

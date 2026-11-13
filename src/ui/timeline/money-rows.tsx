@@ -3,8 +3,16 @@ import { scaleLinear } from "d3-scale";
 import { valueOf } from "../../shared/figures";
 import { axisMoney, money } from "../../shared/format";
 import { Term } from "../term";
-import { barBox, type Frame, isChosen, pad, Ticks, TimelineHead, Years } from "./chart-parts";
-import { colors } from "./kinds";
+import {
+  colors,
+  barBox,
+  type Frame,
+  isChosen,
+  pad,
+  Ticks,
+  TimelineHead,
+  Years,
+} from "./chart-parts";
 
 const revenueHeight = 120;
 const netHeight = 72;

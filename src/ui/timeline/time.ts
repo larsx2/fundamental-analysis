@@ -27,9 +27,9 @@ export const spansOf = (years: ReadonlyArray<StatementYear>): ReadonlyArray<Span
   }));
 
 export const fiscalOf = (spans: ReadonlyArray<Span>, date: Date) =>
+  spans.find((span) => date >= span.start && date <= span.end) ??
   spans.find((span) => date >= span.start && date.getTime() <= span.end.getTime() + 864e5);
 
-// Months in a recession, grouped into unbroken runs.
 export const recessionRuns = (months: ReadonlyArray<EconomyMonth>) => {
   const runs: Array<Array<string>> = [];
   months.forEach((each, index) => {
@@ -69,7 +69,6 @@ const steps: Record<string, number> = {
   PageDown: -12,
 };
 
-// The month a key moves the timeline to, or null for a key that does not move it.
 export const monthAfterKey = (
   key: string,
   monthIndex: number,

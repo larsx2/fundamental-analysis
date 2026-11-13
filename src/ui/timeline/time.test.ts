@@ -18,6 +18,9 @@ const month = (name: string, recession = false): EconomyMonth => ({
 });
 
 const months = ["2023-01", "2023-02", "2023-03", "2023-04", "2023-05"].map((name) => month(name));
+const twoYears = Array.from({ length: 24 }, (_, index) =>
+  month(`${2020 + Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`),
+);
 
 describe("the timeline's months", () => {
   it("groups recession months into unbroken runs", () => {
@@ -36,6 +39,7 @@ describe("the timeline's months", () => {
     expect(nearestMonth(months, new Date(Date.UTC(2023, 1, 20)))).toBe("2023-02");
     expect(nearestMonth(months, new Date(Date.UTC(2030, 0, 1)))).toBe("2023-05");
     expect(nearestMonth([], new Date())).toBeNull();
+    expect(nearestMonth(months, new Date(Date.UTC(2023, 1, 28, 12)))).toBe("2023-02");
   });
 
   it("moves a month with the arrows and a year with Page Up and Page Down, within the months held", () => {
@@ -43,6 +47,8 @@ describe("the timeline's months", () => {
     expect(monthAfterKey("ArrowUp", 2, months)).toBe("2023-04");
     expect(monthAfterKey("PageUp", 2, months)).toBe("2023-05");
     expect(monthAfterKey("PageDown", 2, months)).toBe("2023-01");
+    expect(monthAfterKey("PageUp", 3, twoYears)).toBe("2021-04");
+    expect(monthAfterKey("PageDown", 20, twoYears)).toBe("2020-09");
     expect(monthAfterKey("Home", 2, months)).toBe("2023-01");
     expect(monthAfterKey("End", 0, months)).toBe("2023-05");
   });
@@ -66,6 +72,12 @@ describe("the timeline's fiscal years", () => {
     expect(fiscalOf(spans, middle("2022-09"))?.fiscalYear).toBe(2022);
     expect(fiscalOf(spans, middle("2022-10"))?.fiscalYear).toBe(2023);
     expect(fiscalOf(spans, middle("2024-01"))).toBeUndefined();
+  });
+
+  it("counts the first day of a fiscal year in that year, and a day just after the last year in it", () => {
+    expect(fiscalOf(spans, new Date("2022-09-25T12:00:00Z"))?.fiscalYear).toBe(2023);
+    expect(fiscalOf(spans, new Date("2022-09-24T12:00:00Z"))?.fiscalYear).toBe(2022);
+    expect(fiscalOf(spans, new Date("2023-10-01T12:00:00Z"))?.fiscalYear).toBe(2023);
   });
 
   it("names every year when there is room, and every other one and the chosen one when not", () => {

@@ -4,8 +4,7 @@ import { curveMonotoneX, line as lineShape } from "d3-shape";
 import type { Ref } from "react";
 import { monthName, rate } from "../../shared/format";
 import { Term } from "../term";
-import { type Frame, pad, Ticks, TimelineHead } from "./chart-parts";
-import { colors } from "./kinds";
+import { colors, type Frame, pad, Ticks, TimelineHead } from "./chart-parts";
 import { type EconomyMonth, inflationText, middle } from "./time";
 
 const economyHeight = 150;

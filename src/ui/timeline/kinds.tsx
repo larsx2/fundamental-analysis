@@ -61,13 +61,3 @@ export const kinds: ReadonlyArray<{
     ),
   },
 ];
-
-// Every colour here holds at least 3 to 1 against the panel, chosen or not.
-export const colors = {
-  bar: "#6a6a70",
-  barChosen: "#c9c8c1",
-  kept: "#3f8f3f",
-  keptChosen: "#5fbf5f",
-  recession: "rgb(240 140 110 / 0.11)",
-  recessionEdge: "rgb(240 140 110 / 0.35)",
-};

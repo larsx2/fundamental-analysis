@@ -1,10 +1,8 @@
 import type { KeyboardEvent } from "react";
 import { monthName, monthShort } from "../../shared/format";
-import { axisHeight, type Frame, isChosen, pad, Pill } from "./chart-parts";
-import { colors } from "./kinds";
+import { colors, axisHeight, type Frame, isChosen, pad, Pill } from "./chart-parts";
 import { type EconomyMonth, monthAfterKey, monthStart, nextMonth, recessionRuns } from "./time";
 
-// Behind every row: where each fiscal year starts, the chosen one, and recessions.
 export function Backdrop({
   frame,
   months,
@@ -66,7 +64,6 @@ export function Backdrop({
   );
 }
 
-// The line of years under the chart, which the keyboard moves month by month.
 export function MonthAxis({
   frame,
   months,
@@ -137,7 +134,6 @@ export function MonthAxis({
   );
 }
 
-// Over every row: the chosen month, and the month under the pointer.
 export function Cursor({
   width,
   height,
