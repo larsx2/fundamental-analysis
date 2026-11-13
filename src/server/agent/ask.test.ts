@@ -107,6 +107,9 @@ describe("what Codex may use while it answers", () => {
     expect(Object.keys(settingsFor("http://x/api/lookup", "= not toml [").mcp_servers)).toEqual([
       "lookups",
     ]);
+  });
+});
+
 const completed = (item: Record<string, unknown>) =>
   ({ type: "item.completed", item }) as unknown as ThreadEvent;
 
