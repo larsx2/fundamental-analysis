@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { routeTree } from "./routeTree.gen";
+import { ScreenBroke } from "./ui/screen-broke";
 
 export function getRouter() {
   const queryClient = new QueryClient();
@@ -10,6 +11,7 @@ export function getRouter() {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    defaultErrorComponent: ScreenBroke,
   });
 
   setupRouterSsrQueryIntegration({ router, queryClient });
