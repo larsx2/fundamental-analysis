@@ -98,6 +98,11 @@ tasks:
     preconditions: [*needs-bun, *needs-install]
     cmd: bunx playwright test --update-snapshots
 
+  readme:pictures:
+    desc: Take the pictures in the README again, from the same extracts as the screenshot tests
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun scripts/readme-pictures.ts
+
   ci:
     desc: Run everything that must pass before work is handed over
     cmds:
