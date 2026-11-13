@@ -10,6 +10,10 @@ const pages = [
   { name: "microsoft-timeline", path: "/MSFT/timeline?year=2015" },
 ];
 
+// Tall enough that the menu bar, fixed to the bottom of the window, sits below
+// every screen instead of across it.
+test.use({ viewport: { width: 1440, height: 2600 } });
+
 for (const { name, path } of pages) {
   test(`company screen: ${name}`, async ({ page }) => {
     await page.goto(path, { waitUntil: "networkidle" });

@@ -81,6 +81,77 @@ const program = Effect.gen(function* () {
     INSERT INTO setting (key, value)
     VALUES ('economy-fetched-on', ${new Date().toLocaleDateString("en-CA")})
   `;
+  // Made-up current reports, so the timeline shows single events, a fiscal
+  // year with several, an amendment, and a gap before Apple's are held.
+  yield* sql`UPDATE company SET filings_from = '2012-06-01' WHERE cik = 320193`;
+  const reports = [
+    {
+      cik: 320193,
+      form: "8-K",
+      filedOn: "2013-03-01",
+      reportDate: "2013-02-27",
+      items: "5.02",
+    },
+    {
+      cik: 320193,
+      form: "8-K",
+      filedOn: "2016-08-10",
+      reportDate: "2016-08-08",
+      items: "2.01",
+    },
+    {
+      cik: 320193,
+      form: "8-K",
+      filedOn: "2019-02-05",
+      reportDate: "2019-02-01",
+      items: "5.02",
+    },
+    {
+      cik: 320193,
+      form: "8-K",
+      filedOn: "2019-06-20",
+      reportDate: "2019-06-18",
+      items: "5.02,9.01",
+    },
+    {
+      cik: 320193,
+      form: "8-K",
+      filedOn: "2019-09-03",
+      reportDate: "2019-08-30",
+      items: "2.01",
+    },
+    {
+      cik: 320193,
+      form: "8-K",
+      filedOn: "2023-05-15",
+      reportDate: "2023-05-12",
+      items: "5.02",
+    },
+    {
+      cik: 320193,
+      form: "8-K/A",
+      filedOn: "2023-06-01",
+      reportDate: "2023-05-12",
+      items: "5.02",
+    },
+    {
+      cik: 909832,
+      form: "8-K",
+      filedOn: "2023-01-20",
+      reportDate: "2023-01-18",
+      items: "5.02",
+    },
+  ];
+  for (const [index, report] of reports.entries()) {
+    yield* sql`
+      INSERT INTO company_filing
+        (accession, cik, form, filed_on, report_date, items, primary_document)
+      VALUES (
+        ${`0000000000-00-${String(index).padStart(6, "0")}`}, ${report.cik}, ${report.form},
+        ${report.filedOn}, ${report.reportDate}, ${report.items}, 'report.htm'
+      )
+    `;
+  }
 });
 
 const sec = Layer.succeed(
