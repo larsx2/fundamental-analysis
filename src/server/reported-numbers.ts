@@ -48,12 +48,15 @@ export class ReportedNumbers extends Context.Service<
     ) => Effect.Effect<ReadonlyArray<StoredNumber>, SqlError | Schema.SchemaError>;
     readonly yearlyDollarAmounts: (
       cik: number,
+      tags?: ReadonlyArray<string>,
     ) => Effect.Effect<ReadonlyArray<StoredNumber>, SqlError | Schema.SchemaError>;
     readonly balances: (
       cik: number,
+      tags?: ReadonlyArray<string>,
     ) => Effect.Effect<ReadonlyArray<StoredNumber>, SqlError | Schema.SchemaError>;
     readonly yearlyPerShareAmounts: (
       cik: number,
+      tags?: ReadonlyArray<string>,
     ) => Effect.Effect<ReadonlyArray<StoredNumber>, SqlError | Schema.SchemaError>;
   }
 >()("ReportedNumbers") {
@@ -90,6 +93,13 @@ export class ReportedNumbers extends Context.Service<
           }),
         );
 
+      const Lookup = Schema.Struct({
+        cik: Schema.Int,
+        tags: Schema.optional(Schema.Array(Schema.String)),
+      });
+      const onlyTags = (tags: ReadonlyArray<string> | undefined) =>
+        tags === undefined ? sql`` : sql`AND ${sql.in("n.tag", tags)}`;
+
       const forTag = SqlSchema.findAll({
         Request: Schema.Struct({ cik: Schema.Int, tag: Schema.String }),
         Result: StoredNumber,
@@ -104,47 +114,47 @@ export class ReportedNumbers extends Context.Service<
       });
 
       const yearlyDollarAmounts = SqlSchema.findAll({
-        Request: Schema.Int,
+        Request: Lookup,
         Result: StoredNumber,
-        execute: (cik) => sql`
+        execute: ({ cik, tags }) => sql`
           SELECT
             n.accession, f.filed_on AS "filedOn", f.form, n.taxonomy, n.tag, n.unit,
             n.start_on AS "startOn", n.end_on AS "endOn", n.fiscal_year AS "fiscalYear", n.value
           FROM reported_number n JOIN filing f USING (accession)
-          WHERE n.cik = ${cik} AND n.unit = 'USD' AND n.start_on IS NOT NULL
+          WHERE n.cik = ${cik} AND n.unit = 'USD' AND n.start_on IS NOT NULL ${onlyTags(tags)}
         `,
       });
 
       const balances = SqlSchema.findAll({
-        Request: Schema.Int,
+        Request: Lookup,
         Result: StoredNumber,
-        execute: (cik) => sql`
+        execute: ({ cik, tags }) => sql`
           SELECT
             n.accession, f.filed_on AS "filedOn", f.form, n.taxonomy, n.tag, n.unit,
             n.start_on AS "startOn", n.end_on AS "endOn", n.fiscal_year AS "fiscalYear", n.value
           FROM reported_number n JOIN filing f USING (accession)
-          WHERE n.cik = ${cik} AND n.unit = 'USD' AND n.start_on IS NULL
+          WHERE n.cik = ${cik} AND n.unit = 'USD' AND n.start_on IS NULL ${onlyTags(tags)}
         `,
       });
 
       const yearlyPerShareAmounts = SqlSchema.findAll({
-        Request: Schema.Int,
+        Request: Lookup,
         Result: StoredNumber,
-        execute: (cik) => sql`
+        execute: ({ cik, tags }) => sql`
           SELECT
             n.accession, f.filed_on AS "filedOn", f.form, n.taxonomy, n.tag, n.unit,
             n.start_on AS "startOn", n.end_on AS "endOn", n.fiscal_year AS "fiscalYear", n.value
           FROM reported_number n JOIN filing f USING (accession)
-          WHERE n.cik = ${cik} AND n.unit = 'USD/shares' AND n.start_on IS NOT NULL
+          WHERE n.cik = ${cik} AND n.unit = 'USD/shares' AND n.start_on IS NOT NULL ${onlyTags(tags)}
         `,
       });
 
       return ReportedNumbers.of({
         save,
         forTag: (cik, tag) => forTag({ cik, tag }),
-        yearlyDollarAmounts,
-        balances,
-        yearlyPerShareAmounts,
+        yearlyDollarAmounts: (cik, tags) => yearlyDollarAmounts({ cik, tags }),
+        balances: (cik, tags) => balances({ cik, tags }),
+        yearlyPerShareAmounts: (cik, tags) => yearlyPerShareAmounts({ cik, tags }),
       });
     }),
   );
