@@ -4,6 +4,7 @@ import { Effect, Option, Schema } from "effect";
 import { Collector } from "../server/collector";
 import { Companies } from "../server/companies";
 import { askedFor, knownCompanies, latestFiscalYear } from "../server/company-view";
+import { companyNamedIn } from "../server/named-company";
 import { runtime } from "../server/runtime";
 import {
   contactOf,
@@ -18,6 +19,7 @@ import { valueOf } from "../shared/figures";
 import { homeCompanies } from "../shared/home-companies";
 
 export type { CompanySummary } from "../shared/company-summary";
+export type { NamedCompany } from "../server/named-company";
 
 export type ListedCompany = {
   readonly cik: number;
@@ -230,64 +232,10 @@ export const removeCompany = createServerFn({ method: "POST" })
     ),
   );
 
-// Words that start questions or name ideas rather than companies.
-const notNames = new Set(
-  "what whats where when which who why how does did do is are was were the a an of in on to for and or its it their money go goes going grow growing grew growth spend spent spends kept keep keeps cash debt year years fiscal much many make makes made earn earns earned buy buys sell sells pay pays paid balance sheet statement statements timeline overview happen happened happening show me tell about".split(
-    " ",
-  ),
-);
-
-export type NamedCompany = {
-  readonly cik: number;
-  readonly name: string;
-  readonly ticker: string;
-  readonly state: CompanyMatch["state"];
-};
-
-// The company a sentence names, by ticker or by the start of its name.
 export const findCompanyIn = createServerFn({ method: "GET" })
   .validator(
     Schema.decodeUnknownSync(
       Schema.Struct({ text: Schema.String, skip: Schema.Array(Schema.String) }),
     ),
   )
-  .handler(({ data }) =>
-    runtime.runPromise(
-      Effect.gen(function* () {
-        const companies = yield* Companies;
-        const skip = new Set(data.skip.map((word) => word.toLowerCase()));
-        const tokens = data.text.match(/[A-Za-z][A-Za-z.&-]*/g) ?? [];
-        const named = (match: CompanyMatch | undefined, ticker: string): NamedCompany | null =>
-          match === undefined
-            ? null
-            : { cik: match.cik, name: match.name, ticker, state: match.state };
-
-        for (const token of tokens.filter((each) => /^[A-Z]{1,5}$/.test(each) && each !== "I")) {
-          const matches = yield* companies.search(token, 3);
-          const exact = matches.find((match) => match.tickers.includes(token));
-          if (exact !== undefined) return named(exact, token);
-        }
-        const words = tokens
-          .map((token) => token.replace(/'s$/i, "").replace(/[.-]+$/, ""))
-          .filter(
-            (word) =>
-              word.length >= 3 &&
-              !notNames.has(word.toLowerCase()) &&
-              !skip.has(word.toLowerCase()),
-          )
-          .sort((a, b) => Number(/^[A-Z]/.test(b)) - Number(/^[A-Z]/.test(a)));
-        for (const word of words) {
-          const matches = yield* companies.search(word, 3);
-          // An everyday word typed in lower case names only a company already
-          // collected, so "hello" does not offer to collect Hello Group.
-          const first = matches.find(
-            (match) =>
-              match.name.toLowerCase().startsWith(word.toLowerCase()) &&
-              (/^[A-Z]/.test(word) || match.state === "ready"),
-          );
-          if (first !== undefined) return named(first, first.tickers[0] ?? word.toUpperCase());
-        }
-        return null;
-      }),
-    ),
-  );
+  .handler(({ data }) => runtime.runPromise(companyNamedIn(data.text, data.skip)));
