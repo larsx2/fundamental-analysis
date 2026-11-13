@@ -69,7 +69,7 @@ export const incomeKeys = new Set<FigureKey>([
 ]);
 
 // Everything between operating income and net income, worked out by the tool.
-export const belowOperatingIncome = (year: StatementYear): CheckedFigure => {
+const belowOperatingIncome = (year: StatementYear): CheckedFigure => {
   const operating = valueOf(year.terms.operatingIncome);
   const net = valueOf(year.terms.netIncome);
   if (operating === null || net === null) return { kind: "gap", doubtful: null };
@@ -85,7 +85,7 @@ export const belowOperatingIncome = (year: StatementYear): CheckedFigure => {
   };
 };
 
-export const interestAndOtherIncome = (year: StatementYear): CheckedFigure => {
+const interestAndOtherIncome = (year: StatementYear): CheckedFigure => {
   const operating = valueOf(year.terms.operatingIncome);
   const net = valueOf(year.terms.netIncome);
   const tax = valueOf(year.terms.incomeTax);

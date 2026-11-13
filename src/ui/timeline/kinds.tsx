@@ -4,42 +4,36 @@ import { Term } from "../term";
 
 export const kinds: ReadonlyArray<{
   readonly key: FigureKey;
-  readonly term: string;
   readonly label: ReactNode;
   readonly plain: string;
   readonly inline: ReactNode;
 }> = [
   {
     key: "capitalExpenditure",
-    term: "Capital expenditure",
     label: <Term name="Capital expenditure" />,
     plain: "capital expenditure",
     inline: <Term name="Capital expenditure">capital expenditure</Term>,
   },
   {
     key: "acquisitions",
-    term: "Acquisition",
     label: <Term name="Acquisition" />,
     plain: "acquisitions",
     inline: <Term name="Acquisition">acquisitions</Term>,
   },
   {
     key: "shareBuybacks",
-    term: "Share buyback",
     label: <Term name="Share buyback" />,
     plain: "share buybacks",
     inline: <Term name="Share buyback">share buybacks</Term>,
   },
   {
     key: "dividends",
-    term: "Dividend",
     label: <Term name="Dividend" />,
     plain: "dividends",
     inline: <Term name="Dividend">dividends</Term>,
   },
   {
     key: "debtRaised",
-    term: "Debt",
     label: (
       <>
         <Term name="Debt" /> raised
@@ -54,7 +48,6 @@ export const kinds: ReadonlyArray<{
   },
   {
     key: "debtRepaid",
-    term: "Debt",
     label: (
       <>
         <Term name="Debt" /> repaid

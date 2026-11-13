@@ -18,7 +18,6 @@ export const monthStart = (month: string) =>
 export const nextMonth = (month: string) =>
   new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 1));
 export const inflationText = (value: number | null) => (value === null ? "gap" : rate(value, 1));
-export const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 export const spansOf = (years: ReadonlyArray<StatementYear>): ReadonlyArray<Span> =>
   years.map((each) => ({

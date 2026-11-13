@@ -2,12 +2,11 @@ import { max } from "d3-array";
 import { scaleLinear } from "d3-scale";
 import { figureOf } from "../../shared/figure-keys";
 import { valueOf } from "../../shared/figures";
-import { axisMoney, money } from "../../shared/format";
+import { axisMoney, capitalise, money } from "../../shared/format";
 import { GapMark } from "../marks";
 import { Term } from "../term";
 import { barBox, type Frame, isChosen, pad, Ticks, TimelineHead } from "./chart-parts";
 import { colors, kinds } from "./kinds";
-import { capital } from "./time";
 
 const stripHeight = 52;
 
@@ -60,7 +59,7 @@ export function AllocationRow({ frame }: { readonly frame: Frame }) {
                   width={W}
                   height={stripHeight}
                   role="img"
-                  aria-label={`${capital(kind.plain)} for each fiscal year, up to ${axisMoney(top)}`}
+                  aria-label={`${capitalise(kind.plain)} for each fiscal year, up to ${axisMoney(top)}`}
                 >
                   <line
                     className="grid-line"
@@ -79,7 +78,7 @@ export function AllocationRow({ frame }: { readonly frame: Frame }) {
                   {spans.map((each) => {
                     const value = figureOf(each, kind.key);
                     const { left, width } = barBox(frame, each);
-                    const label = `${capital(kind.plain)}, fiscal ${each.fiscalYear}: ${value.kind === "gap" ? "gap, not reported as its own line" : money(value.value)}`;
+                    const label = `${capitalise(kind.plain)}, fiscal ${each.fiscalYear}: ${value.kind === "gap" ? "gap, not reported as its own line" : money(value.value)}`;
                     if (value.kind === "gap") {
                       return (
                         <rect
