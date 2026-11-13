@@ -86,6 +86,34 @@ describe("Sec", () => {
     }).pipe(Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))));
   });
 
+  it.effect("takes the contact from the environment when the dialog has none", () => {
+    const seen: Array<Seen> = [];
+    const { services } = setup(seen, () => 200, false);
+    const before = {
+      name: process.env.SEC_CONTACT_NAME,
+      email: process.env.SEC_CONTACT_EMAIL,
+    };
+    process.env.SEC_CONTACT_NAME = "Env Person";
+    process.env.SEC_CONTACT_EMAIL = "env@example.com";
+    const put = (key: string, value: string | undefined) => {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    };
+    return Effect.gen(function* () {
+      const sec = yield* Sec;
+      yield* sec.getJson(url);
+      expect(seen.map((request) => request.userAgent)).toEqual(["Env Person env@example.com"]);
+    }).pipe(
+      Effect.provide(Sec.layer.pipe(Layer.provideMerge(services))),
+      Effect.ensuring(
+        Effect.sync(() => {
+          put("SEC_CONTACT_NAME", before.name);
+          put("SEC_CONTACT_EMAIL", before.email);
+        }),
+      ),
+    );
+  });
+
   it.effect("without contact details nothing is sent", () => {
     const seen: Array<Seen> = [];
     const { services } = setup(seen, () => 200, false);
