@@ -1,5 +1,5 @@
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { Codex, type ThreadEvent } from "@openai/codex-sdk";
 import type { Answer, AskEvent, LookupResult } from "../../shared/lookups";
@@ -116,11 +116,58 @@ const failed = (cause: unknown): AskEvent => {
   return { type: "failed", signedOut: signedOutWords.test(message), message };
 };
 
-const toEvent = (event: ThreadEvent): AskEvent | null => {
+const strayed: AskEvent = {
+  type: "failed",
+  signedOut: false,
+  message: "Codex tried to use something other than the tool's lookups, so the answer was stopped.",
+};
+
+const readerServers = (readerConfig: string | null): ReadonlyArray<string> => {
+  if (readerConfig === null) return [];
+  try {
+    const servers = (Bun.TOML.parse(readerConfig) as { mcp_servers?: unknown }).mcp_servers;
+    return typeof servers === "object" && servers !== null ? Object.keys(servers) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const settingsFor = (lookupsUrl: string, readerConfig: string | null) => ({
+  model_reasoning_summary: "concise",
+  features: { shell_tool: false, view_image: false, plugins: false, apps: false },
+  mcp_servers: {
+    ...Object.fromEntries(readerServers(readerConfig).map((name) => [name, { enabled: false }])),
+    lookups: {
+      command: process.execPath,
+      args: [bridge],
+      env: { LOOKUPS_URL: lookupsUrl },
+      default_tools_approval_mode: "approve",
+    },
+  },
+});
+
+const readReaderConfig = (): string | null => {
+  try {
+    const home = process.env.CODEX_HOME ?? join(homedir(), ".codex");
+    return readFileSync(join(home, "config.toml"), "utf8");
+  } catch {
+    return null;
+  }
+};
+
+export const toEvent = (event: ThreadEvent): AskEvent | null => {
   if (event.type === "turn.failed") return failed(event.error.message);
   if (event.type === "error") return failed(event.message);
   if (event.type !== "item.started" && event.type !== "item.completed") return null;
   const item = event.item;
+  if (
+    item.type === "command_execution" ||
+    item.type === "file_change" ||
+    item.type === "web_search" ||
+    (item.type === "mcp_tool_call" && item.server !== "lookups")
+  ) {
+    return strayed;
+  }
   if (item.type === "mcp_tool_call") {
     if (event.type === "item.started") {
       return { type: "reading", id: item.id, lookup: item.tool, input: item.arguments ?? null };
@@ -166,19 +213,7 @@ export async function* ask(input: {
 }): AsyncGenerator<AskEvent> {
   await new Promise((settle) => setTimeout(settle, 250));
   if (input.signal.aborted) return;
-  const codex = new Codex({
-    config: {
-      model_reasoning_summary: "concise",
-      mcp_servers: {
-        lookups: {
-          command: process.execPath,
-          args: [bridge],
-          env: { LOOKUPS_URL: input.lookupsUrl },
-          default_tools_approval_mode: "approve",
-        },
-      },
-    },
-  });
+  const codex = new Codex({ config: settingsFor(input.lookupsUrl, readReaderConfig()) });
   const thread = codex.startThread({
     workingDirectory: emptyFolder(),
     skipGitRepoCheck: true,
@@ -211,6 +246,11 @@ export async function* ask(input: {
       }
       const next = toEvent(event);
       if (next === null) continue;
+      if (next === strayed) {
+        yield next;
+        stop.abort();
+        return;
+      }
       if (next.type === "answer" || next.type === "failed") answered = true;
       yield next;
     }
