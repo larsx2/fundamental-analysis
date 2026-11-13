@@ -75,7 +75,7 @@ const termNamesOnScreens = (): ReadonlyArray<Named> => {
     ...matchesIn(fileEnding(agentFiles, "/lookups/marks.ts"), /\["[A-Za-z]+", "([^"]+)"\]/g).map(
       (name) => ({ from: "marks lookup", name }),
     ),
-    ...matchesIn(fileEnding(screenFiles, "/ui/ask/drawing.tsx"), /block\([^\n]*"([^"]+)"\)/g).map(
+    ...matchesIn(folder(screenFiles, "/ui/ask/drawing/"), /block\([^\n]*"([^"]+)"\)/g).map(
       (name) => ({ from: "balance drawing", name }),
     ),
   ];
