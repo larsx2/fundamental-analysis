@@ -41,6 +41,10 @@ const extracts = new Map(
   ]),
 );
 
+const madeUp = process.argv.includes("--made-up");
+// Checked today, so the tool does not ask the SEC for newer filings during a run.
+const today = new Date().toLocaleDateString("en-CA");
+
 for (const suffix of ["", "-shm", "-wal"]) rmSync(`${file}${suffix}`, { force: true });
 
 const program = Effect.gen(function* () {
@@ -50,7 +54,7 @@ const program = Effect.gen(function* () {
     yield* sql`
       INSERT INTO company (cik, name, list_position, state, as_of, last_checked_on, filings_from)
       VALUES (
-        ${company.cik}, ${company.name}, ${position}, 'ready', ${company.asOf}, '2026-11-11',
+        ${company.cik}, ${company.name}, ${position}, 'ready', ${company.asOf}, ${today},
         '1994-01-01'
       )
     `;
@@ -64,7 +68,8 @@ const program = Effect.gen(function* () {
     `;
     yield* collect.reportedNumbers(company.cik);
   }
-  // Made-up economy months, so the timeline's pictures never depend on FRED.
+  // Only the picture tests get made-up figures. The README pictures must show real ones.
+  if (!madeUp) return;
   // Marked as fetched today, so the tool does not ask FRED for newer ones.
   for (let index = 0; index < 21 * 12 + 10; index++) {
     const year = 2005 + Math.floor(index / 12);
@@ -79,7 +84,7 @@ const program = Effect.gen(function* () {
   }
   yield* sql`
     INSERT INTO setting (key, value)
-    VALUES ('economy-fetched-on', ${new Date().toLocaleDateString("en-CA")})
+    VALUES ('economy-fetched-on', ${today})
   `;
   // Made-up current reports, so the timeline shows single events, a fiscal
   // year with several, an amendment, and a gap before Apple's are held.

@@ -19,7 +19,7 @@ export default defineConfig({
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002 } },
   webServer: {
     command:
-      "bun scripts/screens-database.ts && DATABASE_FILE=data/screens.db bun --bun vp dev --port 4120 --strictPort",
+      "bun scripts/screens-database.ts --made-up && DATABASE_FILE=data/screens.db bun --bun vp dev --port 4120 --strictPort",
     url: "http://127.0.0.1:4120/companies",
     reuseExistingServer: false,
     timeout: 120_000,
