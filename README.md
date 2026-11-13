@@ -52,7 +52,7 @@ task dev
 
 Then open http://127.0.0.1:4100. The first time, the tool asks for [your contact details for the SEC](#your-contact-details-for-the-sec). Apple, Microsoft, Costco, Tesla and NVIDIA are then collected on their own, so the home page has something to show.
 
-To ask questions, sign in to ChatGPT once with `bunx codex login` in the tool's folder.
+To ask questions, sign in to ChatGPT once with `bunx codex login` in the tool's folder. If you already use Codex on this computer and signed in with ChatGPT, there is nothing to do: the tool uses that sign-in.
 
 ## Where it runs
 
