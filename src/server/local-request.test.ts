@@ -43,6 +43,22 @@ describe("only this computer may ask", () => {
     ).toBe(false);
   });
 
+  it("turns away a page on another port of this computer, even when the browser sends only its origin", () => {
+    expect(
+      fromThisComputer(
+        request("http://127.0.0.1:4100/api/ask", { origin: "http://localhost:3000" }),
+      ),
+    ).toBe(false);
+  });
+
+  it("lets a plain request for the lookup list through, whatever it says it carries", () => {
+    expect(
+      fromThisComputer(
+        request("http://127.0.0.1:4100/api/lookup", { "content-type": "text/plain" }, "GET"),
+      ),
+    ).toBe(true);
+  });
+
   it("turns away a request addressed to any other name", () => {
     expect(fromThisComputer(request("http://attacker.example:4100/api/ask"))).toBe(false);
     expect(addressedToThisComputer(request("http://192.168.1.20:4100/companies"))).toBe(false);

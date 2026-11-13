@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { findCompany } from "../../server/company-view";
 import { ask } from "../../server/agent/ask";
-import { fromThisComputer, lookupsUrlFor, refused } from "../../server/agent/local-request";
+import { fromThisComputer, lookupsUrlFor, refused } from "../../server/local-request";
 import { runtime } from "../../server/runtime";
 
 export const Route = createFileRoute("/api/ask")({

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fromThisComputer, refused } from "../../server/agent/local-request";
+import { fromThisComputer, refused } from "../../server/local-request";
 import { lookUp } from "../../server/agent/look-up";
 import { catalog } from "../../server/agent/lookups";
 import { runtime } from "../../server/runtime";

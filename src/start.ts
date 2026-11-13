@@ -1,5 +1,5 @@
 import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/react-start";
-import { addressedToThisComputer, refused } from "./server/agent/local-request";
+import { addressedToThisComputer, refused } from "./server/local-request";
 
 const onlyThisComputer = createMiddleware().server(({ request, next }) =>
   addressedToThisComputer(request) ? next() : refused(),
