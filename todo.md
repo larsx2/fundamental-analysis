@@ -161,7 +161,7 @@ Rests on: [How filing data becomes glossary terms](./docs/rfc/0004-filing-data-t
 
 - [x] A number's fiscal year comes from the dates it covers, never from the SEC's own year label, which is the year of the filing.
 - [x] Years of 52 and 53 weeks both count as full fiscal years.
-- [x] A fiscal year is named by the calendar year it ends in.
+- [x] A fiscal year is named by the calendar year it ends in, except a year ending in the first week of January, which takes the year before.
 
 **Check:** Apple's fiscal 2023 is the period ending 30 September 2023. Microsoft's is the year ending 30 June 2023. Costco's ends on 3 September 2023.
 

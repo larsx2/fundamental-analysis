@@ -10,6 +10,12 @@ describe("fiscalYearOf", () => {
     expect(fiscalYearOf({ start: "2023-09-04", end: "2024-09-01" })).toEqual(Option.some(2024));
   });
 
+  it("names a year that ends in the first days of January by the year before", () => {
+    expect(fiscalYearOf({ start: "2019-12-29", end: "2021-01-02" })).toEqual(Option.some(2020));
+    expect(fiscalYearOf({ start: "2021-01-03", end: "2022-01-01" })).toEqual(Option.some(2021));
+    expect(fiscalYearOf({ start: "2022-01-02", end: "2022-12-31" })).toEqual(Option.some(2022));
+  });
+
   it("does not count a quarter or nine months as a fiscal year", () => {
     expect(fiscalYearOf({ start: "2023-07-02", end: "2023-09-30" })).toEqual(Option.none());
     expect(fiscalYearOf({ start: "2022-10-01", end: "2023-07-01" })).toEqual(Option.none());
