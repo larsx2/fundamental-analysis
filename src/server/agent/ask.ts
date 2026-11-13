@@ -122,52 +122,82 @@ const strayed: AskEvent = {
   message: "Codex tried to use something other than the tool's lookups, so the answer was stopped.",
 };
 
-const readerServers = (readerConfig: string | null): ReadonlyArray<string> => {
+const readerServers = (readerConfig: string | null | Error): ReadonlyArray<string> | null => {
   if (readerConfig === null) return [];
+  if (readerConfig instanceof Error) return null;
   try {
     const servers = (Bun.TOML.parse(readerConfig) as { mcp_servers?: unknown }).mcp_servers;
-    return typeof servers === "object" && servers !== null ? Object.keys(servers) : [];
+    if (servers === undefined) return [];
+    return typeof servers === "object" && servers !== null && !Array.isArray(servers)
+      ? Object.keys(servers)
+      : null;
   } catch {
-    return [];
+    return null;
   }
 };
 
-export const settingsFor = (lookupsUrl: string, readerConfig: string | null) => ({
-  model_reasoning_summary: "concise",
-  features: { shell_tool: false, view_image: false, plugins: false, apps: false },
-  mcp_servers: {
-    ...Object.fromEntries(readerServers(readerConfig).map((name) => [name, { enabled: false }])),
-    lookups: {
-      command: process.execPath,
-      args: [bridge],
-      env: { LOOKUPS_URL: lookupsUrl },
-      default_tools_approval_mode: "approve",
-    },
-  },
-});
+const switchable = /^[A-Za-z0-9_-]+$/;
 
-const readReaderConfig = (): string | null => {
+export const settingsFor = (lookupsUrl: string, readerConfig: string | null | Error) => {
+  const names = readerServers(readerConfig);
+  if (names === null) {
+    return {
+      refused:
+        "Your Codex settings could not be read, so the tool cannot make sure Codex uses only its lookups. Check ~/.codex/config.toml.",
+    };
+  }
+  const unswitchable = names.find((name) => !switchable.test(name));
+  if (unswitchable !== undefined) {
+    return {
+      refused: `Your Codex settings name a server, "${unswitchable}", that the tool cannot switch off, so it cannot make sure Codex uses only its lookups. Rename it in ~/.codex/config.toml.`,
+    };
+  }
+  return {
+    settings: {
+      model_reasoning_summary: "concise",
+      features: { shell_tool: false, view_image: false, plugins: false, apps: false },
+      mcp_servers: {
+        ...Object.fromEntries(names.map((name) => [name, { enabled: false }])),
+        lookups: {
+          command: process.execPath,
+          args: [bridge],
+          env: { LOOKUPS_URL: lookupsUrl },
+          default_tools_approval_mode: "approve",
+        },
+      },
+    },
+  };
+};
+
+export const readReaderConfig = (
+  home = process.env.CODEX_HOME ?? join(homedir(), ".codex"),
+): string | null | Error => {
   try {
-    const home = process.env.CODEX_HOME ?? join(homedir(), ".codex");
     return readFileSync(join(home, "config.toml"), "utf8");
-  } catch {
-    return null;
+  } catch (cause) {
+    return (cause as NodeJS.ErrnoException).code === "ENOENT" ? null : (cause as Error);
   }
 };
 
 export const toEvent = (event: ThreadEvent): AskEvent | null => {
   if (event.type === "turn.failed") return failed(event.error.message);
   if (event.type === "error") return failed(event.message);
-  if (event.type !== "item.started" && event.type !== "item.completed") return null;
-  const item = event.item;
   if (
-    item.type === "command_execution" ||
-    item.type === "file_change" ||
-    item.type === "web_search" ||
-    (item.type === "mcp_tool_call" && item.server !== "lookups")
+    event.type !== "item.started" &&
+    event.type !== "item.updated" &&
+    event.type !== "item.completed"
   ) {
-    return strayed;
+    return null;
   }
+  const item = event.item;
+  const known =
+    item.type === "agent_message" ||
+    item.type === "reasoning" ||
+    item.type === "todo_list" ||
+    item.type === "error" ||
+    (item.type === "mcp_tool_call" && item.server === "lookups");
+  if (!known) return strayed;
+  if (event.type === "item.updated") return null;
   if (item.type === "mcp_tool_call") {
     if (event.type === "item.started") {
       return { type: "reading", id: item.id, lookup: item.tool, input: item.arguments ?? null };
@@ -217,7 +247,12 @@ export async function* ask(input: {
 }): AsyncGenerator<AskEvent> {
   await new Promise((settle) => setTimeout(settle, 250));
   if (input.signal.aborted) return;
-  const codex = new Codex({ config: settingsFor(input.lookupsUrl, readReaderConfig()) });
+  const configured = settingsFor(input.lookupsUrl, readReaderConfig());
+  if ("refused" in configured) {
+    yield { type: "failed", signedOut: false, message: configured.refused };
+    return;
+  }
+  const codex = new Codex({ config: configured.settings });
   const thread = codex.startThread({
     workingDirectory: emptyFolder(),
     skipGitRepoCheck: true,

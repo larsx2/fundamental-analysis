@@ -1,6 +1,9 @@
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "@effect/vitest";
 import type { ThreadEvent } from "@openai/codex-sdk";
-import { promptFor, settingsFor, toEvent } from "./ask";
+import { promptFor, readReaderConfig, settingsFor, toEvent } from "./ask";
 
 const apple = { name: "Apple Inc.", ticker: "AAPL" };
 const costco = { name: "COSTCO WHOLESALE CORP /NEW", ticker: "COST" };
@@ -84,11 +87,33 @@ describe("what Codex may use while it answers", () => {
     });
   });
 
-  it("turns off every tool but the lookups, and every server of the reader's own", () => {
-    const settings = settingsFor(
-      "http://127.0.0.1:4100/api/lookup",
-      '[mcp_servers.node_repl]\ncommand = "node_repl"\n\n[mcp_servers.lookups]\ncommand = "other"\n',
+  it("stops the answer for any kind of step it does not know", () => {
+    const unknown = { id: "1", type: "some_new_tool" };
+    expect(toEvent(started(unknown))).toEqual(stopped);
+    expect(toEvent({ type: "item.updated", item: unknown } as unknown as ThreadEvent)).toEqual(
+      stopped,
     );
+    expect(toEvent({ type: "item.completed", item: unknown } as unknown as ThreadEvent)).toEqual(
+      stopped,
+    );
+  });
+
+  it("lets a plan and an error message through", () => {
+    const plan = { id: "1", type: "todo_list", items: [] };
+    const error = { id: "2", type: "error", message: "something" };
+    expect(toEvent(started(plan))).toBeNull();
+    expect(toEvent(started(error))).toBeNull();
+    expect(toEvent({ type: "item.updated", item: plan } as unknown as ThreadEvent)).toBeNull();
+    expect(toEvent({ type: "item.completed", item: error } as unknown as ThreadEvent)).toBeNull();
+  });
+
+  it("turns off every tool but the lookups, and every server of the reader's own", () => {
+    const result = settingsFor(
+      "http://127.0.0.1:4100/api/lookup",
+      '[mcp_servers.node_repl]\ncommand = "node_repl"\n\n[mcp_servers."chrome-devtools"]\ncommand = "x"\n\n[mcp_servers.lookups]\ncommand = "other"\n',
+    );
+    if (!("settings" in result)) throw new Error(result.refused);
+    const { settings } = result;
     expect(settings.features).toEqual({
       shell_tool: false,
       view_image: false,
@@ -97,16 +122,45 @@ describe("what Codex may use while it answers", () => {
     });
     expect(settings.mcp_servers).toMatchObject({
       node_repl: { enabled: false },
+      "chrome-devtools": { enabled: false },
       lookups: { env: { LOOKUPS_URL: "http://127.0.0.1:4100/api/lookup" } },
     });
     expect(settings.mcp_servers.lookups).not.toHaveProperty("enabled");
   });
 
-  it("keeps only the lookups when the reader's config is missing or unreadable", () => {
-    expect(Object.keys(settingsFor("http://x/api/lookup", null).mcp_servers)).toEqual(["lookups"]);
-    expect(Object.keys(settingsFor("http://x/api/lookup", "= not toml [").mcp_servers)).toEqual([
-      "lookups",
-    ]);
+  it("keeps only the lookups when the reader has no config or no servers", () => {
+    for (const config of [null, "", 'model = "x"\n']) {
+      const result = settingsFor("http://x/api/lookup", config);
+      if (!("settings" in result)) throw new Error(result.refused);
+      expect(Object.keys(result.settings.mcp_servers)).toEqual(["lookups"]);
+    }
+  });
+
+  it("refuses to start when the reader's config cannot be understood", () => {
+    for (const config of ["= not toml [", "mcp_servers = 3", new Error("denied")]) {
+      expect(settingsFor("http://x/api/lookup", config)).toEqual({
+        refused:
+          "Your Codex settings could not be read, so the tool cannot make sure Codex uses only its lookups. Check ~/.codex/config.toml.",
+      });
+    }
+  });
+
+  it("refuses to start when a server's name cannot be switched off", () => {
+    const result = settingsFor("http://x/api/lookup", '[mcp_servers."my.server"]\ncommand = "x"\n');
+    expect(result).toEqual({
+      refused:
+        'Your Codex settings name a server, "my.server", that the tool cannot switch off, so it cannot make sure Codex uses only its lookups. Rename it in ~/.codex/config.toml.',
+    });
+  });
+
+  it("tells a missing config file from one that cannot be read", () => {
+    const home = mkdtempSync(join(tmpdir(), "reader-config-"));
+    expect(readReaderConfig(home)).toBeNull();
+    writeFileSync(join(home, "config.toml"), 'model = "x"\n');
+    expect(readReaderConfig(home)).toBe('model = "x"\n');
+    const folder = mkdtempSync(join(tmpdir(), "reader-config-"));
+    mkdirSync(join(folder, "config.toml"));
+    expect(readReaderConfig(folder)).toBeInstanceOf(Error);
   });
 });
 
