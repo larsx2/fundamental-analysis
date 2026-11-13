@@ -89,6 +89,7 @@ export class Collector extends Context.Service<
       // Removing a company and checking it for new filings both change its
       // data, so one waits for the other.
       const writing = yield* Semaphore.make(1);
+      const failedAt = new Map<number, number>();
 
       const status = SqlSchema.findOneOption({
         Request: Schema.Int,
@@ -151,7 +152,8 @@ export class Collector extends Context.Service<
           }),
         );
 
-      // The ready company most overdue for a check, if any is due.
+      // The ready company most overdue for a check, if any is due. One whose
+      // last check failed waits behind the others, the longest ago first.
       const nextDueForCheck = Effect.gen(function* () {
         const checkedOn = yield* today;
         const companies = yield* sql<{
@@ -166,7 +168,9 @@ export class Collector extends Context.Service<
           FROM company c WHERE c.state = 'ready'
           ORDER BY c.last_checked_on
         `;
-        return companies.find((company) => isDueForCheck({ ...company, today: checkedOn }))?.cik;
+        const due = companies.filter((company) => isDueForCheck({ ...company, today: checkedOn }));
+        return due.toSorted((a, b) => (failedAt.get(a.cik) ?? 0) - (failedAt.get(b.cik) ?? 0))[0]
+          ?.cik;
       });
 
       // Asks the SEC for filings newer than the ones held. A new annual report
@@ -231,9 +235,14 @@ export class Collector extends Context.Service<
             cik === undefined
               ? Effect.succeed(false)
               : checkForNew(cik).pipe(
+                  Effect.tap(() => Effect.sync(() => failedAt.delete(cik))),
                   Effect.as(true),
                   Effect.catchCause((cause) =>
-                    Effect.logWarning(`Could not check company ${cik} for new filings`, cause).pipe(
+                    Clock.currentTimeMillis.pipe(
+                      Effect.tap((now) => Effect.sync(() => failedAt.set(cik, now))),
+                      Effect.andThen(
+                        Effect.logWarning(`Could not check company ${cik} for new filings`, cause),
+                      ),
                       Effect.as(false),
                     ),
                   ),

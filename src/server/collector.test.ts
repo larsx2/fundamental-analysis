@@ -30,7 +30,7 @@ const services = (
   failFirstTry: ReadonlySet<number> = new Set(),
   checks: {
     readonly found?: ReadonlyArray<CompanyFiling>;
-    readonly fail?: boolean;
+    readonly fail?: boolean | ReadonlySet<number>;
   } = {},
 ) => {
   const tried = new Set<number>();
@@ -43,7 +43,7 @@ const services = (
         newFilings: (cik) =>
           Effect.gen(function* () {
             events.push(`check ${cik}`);
-            if (checks.fail === true) {
+            if (checks.fail === true || (typeof checks.fail === "object" && checks.fail.has(cik))) {
               return yield* Effect.die(new Error("The SEC could not be reached."));
             }
             return checks.found ?? [];
@@ -123,6 +123,15 @@ const waitUntil = (
     Effect.repeat({
       schedule: Schedule.spaced("5 millis"),
       until: (company) => states.includes(company.state),
+      times: 400,
+    }),
+  );
+
+const waitForEvents = (events: ReadonlyArray<Event>, count: number) =>
+  Effect.sync(() => events.length).pipe(
+    Effect.repeat({
+      schedule: Schedule.spaced("5 millis"),
+      until: (seen) => seen >= count,
       times: 400,
     }),
   );
@@ -273,4 +282,25 @@ describe("Collector", () => {
       }).pipe(Effect.provide(services(events, new Set(), { fail: true })));
     },
   );
+
+  it.live("a company whose check keeps failing does not stop the others from being checked", () => {
+    const events: Array<Event> = [];
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient;
+      yield* seed([[apple, "ready"], [microsoft, "ready"], [costco]]);
+      yield* sql`UPDATE company SET last_checked_on = '2020-01-01' WHERE cik = ${apple}`;
+      yield* sql`UPDATE company SET last_checked_on = '2020-02-01' WHERE cik = ${microsoft}`;
+      const collector = yield* startCollector;
+      yield* waitForEvents(events, 1);
+      yield* collector.request(costco);
+      yield* waitUntil(collector, costco, ["ready"]);
+      yield* waitForEvents(events, 4);
+      expect(events.slice(0, 4)).toEqual([
+        `check ${apple}`,
+        `start ${costco}`,
+        `end ${costco}`,
+        `check ${microsoft}`,
+      ]);
+    }).pipe(Effect.provide(services(events, new Set(), { fail: new Set([apple]) })));
+  });
 });
