@@ -161,12 +161,12 @@ The annual report
 - Results hold whole paragraphs, so answer from them without reading the report again. Make every report lookup in one exec call: run several searches together, and when one finds nothing useful, search again with other words in the same code.
 - Search the report before saying the tool cannot answer a question about what the company does or says, and when a figure the question is about is a gap: a company that has never paid a dividend, for instance, says so in its report.
 - When a total jumps or falls in one year, search the report for why, such as a special dividend, before describing a trend.
-- When the report names no rivals, say so, and say how it describes its competition.
+- Before saying the report names no rivals, search for the lists where reports name them, such as compet* NEAR(include, 5) or "such as". When it names none, say so, and say how it describes its competition.
 
 Words
 - Use the glossary's words: revenue, not sales; net income, not profit or earnings; fiscal 2026, not FY26. Net income is what is left of each dollar, never what the company keeps.
 - Say what happened. No judgement of the company, no forecast and no advice on buying or selling. If asked whether to buy, or whether the shares are cheap, say the tool cannot tell, because it has no share prices and makes no forecasts, then say what the figures show about the business.
-- If neither the lookups nor the annual report can answer, say so in the lead and name what the tool does not collect, from the notes of the company lookup. Never answer from memory.
+- If neither the lookups nor the annual report can answer, say so in the lead and name what the tool does not collect, from the notes of the company lookup, and give no figures. Never answer from memory.
 
 Answer
 Reply with JSON that matches the schema:
@@ -256,6 +256,12 @@ export const checkQuotes = (answer: Answer, live: ReadonlyArray<LookupResult>): 
       : [{ text: wanted, source: found.result.title, url: filing.url }];
   });
   return { ...answer, quotes: quotes.slice(0, 2) };
+};
+
+type Usage = {
+  readonly inputTokens: number;
+  readonly cachedInputTokens: number;
+  readonly outputTokens: number;
 };
 
 const signedOutWords = /\b(log ?in|sign(ed)? ?in|unauthori[sz]ed|401)\b|not authenticated/i;
@@ -517,6 +523,22 @@ export async function* ask(input: {
     turn = started.turn.id;
     if (input.signal.aborted) interrupt();
     let answered = false;
+    let trips = 0;
+    let usage: Usage = { inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
+    const counted = (notification: Notification) => {
+      if (notification.method !== "thread/tokenUsage/updated") return false;
+      trips += 1;
+      const total = (notification.params.tokenUsage as { readonly total?: Usage } | undefined)
+        ?.total;
+      if (total !== undefined) {
+        usage = {
+          inputTokens: total.inputTokens,
+          cachedInputTokens: total.cachedInputTokens,
+          outputTokens: total.outputTokens,
+        };
+      }
+      return true;
+    };
     const live: Array<LookupResult> = [];
     while (!input.signal.aborted) {
       const notification = queue.shift();
@@ -538,6 +560,7 @@ export async function* ask(input: {
         }
         break;
       }
+      if (counted(notification)) continue;
       const next = toEvent(notification);
       if (next === null) continue;
       if (next === strayed) {
@@ -567,6 +590,25 @@ export async function* ask(input: {
       yield next.type === "answer"
         ? { type: "answer", answer: checkQuotes(next.answer, live) }
         : next;
+      if (next.type === "answer") {
+        // The last trip's tokens arrive after the answer, which is already on
+        // screen, so they are counted while the turn finishes.
+        const until = Date.now() + 3000;
+        while (!finished && !input.signal.aborted && Date.now() < until) {
+          const later = queue.shift();
+          if (later === undefined) {
+            await new Promise<void>((settle) => {
+              wake = settle;
+              setTimeout(settle, until - Date.now());
+            });
+            wake = null;
+            continue;
+          }
+          if (later.method === "turn/completed") finished = true;
+          else counted(later);
+        }
+        yield { type: "usage", trips, ...usage };
+      }
       if (answered) break;
     }
     if (!answered && !input.signal.aborted) {

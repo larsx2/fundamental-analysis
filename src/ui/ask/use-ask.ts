@@ -86,6 +86,8 @@ export const apply = (state: AskState, event: AskEvent): AskState => {
       };
     case "answer":
       return { ...state, answer: event.answer, finishedAt: Date.now() };
+    case "usage":
+      return state;
     case "failed":
       return {
         ...state,

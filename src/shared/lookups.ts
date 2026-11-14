@@ -131,6 +131,13 @@ export type AskEvent =
     }
   | { readonly type: "answer"; readonly answer: Answer }
   | {
+      readonly type: "usage";
+      readonly trips: number;
+      readonly inputTokens: number;
+      readonly cachedInputTokens: number;
+      readonly outputTokens: number;
+    }
+  | {
       readonly type: "failed";
       readonly signedOut: boolean;
       readonly message: string;
