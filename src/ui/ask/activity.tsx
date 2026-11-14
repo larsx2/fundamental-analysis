@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { inWords, lowerFirst } from "../../shared/format";
 import { LogoTile, plainName, shortName } from "../logo-tile";
+import { searchWords } from "./read-rows";
 import type { AskState, LookupRead } from "./use-ask";
 
 const termsOf = (input: unknown) =>
@@ -10,6 +11,14 @@ const termsOf = (input: unknown) =>
 
 const termOf = (input: unknown) =>
   typeof input === "object" && input !== null && "term" in input ? String(input.term) : "a term";
+
+const queryOf = (input: unknown) =>
+  typeof input === "object" && input !== null && "query" in input ? String(input.query) : "";
+
+const foundNothing = (read: LookupRead) =>
+  read.lookup === "search_report" &&
+  read.result !== null &&
+  Object.keys(read.result.figures).length === 0;
 
 export const lookupPhrase = (name: string, read: Pick<LookupRead, "lookup" | "input">) => {
   switch (read.lookup) {
@@ -37,6 +46,14 @@ export const lookupPhrase = (name: string, read: Pick<LookupRead, "lookup" | "in
       return `the marks on ${name}'s figures`;
     case "glossary":
       return `the glossary entry for ${termOf(read.input)}`;
+    case "search_report": {
+      const words = searchWords(queryOf(read.input));
+      return words === "" ? `${name}'s annual report` : `${name}'s annual report for “${words}”`;
+    }
+    case "read_report":
+      return `a passage of ${name}'s annual report`;
+    case "risk_headings":
+      return `the risk headings in ${name}'s annual report`;
     default:
       return read.lookup;
   }
@@ -133,6 +150,7 @@ function Steps({
               {read.status === "failed" && read.error !== null && (
                 <span className="ask-step-detail">{read.error}</span>
               )}
+              {foundNothing(read) && <span className="ask-step-detail">Nothing found</span>}
             </span>
           </li>
         );
@@ -158,7 +176,7 @@ export function Activity({
       <details className="ask-activity done">
         <summary>
           {state.failure === null ? "Worked" : "Stopped"} for {seconds(elapsed)}
-          {lookups > 0 && ` and read ${lookups} ${lookups === 1 ? "lookup" : "lookups"}`}
+          {lookups > 0 && ` and made ${lookups} ${lookups === 1 ? "lookup" : "lookups"}`}
         </summary>
         <Steps state={state} companies={companies} />
       </details>

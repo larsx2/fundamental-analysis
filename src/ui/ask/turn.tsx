@@ -2,24 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { figuresOf, type KnownFigure } from "../../shared/answer-figures";
-import type { CompanyScreen } from "../palette";
 import { AnswerText, termsToLink, uncheckedIn } from "./answer-text";
 import { type Company, withoutAt } from "./conversations";
 import { DrawingPanel } from "./drawing";
 import { namedCompanyQuery } from "./named-company";
+import { screenFor } from "./read-rows";
 import type { AskState } from "./use-ask";
-
-const screenFor: Record<string, { readonly path: CompanyScreen; readonly name: string }> = {
-  company: { path: "overview", name: "The Overview" },
-  trend: { path: "overview", name: "The Overview" },
-  dollar: { path: "where-the-money-goes", name: "Where the money goes" },
-  cash: { path: "statements", name: "The Statements" },
-  balance: { path: "statements", name: "The Statements" },
-  returns: { path: "statements", name: "The Statements" },
-  marks: { path: "statements", name: "The Statements" },
-  uses_of_cash: { path: "timeline", name: "The Timeline" },
-  context: { path: "timeline", name: "The Timeline" },
-};
 
 const drawnIn = (state: AskState) => {
   const answer = state.answer;

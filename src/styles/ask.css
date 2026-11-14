@@ -1086,6 +1086,42 @@
     font-size: var(--text-xs);
     line-height: 1.45;
     transition: background 140ms ease-out;
+    position: relative;
+    cursor: default;
+  }
+
+  .ask-read .ask-read-open {
+    text-decoration: none;
+    outline: none;
+  }
+
+  .ask-read-open::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .ask-read-open:focus-visible::after {
+    outline: 2px solid var(--color-text-1);
+    outline-offset: 1px;
+  }
+
+  .ask-read-open i {
+    font-style: normal;
+    color: var(--color-text-3);
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) {
+    .ask-read li:has(.ask-read-open):hover {
+      background: var(--color-surface-2);
+    }
+
+    .ask-read li:hover .ask-read-open i {
+      color: var(--color-text-1);
+    }
   }
 
   .ask-read li:first-child {

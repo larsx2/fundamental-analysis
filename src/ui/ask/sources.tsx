@@ -1,18 +1,7 @@
+import { Link } from "@tanstack/react-router";
 import { longDate } from "../../shared/format";
-import type { AskState, LookupRead } from "./use-ask";
-
-const readingNames: Record<string, string> = {
-  company: "The company",
-  trend: "Figures across fiscal years",
-  dollar: "Where each dollar went",
-  cash: "Net income and free cash flow",
-  balance: "The balance sheet",
-  uses_of_cash: "Capital allocation",
-  returns: "Operating income, debt and equity",
-  context: "The economy and corporate events",
-  marks: "Marks on every figure",
-  glossary: "The glossary",
-};
+import { filingRows, type ReadRow, readRows } from "./read-rows";
+import type { AskState } from "./use-ask";
 
 const stateIcon = {
   reading: <path d="M12 4a8 8 0 1 1-8 8" />,
@@ -41,24 +30,18 @@ export function Sources({
   readonly lit: string | null;
   readonly onLight: (source: string | null) => void;
 }) {
-  const filings = [
-    ...new Map(
-      state.lookups
-        .flatMap((read) => read.result?.filings ?? [])
-        .map((filing) => [filing.url, filing] as const),
-    ).values(),
-  ].sort((a, b) => b.filedOn.localeCompare(a.filedOn));
+  const filings = filingRows(state.lookups);
   return (
     <aside className="ask-sources" aria-labelledby="read-title">
       <h2 className="eyebrow" id="read-title">
         What it read
       </h2>
       <ul className="ask-read">
-        {state.lookups.map((read) => (
+        {readRows(state.lookups).map((row) => (
           <Read
-            key={read.id}
-            read={read}
-            lit={lit === `${turnId}:${read.id}`}
+            key={row.key}
+            row={row}
+            lit={row.ids.some((id) => lit === `${turnId}:${id}`)}
             onLight={(source) => onLight(source === null ? null : `${turnId}:${source}`)}
           />
         ))}
@@ -81,8 +64,8 @@ export function Sources({
                   <path d="M14 3v4h4" />
                 </svg>
                 <div>
-                  <a href={filing.url} target="_blank" rel="noreferrer">
-                    {filing.form}
+                  <a className="ask-read-open" href={filing.url} target="_blank" rel="noreferrer">
+                    {filing.form} <i aria-hidden="true">↗</i>
                   </a>
                   <span>Filed {longDate(filing.filedOn)}</span>
                 </div>
@@ -96,19 +79,19 @@ export function Sources({
 }
 
 function Read({
-  read,
+  row,
   lit,
   onLight,
 }: {
-  readonly read: LookupRead;
+  readonly row: ReadRow;
   readonly lit: boolean;
   readonly onLight: (source: string | null) => void;
 }) {
   return (
     <li
-      data-state={read.status}
+      data-state={row.status}
       className={lit ? "lit" : ""}
-      onMouseEnter={() => onLight(read.id)}
+      onMouseEnter={() => onLight(row.ids.at(-1) ?? null)}
       onMouseLeave={() => onLight(null)}
     >
       <svg
@@ -120,18 +103,38 @@ function Read({
         strokeLinecap="round"
         aria-hidden="true"
       >
-        {stateIcon[read.status]}
+        {stateIcon[row.status]}
       </svg>
       <div>
-        <strong>{read.result?.title ?? readingNames[read.lookup] ?? read.lookup}</strong>
-        <span>
-          {read.status === "reading"
-            ? "Reading"
-            : read.status === "failed"
-              ? (read.error ?? "Nothing came back")
-              : read.result?.detail}
-        </span>
+        <Title row={row} />
+        {row.lines.map((line) => (
+          <span key={line}>{line}</span>
+        ))}
       </div>
     </li>
+  );
+}
+
+function Title({ row }: { readonly row: ReadRow }) {
+  const opens = row.opens;
+  if (opens === null) return <strong>{row.title}</strong>;
+  if (opens.kind === "filing") {
+    return (
+      <a className="ask-read-open" href={opens.url} target="_blank" rel="noreferrer">
+        {row.title} <i aria-hidden="true">↗</i>
+      </a>
+    );
+  }
+  if (opens.kind === "glossary") {
+    return (
+      <Link className="ask-read-open" to="/glossary">
+        {row.title} <i aria-hidden="true">→</i>
+      </Link>
+    );
+  }
+  return (
+    <Link className="ask-read-open" to={`/$ticker/${opens.path}`} params={{ ticker: opens.ticker }}>
+      {row.title} <i aria-hidden="true">→</i>
+    </Link>
   );
 }
