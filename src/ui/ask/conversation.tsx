@@ -152,6 +152,10 @@ export function Conversation({
       <h1 className="visually-hidden">
         {start === null ? "Ask" : `Ask about ${plainName(start.name)}`}
       </h1>
+      <div className="ask-backdrop" data-blank={blank} aria-hidden="true">
+        <div className="ask-glow" />
+        <div className="ask-dots" />
+      </div>
       <div className="ask-layout">
         <History threads={threads} current={thread?.id ?? null} />
         <article
