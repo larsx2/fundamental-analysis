@@ -7,9 +7,11 @@ import { Body } from "./drawing/body";
 export function DrawingPanel({
   drawing,
   link,
+  linked,
 }: {
   readonly drawing: Drawing;
   readonly link: ReactNode;
+  readonly linked: ReadonlySet<string>;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const width = Math.max(260, useWidth(box, 720));
@@ -21,7 +23,7 @@ export function DrawingPanel({
         {link}
       </div>
       <div ref={box} onMouseLeave={tip.hide}>
-        <Body drawing={drawing} width={width} tip={tip} />
+        <Body drawing={drawing} width={width} tip={tip} linked={linked} />
       </div>
       {tip.element}
     </section>

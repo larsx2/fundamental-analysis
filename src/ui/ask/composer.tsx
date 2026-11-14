@@ -16,12 +16,14 @@ export function AskComposer({
   onStop,
   threadId,
   centred,
+  offered,
 }: {
   readonly context: ReadonlyArray<Mention>;
   readonly working: boolean;
   readonly onStop: () => void;
   readonly threadId: string | null;
   readonly centred: boolean;
+  readonly offered: boolean;
 }) {
   const navigate = useNavigate();
   const askToCollect = useAskToCollect();
@@ -174,7 +176,7 @@ export function AskComposer({
               {say}
               {prefill.pending && <Clears />}
             </p>
-          ) : about !== null ? (
+          ) : about !== null && !offered ? (
             <div className="ask-topics" role="group" aria-label="Topics">
               {topics.map((topic) => {
                 const question = questions.find((each) => each.key === topic.key)!;

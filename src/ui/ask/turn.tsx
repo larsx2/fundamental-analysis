@@ -67,7 +67,7 @@ export function TurnView({
     companies.find((each) => each.ticker.toUpperCase() === drawnTicker)?.ticker ??
     companies[0]?.ticker ??
     null;
-  const linked = answer === null ? [] : termsToLink([answer.lead, ...answer.sentences]);
+  const linked = answer === null ? [] : termsToLink(answer.sentences);
   const unchecked = answer === null ? 0 : uncheckedIn([answer.lead, ...answer.sentences], known);
   return (
     <section className="ask-turn" aria-label={question}>
@@ -98,7 +98,7 @@ export function TurnView({
             <AnswerText
               text={answer.lead}
               known={known}
-              linked={linked[0] ?? new Set()}
+              linked={new Set()}
               lit={lit}
               onLight={onLight}
             />
@@ -108,7 +108,7 @@ export function TurnView({
               <AnswerText
                 text={sentence}
                 known={known}
-                linked={linked[index + 1] ?? new Set()}
+                linked={linked[index] ?? new Set()}
                 lit={lit}
                 onLight={onLight}
               />
@@ -130,6 +130,7 @@ export function TurnView({
           {drawn?.result?.drawing != null && (
             <DrawingPanel
               drawing={drawn.result.drawing}
+              linked={new Set(linked.flatMap((each) => [...each]))}
               link={
                 screen === undefined || ticker === null ? null : (
                   <Link className="more-link" to={`/$ticker/${screen.path}`} params={{ ticker }}>

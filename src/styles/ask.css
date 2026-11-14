@@ -739,6 +739,46 @@
     margin-top: 32px;
   }
 
+  .ask-sentence .term {
+    text-decoration-color: rgb(163 162 155 / 0.45);
+  }
+
+  /* Each part of the dollar as a line of a receipt, with what was left under a rule. */
+  .ask-receipt {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-xs);
+    color: var(--color-text-2);
+  }
+
+  .ask-receipt li {
+    display: grid;
+    grid-template-columns: 10px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+  }
+
+  .ask-receipt i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  .ask-receipt .numbers {
+    color: var(--color-text-1);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ask-receipt li.kept {
+    margin-top: 4px;
+    padding-top: 9px;
+    border-top: 1px solid var(--color-hairline);
+    color: var(--color-text-1);
+  }
+
   .ask-drawing .panel-title {
     flex-wrap: nowrap;
     align-items: baseline;

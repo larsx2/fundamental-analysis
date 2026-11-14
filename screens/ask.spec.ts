@@ -100,3 +100,52 @@ test("a passage of the annual report shows under the answer, with a link to the 
     "https://www.sec.gov/Archives/edgar/data/320193/aapl.htm",
   );
 });
+
+test("an answer's headline underlines no word, and its chart lists every part of the dollar once", async ({
+  page,
+  request,
+}) => {
+  const reply = await request.post("/api/lookup", {
+    headers: sameComputer,
+    data: { name: "dollar", input: { ticker: "AAPL", fiscalYear: 2023 } },
+  });
+  const { result } = (await reply.json()) as { result: unknown };
+
+  await askWithReply(page, [
+    { type: "reading", id: "1", lookup: "dollar", input: { ticker: "AAPL" } },
+    { type: "read", id: "1", lookup: "dollar", result, error: null },
+    {
+      type: "answer",
+      answer: {
+        lead: "Apple kept a quarter of its revenue as net income.",
+        sentences: ["Cost of revenue took the most."],
+        drawing: "dollar",
+        next: ["Is Apple growing?"],
+      },
+    },
+  ]);
+
+  await expect(page.locator(".ask-lead")).toBeVisible();
+  await expect(page.locator(".ask-lead .term")).toHaveCount(0);
+  await expect(page.locator(".ask-sentence .term")).toHaveText(["Cost of revenue"]);
+  const receipt = page.locator(".ask-receipt li");
+  await expect(receipt.first()).toContainText(/Cost of revenue\s*\d+¢/);
+  await expect(receipt.last()).toContainText(/Net income\s*\d+¢/);
+  await expect(page.locator(".ask-receipt .term")).not.toContainText(["Cost of revenue"]);
+  await expect(receipt.last().locator(".term")).toHaveText("Net income");
+  await expect(page.getByRole("group", { name: "Topics" })).toHaveCount(0);
+});
+
+test("the topics stay in the question box when an answer offers nothing to ask next", async ({
+  page,
+}) => {
+  await askWithReply(page, [
+    {
+      type: "answer",
+      answer: { lead: "Apple brought in a lot.", sentences: [], drawing: null, next: [] },
+    },
+  ]);
+
+  await expect(page.locator(".ask-lead")).toBeVisible();
+  await expect(page.getByRole("group", { name: "Topics" })).toBeVisible();
+});

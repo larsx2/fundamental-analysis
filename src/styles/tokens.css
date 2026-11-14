@@ -30,7 +30,6 @@
 
   /* Text set inside a part of a dollar: near-black on every part. */
   --color-text-on-part: #0b0b0c;
-  --color-text-on-kept: #0b0b0c;
 
   /* The quiet lines of a chart: grid, baseline at zero, the chosen year
      and the year under the pointer. */

@@ -54,10 +54,7 @@ export function DollarBar({
             style={{
               flexGrow: share,
               background: part.color,
-              color:
-                part.key === "netIncome"
-                  ? "var(--color-text-on-kept)"
-                  : "var(--color-text-on-part)",
+              color: "var(--color-text-on-part)",
             }}
           >
             {share >= labelInside ? `${share}¢` : ""}

@@ -229,6 +229,7 @@ export function Conversation({
             onStop={live.stop}
             threadId={thread?.id ?? null}
             centred={blank}
+            offered={(latest.state.answer?.next.length ?? 0) > 0}
           />
           {blank && (
             <p className="ask-foot ask-empty-note">

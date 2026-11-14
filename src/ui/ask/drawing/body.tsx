@@ -1,6 +1,7 @@
 import type { Drawing } from "../../../shared/lookups";
 import { longDate, money, moneyShort } from "../../../shared/format";
 import { CalculatedMark, DoubtfulMark, GapMark } from "../../marks";
+import { findTerm } from "../../../glossary/glossary";
 import { Term } from "../../term";
 import { type Tip, Caption } from "./chart-parts";
 import { LineChart } from "./line-chart";
@@ -16,16 +17,16 @@ const partColors: Record<string, string> = {
   netIncome: "var(--color-part-kept)",
 };
 
-const insideDollar = 8;
-
 export function Body({
   drawing,
   width,
   tip,
+  linked,
 }: {
   readonly drawing: Drawing;
   readonly width: number;
   readonly tip: Tip;
+  readonly linked: ReadonlySet<string>;
 }) {
   switch (drawing.kind) {
     case "lines": {
@@ -95,25 +96,20 @@ export function Body({
             {drawing.parts.map((part) => (
               <span
                 key={part.key}
-                style={{
-                  flexGrow: part.cents,
-                  background: partColors[part.key],
-                  color:
-                    part.key === "netIncome"
-                      ? "var(--color-text-on-kept)"
-                      : "var(--color-text-on-part)",
-                }}
-              >
-                {part.cents >= insideDollar ? `${part.cents}¢` : ""}
-              </span>
+                style={{ flexGrow: Math.max(part.cents, 0), background: partColors[part.key] }}
+              />
             ))}
           </div>
-          <ul className="dollar-legend">
+          <ul className="ask-receipt">
             {drawing.parts.map((part) => (
-              <li key={part.key}>
+              <li key={part.key} className={part.key === "netIncome" ? "kept" : undefined}>
                 <i style={{ background: partColors[part.key] }} aria-hidden="true" />
-                <Term name={part.name} />
-                {part.cents < insideDollar && <span className="numbers">{part.cents}¢</span>}
+                {linked.has(findTerm(part.name)?.name ?? part.name) ? (
+                  <span>{part.name}</span>
+                ) : (
+                  <Term name={part.name} />
+                )}
+                <span className="numbers">{part.cents}¢</span>
               </li>
             ))}
           </ul>
