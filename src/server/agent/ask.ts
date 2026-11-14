@@ -448,8 +448,14 @@ export async function* ask(input: {
     wake?.();
   });
   let turn: string | null = null;
+  let finished = false;
   const interrupt = () => {
-    if (turn !== null) void server.request("turn/interrupt", { threadId: thread, turnId: turn });
+    if (turn !== null && !finished) {
+      finished = true;
+      void server
+        .request("turn/interrupt", { threadId: thread, turnId: turn })
+        .catch(() => undefined);
+    }
     wake?.();
   };
   input.signal.addEventListener("abort", interrupt, { once: true });
@@ -486,6 +492,7 @@ export async function* ask(input: {
         continue;
       }
       if (notification.method === "turn/completed") {
+        finished = true;
         const error = (
           notification.params.turn as { readonly error?: { readonly message?: string } | null }
         ).error;
@@ -499,7 +506,6 @@ export async function* ask(input: {
       if (next === null) continue;
       if (next === strayed) {
         yield next;
-        interrupt();
         return;
       }
       if (next.type === "read" && next.result !== null) live.push(next.result);
@@ -531,6 +537,7 @@ export async function* ask(input: {
     if (!input.signal.aborted) yield failed(cause);
   } finally {
     input.signal.removeEventListener("abort", interrupt);
+    interrupt();
     stopListening();
     void server.request("thread/unsubscribe", { threadId: thread }).catch(() => undefined);
   }

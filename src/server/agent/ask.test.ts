@@ -44,7 +44,10 @@ describe("what the agent is told", () => {
 
   it("carries the earlier questions and answers of the conversation", () => {
     const prompt = promptFor("And the year before?", [apple], null, [
-      { question: "Is Apple growing?", answer: "Yes. Revenue rose in fiscal 2026." },
+      {
+        question: "Is Apple growing?",
+        answer: "Yes. Revenue rose in fiscal 2026.",
+      },
     ]);
     expect(prompt).toContain(
       "Question: Is Apple growing?\nAnswer: Yes. Revenue rose in fiscal 2026.",
@@ -53,7 +56,10 @@ describe("what the agent is told", () => {
   });
 });
 
-const started = (item: object): Notification => ({ method: "item/started", params: { item } });
+const started = (item: object): Notification => ({
+  method: "item/started",
+  params: { item },
+});
 const completed = (item: object): Notification => ({
   method: "item/completed",
   params: { item },
@@ -66,7 +72,11 @@ const stopped = {
 
 describe("what Codex may use while it answers", () => {
   it("stops the answer when Codex starts a command", () => {
-    const command = { id: "1", type: "commandExecution", command: "cat ~/.ssh/id_rsa" };
+    const command = {
+      id: "1",
+      type: "commandExecution",
+      command: "cat ~/.ssh/id_rsa",
+    };
     expect(toEvent(started(command))).toEqual(stopped);
   });
 
@@ -91,6 +101,12 @@ describe("what Codex may use while it answers", () => {
       lookup: "take_snapshot",
       input: {},
     });
+  });
+
+  it("stops the answer when Codex starts a helper agent", () => {
+    const spawn = { id: "1", type: "collabAgentToolCall", tool: "spawnAgent" };
+    expect(toEvent(started(spawn))).toEqual(stopped);
+    expect(toEvent(started({ id: "2", type: "subAgentActivity" }))).toEqual(stopped);
   });
 
   it("stops the answer for any kind of step it does not know", () => {
@@ -182,9 +198,15 @@ describe("what the reader sees of Codex's work", () => {
   });
 
   it("only a sign-in failure is shown as one", () => {
-    expect(toEvent(failure("401 Unauthorized"))).toMatchObject({ signedOut: true });
-    expect(toEvent(failure("catalog index unavailable"))).toMatchObject({ signedOut: false });
-    expect(toEvent(failure("assigning request"))).toMatchObject({ signedOut: false });
+    expect(toEvent(failure("401 Unauthorized"))).toMatchObject({
+      signedOut: true,
+    });
+    expect(toEvent(failure("catalog index unavailable"))).toMatchObject({
+      signedOut: false,
+    });
+    expect(toEvent(failure("assigning request"))).toMatchObject({
+      signedOut: false,
+    });
   });
 
   it("waits while Codex retries a failed request", () => {
@@ -194,7 +216,14 @@ describe("what the reader sees of Codex's work", () => {
   it("a message that is not the answer's JSON becomes a thinking step, not an answer", () => {
     const text = "  Let me check the trend.  ";
     expect(
-      toEvent(completed({ id: "m1", type: "agentMessage", text, phase: "commentary" })),
+      toEvent(
+        completed({
+          id: "m1",
+          type: "agentMessage",
+          text,
+          phase: "commentary",
+        }),
+      ),
     ).toEqual({
       type: "thinking",
       id: "m1",
@@ -222,7 +251,9 @@ const read = (lookup: string, figures: Record<string, string>): Prefetched => ({
 });
 
 describe("figures read before the question", () => {
-  const dollar = read("dollar", { "Net income, cents of each dollar of revenue": "3¢" });
+  const dollar = read("dollar", {
+    "Net income, cents of each dollar of revenue": "3¢",
+  });
   const cash = read("cash", { "Free cash flow, fiscal 2026": "$7.6 billion" });
   const balance = read("balance", { "Debt, fiscal 2026": "$5.8 billion" });
 
@@ -263,7 +294,9 @@ describe("figures read before the question", () => {
       drawing: "dollar",
       next: [],
     };
-    const called = result("dollar", { "Net income, cents of each dollar of revenue": "3¢" });
+    const called = result("dollar", {
+      "Net income, cents of each dollar of revenue": "3¢",
+    });
     expect(usedBy(answer, [dollar, cash], [called])).toEqual([]);
   });
 

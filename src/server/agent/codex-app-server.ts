@@ -188,15 +188,17 @@ class AppServer {
   }
 }
 
-let running: { readonly key: string; readonly server: AppServer } | null = null;
+const shared = globalThis as typeof globalThis & {
+  codexAppServer?: { readonly key: string; readonly server: AppServer };
+};
 
 export const appServer = (flags: ReadonlyArray<string>) => {
   const key = flags.join("\n");
-  if (running === null || running.key !== key || running.server.closed) {
+  const running = shared.codexAppServer;
+  if (running === undefined || running.key !== key || running.server.closed) {
     running?.server.stop();
-    running = { key, server: new AppServer(flags) };
+    shared.codexAppServer = { key, server: new AppServer(flags) };
+    process.once("exit", () => shared.codexAppServer?.server.stop());
   }
-  return running.server;
+  return shared.codexAppServer!.server;
 };
-
-process.once("exit", () => running?.server.stop());
