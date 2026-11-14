@@ -31,3 +31,5 @@ mocks/
 # Local git worktrees for parallel sessions
 .worktrees/
 .tanstack/
+
+evals/results/
