@@ -52,10 +52,13 @@ export const balanceTags: Record<Exclude<BalanceKey, "debt" | "netDebt">, Readon
 // debt due within a year and after it. The names are said in plain words.
 export const debtParts = [
   { name: "Short-term debt", tags: ["ShortTermBorrowings", "CommercialPaper"] },
-  { name: "Longer-term debt due within a year", tags: ["LongTermDebtCurrent"] },
+  {
+    name: "Longer-term debt due within a year",
+    tags: ["LongTermDebtCurrent", "ConvertibleDebtCurrent"],
+  },
   {
     name: "Longer-term debt due after a year",
-    tags: ["LongTermDebtNoncurrent"],
+    tags: ["LongTermDebtNoncurrent", "ConvertibleDebtNoncurrent"],
   },
 ] as const;
 
@@ -74,7 +77,12 @@ export const cashFlowTags: Record<Exclude<CashFlowKey, "freeCashFlow">, Readonly
     "DepreciationAndAmortization",
   ],
   stockBasedCompensation: ["ShareBasedCompensation", "AllocatedShareBasedCompensationExpense"],
-  capitalExpenditure: ["PaymentsToAcquirePropertyPlantAndEquipment"],
+  // Some companies, NVIDIA among them, report property and intangible
+  // assets bought on one line.
+  capitalExpenditure: [
+    "PaymentsToAcquirePropertyPlantAndEquipment",
+    "PaymentsToAcquireProductiveAssets",
+  ],
   acquisitions: [
     "PaymentsToAcquireBusinessesNetOfCashAcquired",
     "PaymentsToAcquireBusinessesGross",

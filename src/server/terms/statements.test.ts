@@ -9,17 +9,45 @@ import type { NumberRow } from "./choose-terms";
 import { balanceCheck, findSplits } from "./statements";
 import { statementsFor } from "./terms";
 
-const companies = { apple: 320193, microsoft: 789019 } as const;
+const companies = { apple: 320193, microsoft: 789019, madeUp: 1 } as const;
 type Company = keyof typeof companies;
 
 const extract = (company: Company): unknown =>
   JSON.parse(readFileSync(new URL(`../testdata/${company}.json`, import.meta.url), "utf8"));
 
+// A made-up company that files capital expenditure and its debt only under the
+// lines NVIDIA and Cloudflare use.
+const usd = (value: number, period: { start?: string; end: string }) => ({
+  ...period,
+  val: value,
+  accn: "0000000001-26-000001",
+  fy: 2025,
+  fp: "FY",
+  form: "10-K",
+  filed: "2026-02-20",
+});
+const year = { start: "2025-01-01", end: "2025-12-31" };
+const madeUp = {
+  cik: 1,
+  entityName: "Made Up Inc.",
+  facts: {
+    "us-gaap": Object.fromEntries(
+      Object.entries({
+        Revenues: usd(2_000_000_000, year),
+        NetCashProvidedByUsedInOperatingActivities: usd(600_000_000, year),
+        PaymentsToAcquireProductiveAssets: usd(300_000_000, year),
+        ConvertibleDebtCurrent: usd(1_300_000_000, { end: year.end }),
+        ConvertibleDebtNoncurrent: usd(2_000_000_000, { end: year.end }),
+      }).map(([tag, fact]) => [tag, { label: tag, units: { USD: [fact] } }]),
+    ),
+  },
+};
+
 const statementsOf = (company: Company, fiscalYear: number) =>
   Effect.gen(function* () {
     yield* (yield* Collect).reportedNumbers(companies[company]);
     const years = yield* statementsFor(companies[company]);
-    return years.find((year) => year.fiscalYear === fiscalYear)!.terms;
+    return years.find((each) => each.fiscalYear === fiscalYear)!.terms;
   }).pipe(
     Effect.provide(
       Collect.layer.pipe(
@@ -29,7 +57,7 @@ const statementsOf = (company: Company, fiscalYear: number) =>
           Layer.succeed(
             Sec,
             Sec.of({
-              getJson: () => Effect.succeed(extract(company)),
+              getJson: () => Effect.succeed(company === "madeUp" ? madeUp : extract(company)),
               getText: () => Effect.die("unused"),
             }),
           ),
@@ -91,6 +119,15 @@ describe("the balance sheet and cash flow statement, from trimmed SEC data", () 
         99_584,
         "calculated",
       ]);
+    }),
+  );
+
+  it.effect("takes capital expenditure and debt from the lines some companies use instead", () =>
+    Effect.gen(function* () {
+      const terms = yield* statementsOf("madeUp", 2025);
+      expect(millions(terms.capitalExpenditure)).toBe(300);
+      expect(millions(terms.debt)).toBe(3_300);
+      expect(millions(terms.freeCashFlow)).toBe(300);
     }),
   );
 });
