@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { figuresOf, type KnownFigure } from "../../shared/answer-figures";
 import type { CompanyScreen } from "../palette";
 import { AnswerText, termsToLink, uncheckedIn } from "./answer-text";
-import type { Company } from "./conversations";
+import { type Company, withoutAt } from "./conversations";
 import { DrawingPanel } from "./drawing";
 import { namedCompanyQuery } from "./named-company";
 import type { AskState } from "./use-ask";
@@ -85,7 +85,7 @@ export function TurnView({
     <section className="ask-turn" aria-label={question}>
       <h2 className="ask-question">
         <span className="visually-hidden">You asked: </span>
-        {question}
+        {withoutAt(question, companies)}
       </h2>
       {activity}
       {state.stopped && (

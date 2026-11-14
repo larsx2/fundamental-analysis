@@ -302,7 +302,8 @@ export function MentionInput({
 
   const replaceWord = (target: Word, offer: Offer) => {
     const range = document.createRange();
-    range.setStart(target.node, target.start);
+    const afterAt = target.node.data.charAt(target.start - 1) === "@";
+    range.setStart(target.node, afterAt ? target.start - 1 : target.start);
     range.setEnd(target.node, target.end);
     range.deleteContents();
     const chip = chipFor(offer, offer.ready || readyCiks.has(offer.cik));

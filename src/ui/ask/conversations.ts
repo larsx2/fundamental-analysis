@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { shortName } from "../logo-tile";
 import type { AskState } from "./use-ask";
 
 export type Company = {
@@ -152,6 +153,12 @@ export const companiesOf = (thread: Thread): ReadonlyArray<Company> => {
   }
   return [...seen.values()];
 };
+
+export const withoutAt = (question: string, companies: ReadonlyArray<Company>) =>
+  companies.reduce((text, company) => {
+    const name = shortName(company.name);
+    return name === "" ? text : text.replaceAll(`@${name}`, name);
+  }, question);
 
 export const useThreads = () => useSyncExternalStore(subscribe, read, () => none);
 

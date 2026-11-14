@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Icon } from "../icons";
 import { LogoTile, plainName } from "../logo-tile";
-import { clearThreads, companiesOf, deleteThread, type Thread } from "./conversations";
+import { clearThreads, companiesOf, deleteThread, type Thread, withoutAt } from "./conversations";
 
 export function History({
   threads,
@@ -47,7 +47,7 @@ export function History({
               >
                 <Logos thread={thread} />
                 <span className="ask-history-text">
-                  <span>{thread.turns[0]?.question ?? ""}</span>
+                  <span>{withoutAt(thread.turns[0]?.question ?? "", companiesOf(thread))}</span>
                 </span>
               </Link>
               <button
