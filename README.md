@@ -37,6 +37,8 @@ It is not a course. It teaches through how it is built: clear visuals, numbers y
 
 ![Apple, Microsoft and Costco compared by revenue, growth, operating margin, net income and free cash flow](docs/pictures/companies.png)
 
+**Ask.** Ask about any company in plain words, from Ask in the bottom menu. The answer is written from what the tool looked up, with a chart when it helps and the passage of the annual report it rests on. Beside it, What it read lists every lookup, and each one opens the filing or the screen it came from. A number that did not come from a lookup is marked. Conversations stay in this browser.
+
 Each company also has an Overview, and every word underlined on a screen opens its meaning from the [glossary](./GLOSSARY.md).
 
 These pictures come from the small extracts of Apple's, Microsoft's and Costco's filings that the tests use, so they carry no logos. `task readme:pictures` takes them again.
