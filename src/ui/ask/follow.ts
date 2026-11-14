@@ -25,12 +25,23 @@ export function useFollowBottom(target: RefObject<HTMLElement | null>, restartOn
     window.addEventListener("touchmove", onTouch, { passive: true });
     const element = target.current;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const behavior = still ? "auto" : "smooth";
+    const pageTop = (each: Element) => each.getBoundingClientRect().top + window.scrollY;
     const follow = new ResizeObserver(() => {
       if (!following.on) return;
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: still ? "auto" : "smooth",
-      });
+      const turn = element?.querySelectorAll(".ask-turn");
+      const last = turn?.[turn.length - 1];
+      const lead = last?.querySelector(".ask-lead");
+      const question = last?.querySelector(".ask-question");
+      if (lead == null || question == null) {
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior });
+        return;
+      }
+      following.on = false;
+      const start = pageTop(question);
+      const begins = pageTop(lead);
+      const top = begins - start < window.innerHeight / 3 ? start : begins;
+      window.scrollTo({ top: top - 32, behavior });
     });
     if (element !== null) follow.observe(element);
     return () => {

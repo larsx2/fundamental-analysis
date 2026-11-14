@@ -51,3 +51,20 @@ test("a signed-out assistant says how to sign in", async ({ page }) => {
 
   await expect(page.getByText("The assistant is not signed in on this computer")).toBeVisible();
 });
+
+test("a long answer opens at its first line, not at its end", async ({ page }) => {
+  const sentences = Array.from(
+    { length: 40 },
+    (_, index) => `Point ${index + 1} explains one more part of where the money went this year.`,
+  );
+  await askWithReply(page, [
+    { type: "thinking", id: "1", text: "Reading what Apple reported." },
+    {
+      type: "answer",
+      answer: { lead: "Apple brought in a lot.", sentences, drawing: null, next: [] },
+    },
+  ]);
+
+  await expect(page.getByText("Point 40 explains")).toBeAttached();
+  await expect(page.locator(".ask-lead")).toBeInViewport();
+});
