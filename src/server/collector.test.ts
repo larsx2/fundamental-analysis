@@ -52,7 +52,7 @@ const services = (
             return checks.found ?? [];
           }),
         addFilings: () => Effect.void,
-        businessDescription: () => Effect.void,
+        annualReport: () => Effect.void,
         reportedNumbers: (cik) =>
           Effect.gen(function* () {
             events.push(`start ${cik}`);

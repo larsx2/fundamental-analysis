@@ -123,6 +123,36 @@ export const catalog = [
     },
   },
   {
+    name: "search_report",
+    description:
+      'Searches the company\'s latest annual report (10-K) and returns up to 8 whole paragraphs with their line numbers. Words match by stem, so a prefix such as compet* matches every form; OR, AND, NOT, "phrases" and NEAR(a b, 10) work too.',
+    inputSchema: {
+      type: "object",
+      properties: { ticker, query: { type: "string" } },
+      required: ["ticker", "query"],
+    },
+  },
+  {
+    name: "read_report",
+    description:
+      "Returns the paragraphs of the latest annual report that start at a line number, for the text around a search result.",
+    inputSchema: {
+      type: "object",
+      properties: { ticker, line: { type: "integer" }, count: { type: "integer" } },
+      required: ["ticker", "line"],
+    },
+  },
+  {
+    name: "risk_headings",
+    description:
+      "The headings of the risk factors in the latest annual report, each with its line number.",
+    inputSchema: {
+      type: "object",
+      properties: { ticker },
+      required: ["ticker"],
+    },
+  },
+  {
     name: "glossary",
     description: "A glossary term's definition and example.",
     inputSchema: {

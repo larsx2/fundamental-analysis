@@ -10,6 +10,23 @@ const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const amount =
   /[+−-]?\$\d[\d,]*(?:\.\d+)?(?:\s(?:billion|million|trillion))?|[+−-]?\d[\d,]*(?:\.\d+)?\s?(?:%|¢|cents\b|points?\b)/g;
 
+export const reportLookups = ["search_report", "read_report", "risk_headings"] as const;
+
+export const isReportLookup = (name: string): name is (typeof reportLookups)[number] =>
+  (reportLookups as ReadonlyArray<string>).includes(name);
+
+// The figures an answer may use from a lookup. A report lookup returns whole
+// paragraphs, so each amount written in them counts on its own.
+export const figuresOf = (result: {
+  readonly lookup: string;
+  readonly figures: Readonly<Record<string, string>>;
+}): ReadonlyArray<string> =>
+  isReportLookup(result.lookup)
+    ? Object.values(result.figures).flatMap((text) =>
+        [...text.matchAll(amount)].map((match) => match[0]),
+      )
+    : Object.values(result.figures);
+
 const plain = (text: string): ReadonlyArray<Piece> => {
   const pieces: Array<Piece> = [];
   let at = 0;

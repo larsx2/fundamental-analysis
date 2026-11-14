@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import type { KnownFigure } from "../../shared/answer-figures";
+import { figuresOf, type KnownFigure } from "../../shared/answer-figures";
 import type { CompanyScreen } from "../palette";
 import { AnswerText, termsToLink, uncheckedIn } from "./answer-text";
 import type { Company } from "./conversations";
@@ -59,7 +59,7 @@ export function TurnView({
   const known: ReadonlyArray<KnownFigure> = state.lookups.flatMap((read) =>
     read.result === null
       ? []
-      : Object.values(read.result.figures).map((text) => ({
+      : figuresOf(read.result).map((text) => ({
           text,
           source: `${id}:${read.id}`,
         })),
@@ -125,6 +125,19 @@ export function TurnView({
                 onLight={onLight}
               />
             </p>
+          ))}
+          {(answer.quotes ?? []).map((quote) => (
+            <figure key={quote.text} className="ask-quote">
+              <blockquote cite={quote.url}>
+                <p>{quote.text}</p>
+              </blockquote>
+              <figcaption className="source">
+                {quote.source}.{" "}
+                <a href={quote.url} target="_blank" rel="noreferrer">
+                  Read it in the filing ↗
+                </a>
+              </figcaption>
+            </figure>
           ))}
           {drawn?.result?.drawing != null && (
             <DrawingPanel

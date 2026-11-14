@@ -7,6 +7,7 @@ import filingsAndContext from "./0006_filings_and_context";
 import companyLogos from "./0007_company_logos";
 import fiscalYearByEndLessAWeek from "./0008_fiscal_year_by_end_less_a_week";
 import unexpectedNumbers from "./0009_unexpected_numbers";
+import reportText from "./0010_report_text";
 
 // Each migration lives in its own file, named `<number>_<what it does>.ts`,
 // and is listed here. A committed migration is never edited, because
@@ -21,4 +22,5 @@ export const migrations = {
   "0007_company_logos": companyLogos,
   "0008_fiscal_year_by_end_less_a_week": fiscalYearByEndLessAWeek,
   "0009_unexpected_numbers": unexpectedNumbers,
+  "0010_report_text": reportText,
 };

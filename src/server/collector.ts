@@ -141,7 +141,7 @@ export class Collector extends Context.Service<
           );
           if (years.length === 0) return yield* new NoRevenue({ cik });
           yield* step(cik, 3);
-          yield* collect.businessDescription(cik);
+          yield* collect.annualReport(cik);
           yield* logos.fetch(cik);
           const checkedOn = yield* today;
           yield* sql`
@@ -168,7 +168,7 @@ export class Collector extends Context.Service<
       const addDetails = (cik: number) =>
         Effect.gen(function* () {
           yield* collect.filings(cik);
-          yield* collect.businessDescription(cik);
+          yield* collect.annualReport(cik);
         }).pipe(
           Effect.ignoreCause({
             log: "Warn",
@@ -212,7 +212,7 @@ export class Collector extends Context.Service<
           }
           yield* collect.addFilings(cik, added);
           if (added.some((filing) => filing.form === "10-K" || filing.form === "10-KT")) {
-            yield* collect.businessDescription(cik);
+            yield* collect.annualReport(cik);
           }
           const checkedOn = yield* today;
           yield* sql`

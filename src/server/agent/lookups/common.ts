@@ -35,7 +35,7 @@ export const notCollected = [
   "segments, so the tool cannot split revenue by product or place",
   "the number of shares, so it cannot show dilution",
   "share prices, so it cannot say whether the shares are cheap or worth buying",
-  "the text of the annual report beyond the opening of the business description, so it cannot quote risks, competitors or what the company says about its year",
+  "the text of annual reports before the latest one, so it cannot quote what a company said in earlier years",
   "short-term investments, so cash may read low and net debt high",
   "interest and tax on their own lines, so return on invested capital can only be worked out before tax",
 ];

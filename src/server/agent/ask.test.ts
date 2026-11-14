@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "@effect/vitest";
 import type { LookupResult } from "../../shared/lookups";
 import {
+  checkQuotes,
   type Prefetched,
   promptFor,
   readReaderConfig,
@@ -314,6 +315,58 @@ describe("figures read before the question", () => {
       ticker: "COST",
       fiscalYear: 2025,
     });
+  });
+});
+
+describe("quotes from the annual report", () => {
+  const passage =
+    "Walmart, Target, Kroger, and Amazon are among our significant general merchandise retail competitors in the U.S. We also compete with other warehouse clubs.";
+  const search: LookupResult = {
+    lookup: "search_report",
+    title: "Annual report (10-K), filed on 7 October 2026",
+    detail: '1 paragraph matches "compet*"',
+    figures: { "line 226": passage },
+    notes: [],
+    drawing: null,
+    filings: [
+      { form: "Annual report (10-K)", filedOn: "2026-10-07", url: "https://www.sec.gov/costco" },
+    ],
+  };
+  const answer = (quotes: ReadonlyArray<string>) => ({
+    lead: "Costco names Walmart, Target, Kroger and Amazon as rivals.",
+    sentences: [],
+    quotes: quotes.map((text) => ({ text, source: "", url: "" })),
+    drawing: null,
+    next: [],
+  });
+
+  it("shows a quote found word for word in a report lookup, with its filing", () => {
+    expect(
+      checkQuotes(
+        answer([
+          "Walmart, Target, Kroger, and Amazon are among our significant general merchandise retail competitors in the U.S.",
+        ]),
+        [search],
+      ).quotes,
+    ).toEqual([
+      {
+        text: "Walmart, Target, Kroger, and Amazon are among our significant general merchandise retail competitors in the U.S.",
+        source: "Annual report (10-K), filed on 7 October 2026",
+        url: "https://www.sec.gov/costco",
+      },
+    ]);
+  });
+
+  it("drops a quote the report does not contain", () => {
+    expect(checkQuotes(answer(["Walmart is our only real competitor."]), [search]).quotes).toEqual(
+      [],
+    );
+  });
+
+  it("drops a quote when no report lookup was read, even if a figure lookup holds the words", () => {
+    expect(
+      checkQuotes(answer(["among our significant"]), [{ ...search, lookup: "company" }]).quotes,
+    ).toEqual([]);
   });
 });
 

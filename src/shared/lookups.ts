@@ -100,9 +100,16 @@ export type LookupResult = {
   readonly filings: ReadonlyArray<FilingLink>;
 };
 
+export type Quote = {
+  readonly text: string;
+  readonly source: string;
+  readonly url: string;
+};
+
 export type Answer = {
   readonly lead: string;
   readonly sentences: ReadonlyArray<string>;
+  readonly quotes?: ReadonlyArray<Quote>;
   readonly drawing: string | null;
   readonly next: ReadonlyArray<string>;
 };

@@ -1,7 +1,8 @@
-import { Context, Data, Effect, Layer, Option, Result, Schema } from "effect";
+import { Array as Arr, Context, Data, Effect, Layer, Option, Result, Schema } from "effect";
 import { SqlClient } from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
 import { openingOfBusiness } from "./business-description";
+import { paragraphsOf } from "./report-text";
 import {
   addFilings,
   annualReportForms,
@@ -78,8 +79,10 @@ export class Collect extends Context.Service<
       cik: number,
       filings: ReadonlyArray<CompanyFiling>,
     ) => Effect.Effect<void, SqlError>;
-    // A description that cannot be read leaves a gap; it never fails a company.
-    readonly businessDescription: (cik: number) => Effect.Effect<void>;
+    // Reads the latest annual report: the opening of its business description,
+    // and its paragraphs for the agent to search. A report that cannot be read
+    // leaves a gap; it never fails a company.
+    readonly annualReport: (cik: number) => Effect.Effect<void>;
   }
 >()("Collect") {
   static readonly layer = Layer.effect(
@@ -153,7 +156,7 @@ export class Collect extends Context.Service<
           Effect.provideService(SqlClient, sql),
         );
 
-      const businessDescription = (cik: number) =>
+      const annualReport = (cik: number) =>
         Effect.gen(function* () {
           const latest = yield* sql<{ accession: string; primary_document: string }>`
             SELECT accession, primary_document FROM company_filing
@@ -165,16 +168,31 @@ export class Collect extends Context.Service<
           const html = yield* sec.getText(
             `https://www.sec.gov/Archives/edgar/data/${cik}/${filing.accession.replaceAll("-", "")}/${filing.primary_document}`,
           );
-          yield* sql`
-            UPDATE company SET
-              description = ${openingOfBusiness(html)},
-              description_accession = ${filing.accession}
-            WHERE cik = ${cik}
-          `;
+          const paragraphs = paragraphsOf(html).map((paragraph) => ({
+            cik,
+            accession: filing.accession,
+            line: paragraph.line,
+            heading: paragraph.heading ? 1 : 0,
+            text: paragraph.text,
+          }));
+          yield* Effect.gen(function* () {
+            yield* sql`
+              UPDATE company SET
+                description = ${openingOfBusiness(html)},
+                description_accession = ${filing.accession}
+              WHERE cik = ${cik}
+            `;
+            yield* sql`DELETE FROM report_paragraph WHERE cik = ${cik}`;
+            if (Arr.isReadonlyArrayNonEmpty(paragraphs)) {
+              for (const chunk of Arr.chunksOf(paragraphs, 200)) {
+                yield* sql`INSERT INTO report_paragraph ${sql.insert(chunk)}`;
+              }
+            }
+          }).pipe(sql.withTransaction);
         }).pipe(
           Effect.ignoreCause({
             log: "Warn",
-            message: `Could not read the business description of company ${cik}`,
+            message: `Could not read the latest annual report of company ${cik}`,
           }),
         );
 
@@ -188,7 +206,7 @@ export class Collect extends Context.Service<
           ),
         addFilings: (cik, list) =>
           addFilings(cik, list).pipe(Effect.provideService(SqlClient, sql)),
-        businessDescription,
+        annualReport,
       });
     }),
   );

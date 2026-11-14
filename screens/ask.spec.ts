@@ -68,3 +68,35 @@ test("a long answer opens at its first line, not at its end", async ({ page }) =
   await expect(page.getByText("Point 40 explains")).toBeAttached();
   await expect(page.locator(".ask-lead")).toBeInViewport();
 });
+
+test("a passage of the annual report shows under the answer, with a link to the filing", async ({
+  page,
+}) => {
+  await askWithReply(page, [
+    {
+      type: "answer",
+      answer: {
+        lead: "Apple says its markets are highly competitive.",
+        sentences: [],
+        quotes: [
+          {
+            text: "The markets for the Company's products and services are highly competitive.",
+            source: "Annual report (10-K), filed on 3 November 2026",
+            url: "https://www.sec.gov/Archives/edgar/data/320193/aapl.htm",
+          },
+        ],
+        drawing: null,
+        next: [],
+      },
+    },
+  ]);
+
+  const quote = page.locator(".ask-quote");
+  await expect(quote.locator("blockquote")).toHaveText(
+    "The markets for the Company's products and services are highly competitive.",
+  );
+  await expect(quote.getByRole("link", { name: "Read it in the filing ↗" })).toHaveAttribute(
+    "href",
+    "https://www.sec.gov/Archives/edgar/data/320193/aapl.htm",
+  );
+});

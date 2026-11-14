@@ -495,6 +495,25 @@
     margin-top: 12px;
   }
 
+  /* A passage of the annual report the answer rests on, under the answer. */
+  .ask-quote {
+    margin: 24px 0 0;
+    padding: 16px 20px;
+    border-left: 2px solid var(--color-text-2);
+    border-radius: 0 var(--radius-m) var(--radius-m) 0;
+    background: var(--color-surface-2);
+  }
+
+  .ask-quote blockquote {
+    margin: 0 0 10px;
+    color: var(--color-text-1);
+    line-height: 1.6;
+  }
+
+  .ask-quote blockquote p {
+    margin: 0;
+  }
+
   .ask-figure {
     border: 0;
     padding: 0;

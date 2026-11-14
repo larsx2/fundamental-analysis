@@ -3,6 +3,7 @@ import type { LookupResult } from "../../shared/lookups";
 import { companyDetails, findCompany } from "../company-view";
 import { Economy } from "../economy";
 import { glossaryLookup, LookupProblem, runLookup } from "./lookups";
+import { isReportLookup, reportLookup } from "./report-lookups";
 
 export type LookupReply = { readonly result: LookupResult } | { readonly error: string };
 
@@ -37,6 +38,14 @@ export const lookUp = (name: string, input: unknown) =>
       return {
         error: `${row.name} is not collected yet, so the tool holds none of its figures.`,
       } satisfies LookupReply;
+    }
+    if (isReportLookup(name)) {
+      return yield* reportLookup({ cik: row.cik, name: row.name }, name, args).pipe(
+        Effect.map((result): LookupReply => ({ result })),
+        Effect.catchTag("LookupProblem", (problem) =>
+          Effect.succeed<LookupReply>({ error: problem.message }),
+        ),
+      );
     }
     const details = yield* companyDetails(row);
     const months =

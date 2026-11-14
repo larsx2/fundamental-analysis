@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-import { splitFigures } from "../../shared/answer-figures";
+import { figuresOf, isReportLookup, splitFigures } from "../../shared/answer-figures";
 import type { Answer, AskEvent, LookupResult } from "../../shared/lookups";
 import { appServer, flagsFor, type Notification } from "./codex-app-server";
 import type { LookupReply } from "./look-up";
@@ -14,10 +14,11 @@ const answerSchema = {
   properties: {
     lead: { type: "string" },
     sentences: { type: "array", items: { type: "string" } },
+    quotes: { type: "array", items: { type: "string" } },
     drawing: { type: "string" },
     next: { type: "array", items: { type: "string" } },
   },
-  required: ["lead", "sentences", "drawing", "next"],
+  required: ["lead", "sentences", "quotes", "drawing", "next"],
   additionalProperties: false,
 } as const;
 
@@ -116,6 +117,7 @@ Answer
 Reply with JSON that matches the schema:
 - lead: one short sentence that answers the question.
 - sentences: one to three short sentences that explain it, in the glossary's words.
+- quotes: none.
 - drawing: "".
 - next: three short questions a beginner might ask next, about words or ideas, or about a company such as "Is Apple growing?".
 
@@ -144,7 +146,7 @@ export const promptFor = (
   const several = companies.length > 1;
   return `You answer one question about ${about}, ${several ? "US public companies" : "a US public company"}, for someone new to finance. You work inside a learning tool that holds ${several ? "each company's" : "the company's"} figures from its annual reports (10-K).${several ? " Read the same lookups for each company, passing its ticker, so the answer compares like with like." : ""}
 
-Use only the tools of the "lookups" server. Do not run commands, read files or search the web. Call as few lookups as the answer needs, each at most once. Call the glossary lookup only when the question asks what a word means: the screen already explains every term.
+Use only the tools of the "lookups" server. Do not run commands, read files or search the web. Call as few lookups as the answer needs, each at most once, except searches of the annual report. Call the glossary lookup only when the question asks what a word means: the screen already explains every term.
 
 Lookups
 ${callingLookups(catalog.map((lookup) => lookup.name))}
@@ -152,16 +154,25 @@ ${callingLookups(catalog.map((lookup) => lookup.name))}
 ${alreadyRead(already)}Figures
 - Copy every number in your answer character for character from the "figures" of a lookup result, with its dollar sign, unit, sign and rounding. Never calculate, round, convert, subtract or write a number that is not there. If you need a figure that is not there, call the lookup that gives it, or say the tool does not hold it.
 - A change carries its own sign, such as +10.1%. Write it after words like "a change of" or "a year-over-year change of", never after "up", "down", "grew" or "fell".
+- A figure below zero keeps its minus sign, such as net income of −$102 million. Never turn it into words such as "a loss of $102 million".
+
+The annual report
+- For what the company says in words, such as what it does, who it competes with, its risks, its suppliers and customers, or why its results changed, read its latest annual report. Search it with search_report using the words an annual report would use, and list its risks with risk_headings.
+- Results hold whole paragraphs, so answer from them without reading the report again. Make every report lookup in one exec call: run several searches together, and when one finds nothing useful, search again with other words in the same code.
+- Search the report before saying the tool cannot answer a question about what the company does or says, and when a figure the question is about is a gap: a company that has never paid a dividend, for instance, says so in its report.
+- When a total jumps or falls in one year, search the report for why, such as a special dividend, before describing a trend.
+- When the report names no rivals, say so, and say how it describes its competition.
 
 Words
 - Use the glossary's words: revenue, not sales; net income, not profit or earnings; fiscal 2026, not FY26. Net income is what is left of each dollar, never what the company keeps.
 - Say what happened. No judgement of the company, no forecast and no advice on buying or selling. If asked whether to buy, or whether the shares are cheap, say the tool cannot tell, because it has no share prices and makes no forecasts, then say what the figures show about the business.
-- If the lookups cannot answer, say so in the lead and name what the tool does not collect, from the notes of the company lookup. Never answer from memory.
+- If neither the lookups nor the annual report can answer, say so in the lead and name what the tool does not collect, from the notes of the company lookup. Never answer from memory.
 
 Answer
 Reply with JSON that matches the schema:
 - lead: one short sentence that answers the question.
 - sentences: one to three short sentences with the figures behind it.
+- quotes: when the answer uses the annual report, one or two passages it rests on, such as the risk headings it names, each copied character for character from a report lookup's result; otherwise none.
 - drawing: the name of the one lookup whose drawing shows the answer best (trend, dollar, cash, balance, uses_of_cash, returns, context, marks or company), or "" for none.
 - next: three short questions about ${several ? "these companies" : companies[0]!.name} that these lookups can answer.
 
@@ -182,12 +193,8 @@ export const usedBy = (
   live: ReadonlyArray<LookupResult> = [],
 ) => {
   const known = [
-    ...already.flatMap((read) =>
-      Object.values(read.result.figures).map((text) => ({ text, source: read.id })),
-    ),
-    ...live.flatMap((result) =>
-      Object.values(result.figures).map((text) => ({ text, source: "live" })),
-    ),
+    ...already.flatMap((read) => figuresOf(read.result).map((text) => ({ text, source: read.id }))),
+    ...live.flatMap((result) => figuresOf(result).map((text) => ({ text, source: "live" }))),
   ];
   const sources = new Set(
     [answer.lead, ...answer.sentences].flatMap((text) =>
@@ -214,12 +221,41 @@ const readAnswer = (text: string): Answer | null => {
     return {
       lead: parsed.lead,
       sentences: parsed.sentences.map(String),
+      quotes: Array.isArray(parsed.quotes)
+        ? parsed.quotes.map((text) => ({ text: String(text), source: "", url: "" }))
+        : [],
       drawing: typeof parsed.drawing === "string" && parsed.drawing !== "" ? parsed.drawing : null,
       next: Array.isArray(parsed.next) ? parsed.next.map(String).slice(0, 3) : [],
     };
   } catch {
     return null;
   }
+};
+
+const plain = (text: string) =>
+  text
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/\s+/g, " ")
+    .replace(/^["'…\s]+|["'…\s]+$/g, "");
+
+// A quote is shown only when its words are in a paragraph a report lookup
+// returned during this answer, so the agent cannot put words in a company's mouth.
+export const checkQuotes = (answer: Answer, live: ReadonlyArray<LookupResult>): Answer => {
+  const passages = live
+    .filter((result) => isReportLookup(result.lookup))
+    .flatMap((result) =>
+      Object.values(result.figures).map((text) => ({ text: plain(text), result })),
+    );
+  const quotes = (answer.quotes ?? []).flatMap((quote) => {
+    const wanted = plain(quote.text);
+    const found = passages.find((passage) => wanted.length > 0 && passage.text.includes(wanted));
+    const filing = found?.result.filings[0];
+    return found === undefined || filing === undefined
+      ? []
+      : [{ text: wanted, source: found.result.title, url: filing.url }];
+  });
+  return { ...answer, quotes: quotes.slice(0, 2) };
 };
 
 const signedOutWords = /\b(log ?in|sign(ed)? ?in|unauthori[sz]ed|401)\b|not authenticated/i;
@@ -510,7 +546,8 @@ export async function* ask(input: {
       }
       if (next.type === "read" && next.result !== null) live.push(next.result);
       if (next.type === "answer") {
-        for (const read of usedBy(next.answer, already, live)) {
+        const checked = checkQuotes(next.answer, live);
+        for (const read of usedBy(checked, already, live)) {
           yield {
             type: "reading",
             id: read.id,
@@ -527,7 +564,9 @@ export async function* ask(input: {
         }
       }
       if (next.type === "answer" || next.type === "failed") answered = true;
-      yield next;
+      yield next.type === "answer"
+        ? { type: "answer", answer: checkQuotes(next.answer, live) }
+        : next;
       if (answered) break;
     }
     if (!answered && !input.signal.aborted) {
