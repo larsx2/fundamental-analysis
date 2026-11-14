@@ -131,6 +131,7 @@ export function History({
         ))}
     </>
   );
+  if (count === 0) return null;
   return (
     <nav className="ask-history" aria-label="Conversations">
       <Link

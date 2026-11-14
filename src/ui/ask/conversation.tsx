@@ -136,6 +136,7 @@ export function Conversation({
   const context =
     lastTurn !== undefined ? companiesOfTurn(lastTurn) : start === null ? [] : [start];
   const name = start === null ? null : shortName(start.name);
+  const blank = turns.length === 0 && pending === "";
 
   return (
     <Screen active="ask" className="ask-page" settle={false}>
@@ -144,17 +145,16 @@ export function Conversation({
       </h1>
       <div className="ask-layout">
         <History threads={threads} current={thread?.id ?? null} />
-        <article ref={article} className="ask-answer" aria-live="polite" aria-busy={working}>
+        <article
+          ref={article}
+          className={blank ? "ask-answer blank" : "ask-answer"}
+          aria-live="polite"
+          aria-busy={working}
+        >
           <div key={thread?.id ?? "new"} className="ask-thread">
-            {turns.length === 0 && pending === "" && (
+            {blank && (
               <header className="ask-empty">
-                <h2 className="ask-question">
-                  {name === null ? "What do you want to understand?" : `Ask about ${name}`}
-                </h2>
-                <p className="ask-foot">
-                  Answers use your own subscription from this computer. Your question and the
-                  figures it reads are sent to be answered; the database stays here.
-                </p>
+                <h2>{name === null ? "What do you want to understand?" : `Ask about ${name}`}</h2>
               </header>
             )}
             {turns.map((turn, index) => {
@@ -215,7 +215,13 @@ export function Conversation({
             working={working}
             onStop={live.stop}
             threadId={thread?.id ?? null}
+            centred={blank}
           />
+          {blank && (
+            <p className="ask-foot ask-empty-note">
+              Uses your ChatGPT subscription. Your database stays on this computer.
+            </p>
+          )}
         </article>
         {latest.state.lookups.length > 0 && (
           <Sources turnId={latest.id} state={latest.state} lit={lit} onLight={setLit} />

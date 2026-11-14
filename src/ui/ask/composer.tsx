@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { companiesQuery } from "../../functions/companies";
 import { questions, topics } from "../../shared/questions";
 import { useAskToCollect } from "../collect-dialog";
@@ -15,17 +15,36 @@ export function AskComposer({
   working,
   onStop,
   threadId,
+  centred,
 }: {
   readonly context: ReadonlyArray<Mention>;
   readonly working: boolean;
   readonly onStop: () => void;
   readonly threadId: string | null;
+  readonly centred: boolean;
 }) {
   const navigate = useNavigate();
   const askToCollect = useAskToCollect();
   const { data } = useQuery(companiesQuery);
   const [text, setText] = useState("");
   const [mentions, setMentions] = useState<ReadonlyArray<Mention>>([]);
+  const form = useRef<HTMLFormElement>(null);
+  const leftFrom = useRef<DOMRect | null>(null);
+
+  useLayoutEffect(() => {
+    const from = leftFrom.current;
+    const box = form.current;
+    if (centred || from === null || box === null) return;
+    leftFrom.current = null;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const to = box.getBoundingClientRect();
+    const dy = from.top - to.top;
+    if (Math.abs(dy) < 2) return;
+    box.animate(
+      [{ transform: `translateY(${dy}px) scale(${from.width / to.width})` }, { transform: "none" }],
+      { duration: 560, easing: "cubic-bezier(0.2, 0, 0, 1)" },
+    );
+  }, [centred]);
 
   const ready = (data?.companies ?? [])
     .filter((company) => company.state === "ready")
@@ -64,6 +83,7 @@ export function AskComposer({
       askToCollect({ cik: missing.cik, name: missing.name });
       return;
     }
+    if (centred) leftFrom.current = form.current?.getBoundingClientRect() ?? null;
     setText("");
     setMentions([]);
     void navigate({
@@ -105,10 +125,22 @@ export function AskComposer({
     );
 
   const about = targets.length === 1 && missing === null ? targets[0]! : null;
+  const preferred = [...ready].sort(
+    (a, b) =>
+      Number(b.ticker === "COST") - Number(a.ticker === "COST") ||
+      Number(b.ticker === "AAPL") - Number(a.ticker === "AAPL"),
+  );
+  const starters = [
+    { company: preferred[0], text: (name: string) => `Where does ${name}'s money go?` },
+    { company: preferred[1], text: (name: string) => `Is ${name} growing?` },
+  ].flatMap(({ company, text: question }) =>
+    company === undefined ? [] : [{ company, question: question(shortName(company.name)) }],
+  );
 
   return (
     <div className="ask-dock">
       <form
+        ref={form}
         className={`composer ask-composer ${working ? "working" : ""}`}
         autoComplete="off"
         onSubmit={(event) => {
@@ -124,7 +156,7 @@ export function AskComposer({
             working
               ? "Working on the answer. Type your next question, or stop it."
               : context.length === 0
-                ? "Ask about any company, such as Apple or COST"
+                ? "Ask about any company"
                 : `Ask about ${inWords(context.map((each) => shortName(each.name)))}, or name another company`
           }
           value={text}
@@ -161,6 +193,21 @@ export function AskComposer({
                   </button>
                 );
               })}
+            </div>
+          ) : centred && starters.length > 0 && context.length === 0 ? (
+            <div className="ask-topics" role="group" aria-label="Examples">
+              {starters.map(({ company, question }) => (
+                <button
+                  key={question}
+                  type="button"
+                  onClick={() => {
+                    prefill.fill(question, [company]);
+                    document.getElementById("ask-next")?.focus();
+                  }}
+                >
+                  {question}
+                </button>
+              ))}
             </div>
           ) : (
             <div />
