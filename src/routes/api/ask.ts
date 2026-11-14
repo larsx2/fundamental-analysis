@@ -1,12 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { findCompany } from "../../server/company-view";
-import { ask } from "../../server/agent/ask";
+import { ask, warm } from "../../server/agent/ask";
+import { lookUp } from "../../server/agent/look-up";
 import { fromThisComputer, lookupsUrlFor, refused } from "../../server/local-request";
 import { runtime } from "../../server/runtime";
 
 export const Route = createFileRoute("/api/ask")({
   server: {
     handlers: {
+      GET: ({ request }) => {
+        if (!fromThisComputer(request)) return refused();
+        warm(lookupsUrlFor(request));
+        return new Response(null, { status: 204 });
+      },
       POST: async ({ request }) => {
         if (!fromThisComputer(request)) return refused();
         const body = (await request.json().catch(() => null)) as {
@@ -60,6 +66,7 @@ export const Route = createFileRoute("/api/ask")({
           fiscalYear,
           earlier,
           lookupsUrl: lookupsUrlFor(request),
+          read: (name, input) => runtime.runPromise(lookUp(name, input)),
           signal: request.signal,
         });
         const stream = new ReadableStream<Uint8Array>({

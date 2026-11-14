@@ -95,6 +95,14 @@ export const apply = (state: AskState, event: AskEvent): AskState => {
   }
 };
 
+let warmed = 0;
+
+export const warmAsk = () => {
+  if (Date.now() - warmed < 30_000) return;
+  warmed = Date.now();
+  void fetch("/api/ask").catch(() => undefined);
+};
+
 export type Earlier = { readonly question: string; readonly answer: string };
 
 export const useAsk = (

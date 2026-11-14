@@ -2,8 +2,17 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "@effect/vitest";
-import type { ThreadEvent } from "@openai/codex-sdk";
-import { promptFor, readReaderConfig, settingsFor, toEvent } from "./ask";
+import type { LookupResult } from "../../shared/lookups";
+import {
+  type Prefetched,
+  promptFor,
+  readReaderConfig,
+  readUpFront,
+  settingsFor,
+  toEvent,
+  usedBy,
+} from "./ask";
+import { flagsFor, type Notification } from "./codex-app-server";
 
 const apple = { name: "Apple Inc.", ticker: "AAPL" };
 const costco = { name: "COSTCO WHOLESALE CORP /NEW", ticker: "COST" };
@@ -44,7 +53,11 @@ describe("what the agent is told", () => {
   });
 });
 
-const started = (item: object) => ({ type: "item.started", item }) as ThreadEvent;
+const started = (item: object): Notification => ({ method: "item/started", params: { item } });
+const completed = (item: object): Notification => ({
+  method: "item/completed",
+  params: { item },
+});
 const stopped = {
   type: "failed",
   signedOut: false,
@@ -53,30 +66,23 @@ const stopped = {
 
 describe("what Codex may use while it answers", () => {
   it("stops the answer when Codex starts a command", () => {
-    const command = {
-      id: "1",
-      type: "command_execution",
-      command: "cat ~/.ssh/id_rsa",
-      aggregated_output: "",
-      status: "in_progress",
-    };
+    const command = { id: "1", type: "commandExecution", command: "cat ~/.ssh/id_rsa" };
     expect(toEvent(started(command))).toEqual(stopped);
   });
 
   it("stops the answer when Codex changes a file or searches the web", () => {
-    const change = { id: "1", type: "file_change", changes: [], status: "completed" };
-    expect(toEvent(started(change))).toEqual(stopped);
-    expect(toEvent(started({ id: "2", type: "web_search", query: "apple" }))).toEqual(stopped);
+    expect(toEvent(started({ id: "1", type: "fileChange", changes: [] }))).toEqual(stopped);
+    expect(toEvent(started({ id: "2", type: "webSearch", query: "apple" }))).toEqual(stopped);
   });
 
   it("stops the answer when Codex calls a tool of another server", () => {
     const call = (server: string) => ({
       id: "1",
-      type: "mcp_tool_call",
+      type: "mcpToolCall",
       server,
       tool: "take_snapshot",
       arguments: {},
-      status: "in_progress",
+      status: "inProgress",
     });
     expect(toEvent(started(call("chrome-devtools")))).toEqual(stopped);
     expect(toEvent(started(call("lookups")))).toEqual({
@@ -88,23 +94,15 @@ describe("what Codex may use while it answers", () => {
   });
 
   it("stops the answer for any kind of step it does not know", () => {
-    const unknown = { id: "1", type: "some_new_tool" };
+    const unknown = { id: "1", type: "someNewTool" };
     expect(toEvent(started(unknown))).toEqual(stopped);
-    expect(toEvent({ type: "item.updated", item: unknown } as unknown as ThreadEvent)).toEqual(
-      stopped,
-    );
-    expect(toEvent({ type: "item.completed", item: unknown } as unknown as ThreadEvent)).toEqual(
-      stopped,
-    );
+    expect(toEvent(completed(unknown))).toEqual(stopped);
   });
 
-  it("lets a plan and an error message through", () => {
-    const plan = { id: "1", type: "todo_list", items: [] };
-    const error = { id: "2", type: "error", message: "something" };
-    expect(toEvent(started(plan))).toBeNull();
-    expect(toEvent(started(error))).toBeNull();
-    expect(toEvent({ type: "item.updated", item: plan } as unknown as ThreadEvent)).toBeNull();
-    expect(toEvent({ type: "item.completed", item: error } as unknown as ThreadEvent)).toBeNull();
+  it("lets the question, a plan and a compaction through", () => {
+    expect(toEvent(started({ id: "1", type: "userMessage", content: [] }))).toBeNull();
+    expect(toEvent(started({ id: "2", type: "plan", text: "" }))).toBeNull();
+    expect(toEvent(completed({ id: "3", type: "contextCompaction" }))).toBeNull();
   });
 
   it("turns off every tool but the lookups, and every server of the reader's own", () => {
@@ -119,7 +117,11 @@ describe("what Codex may use while it answers", () => {
       view_image: false,
       plugins: false,
       apps: false,
+      hooks: false,
+      tool_suggest: false,
+      sleep_tool: false,
     });
+    expect(settings.skills).toEqual({ include_instructions: false });
     expect(settings.mcp_servers).toMatchObject({
       node_repl: { enabled: false },
       "chrome-devtools": { enabled: false },
@@ -164,16 +166,15 @@ describe("what Codex may use while it answers", () => {
   });
 });
 
-const completed = (item: Record<string, unknown>) =>
-  ({ type: "item.completed", item }) as unknown as ThreadEvent;
-
-const failure = (message: string) =>
-  ({ type: "turn.failed", error: { message } }) as unknown as ThreadEvent;
+const failure = (message: string, willRetry = false): Notification => ({
+  method: "error",
+  params: { error: { message }, willRetry },
+});
 
 describe("what the reader sees of Codex's work", () => {
   it("a reasoning summary reads as sentences", () => {
-    const text = "**Reading revenue**\n\nI will call the trend lookup.\nThen compare.";
-    expect(toEvent(completed({ id: "r1", type: "reasoning", text }))).toEqual({
+    const summary = ["**Reading revenue**", "I will call the trend lookup.\nThen compare."];
+    expect(toEvent(completed({ id: "r1", type: "reasoning", summary, content: [] }))).toEqual({
       type: "thinking",
       id: "r1",
       text: "Reading revenue. I will call the trend lookup. Then compare.",
@@ -186,12 +187,118 @@ describe("what the reader sees of Codex's work", () => {
     expect(toEvent(failure("assigning request"))).toMatchObject({ signedOut: false });
   });
 
+  it("waits while Codex retries a failed request", () => {
+    expect(toEvent(failure("stream disconnected", true))).toBeNull();
+  });
+
   it("a message that is not the answer's JSON becomes a thinking step, not an answer", () => {
     const text = "  Let me check the trend.  ";
-    expect(toEvent(completed({ id: "m1", type: "agent_message", text }))).toEqual({
+    expect(
+      toEvent(completed({ id: "m1", type: "agentMessage", text, phase: "commentary" })),
+    ).toEqual({
       type: "thinking",
       id: "m1",
       text: "Let me check the trend.",
     });
+  });
+});
+
+const result = (lookup: string, figures: Record<string, string>): LookupResult => ({
+  lookup,
+  title: lookup,
+  detail: "",
+  figures,
+  notes: [],
+  drawing: null,
+  filings: [],
+});
+
+const read = (lookup: string, figures: Record<string, string>): Prefetched => ({
+  id: `COST-${lookup}`,
+  ticker: "COST",
+  lookup,
+  input: { ticker: "COST" },
+  result: result(lookup, figures),
+});
+
+describe("figures read before the question", () => {
+  const dollar = read("dollar", { "Net income, cents of each dollar of revenue": "3¢" });
+  const cash = read("cash", { "Free cash flow, fiscal 2026": "$7.6 billion" });
+  const balance = read("balance", { "Debt, fiscal 2026": "$5.8 billion" });
+
+  it("are given to the agent with the lookups it can still call", () => {
+    const prompt = promptFor("Where does the money go?", [costco], null, [], [dollar]);
+    expect(prompt).toContain("Already read");
+    expect(prompt).toContain('"lookup":"dollar","input":{"ticker":"COST"}');
+    expect(prompt).toContain("tools.mcp__lookups__trend({ ticker: string, terms: (");
+    expect(prompt).toContain("never list or search ALL_TOOLS");
+  });
+
+  it("leave out the section when nothing was read", () => {
+    expect(promptFor("Is Apple growing?", [apple])).not.toContain("Already read");
+  });
+
+  it("count as read only when the answer uses one of their figures or draws them", () => {
+    const answer = {
+      lead: "Net income was 3¢ of each dollar of revenue.",
+      sentences: ["Free cash flow was $7.6 billion."],
+      drawing: null,
+      next: [],
+    };
+    expect(usedBy(answer, [dollar, cash, balance]).map((each) => each.lookup)).toEqual([
+      "dollar",
+      "cash",
+    ]);
+    expect(
+      usedBy({ ...answer, sentences: [], drawing: "balance" }, [dollar, cash, balance]).map(
+        (each) => each.lookup,
+      ),
+    ).toEqual(["dollar", "balance"]);
+  });
+
+  it("give way to a lookup the agent called itself for the same figure", () => {
+    const answer = {
+      lead: "Net income was 3¢ of each dollar of revenue.",
+      sentences: [],
+      drawing: "dollar",
+      next: [],
+    };
+    const called = result("dollar", { "Net income, cents of each dollar of revenue": "3¢" });
+    expect(usedBy(answer, [dollar, cash], [called])).toEqual([]);
+  });
+
+  it("skip a lookup that fails and read each company's own", async () => {
+    const asked: Array<string> = [];
+    const all = await readUpFront([{ ticker: "COST" }, { ticker: "AAPL" }], 2025, (name, input) => {
+      asked.push(`${(input as { ticker: string }).ticker} ${name}`);
+      return Promise.resolve(
+        name === "marks" ? { error: "No figures." } : { result: result(name, {}) },
+      );
+    });
+    expect(asked).toContain("AAPL dollar");
+    expect(all.some((each) => each.lookup === "marks")).toBe(false);
+    expect(all.find((each) => each.id === "COST-dollar")?.input).toEqual({
+      ticker: "COST",
+      fiscalYear: 2025,
+    });
+  });
+});
+
+describe("the settings Codex starts with", () => {
+  it("become one command-line setting per value, with each server whole", () => {
+    expect(
+      flagsFor({
+        web_search: "disabled",
+        features: { hooks: false },
+        mcp_servers: { lookups: { command: "bun", args: ["bridge.ts"] } },
+      }),
+    ).toEqual([
+      "-c",
+      'web_search="disabled"',
+      "-c",
+      "features.hooks=false",
+      "-c",
+      'mcp_servers.lookups={ "command" = "bun", "args" = ["bridge.ts"] }',
+    ]);
   });
 });

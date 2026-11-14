@@ -12,7 +12,7 @@ import { History } from "./history";
 import { namedCompanyQuery } from "./named-company";
 import { Sources } from "./sources";
 import { drawingTitle, TurnView } from "./turn";
-import { type AskState, useAsk } from "./use-ask";
+import { type AskState, useAsk, warmAsk } from "./use-ask";
 
 declare module "@tanstack/history" {
   interface HistoryState {
@@ -79,6 +79,8 @@ export function Conversation({
   const [lit, setLit] = useState<string | null>(null);
   const saved = useRef<string | null>(null);
   const article = useRef<HTMLElement>(null);
+
+  useEffect(warmAsk, []);
 
   useEffect(() => {
     document.title = pending !== "" ? pending : (turns[0]?.question ?? "Ask");

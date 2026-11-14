@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { companiesQuery } from "../functions/companies";
 import { namedCompanyQuery } from "../ui/ask/named-company";
+import { warmAsk } from "../ui/ask/use-ask";
 import { RevenueExhibit } from "../ui/home/revenue-exhibit";
 import { HomeBackdrop } from "../ui/home/backdrop";
 import { companyOf, understand, type Understood, wordsOf } from "../ui/home/understand";
@@ -248,6 +249,7 @@ function Home() {
               go();
             }}
             onKeyDown={prefill.onKeyDown}
+            onFocus={warmAsk}
           >
             <MentionInput
               id="ask"
