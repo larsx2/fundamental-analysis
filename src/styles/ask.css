@@ -611,6 +611,21 @@
     margin-top: 32px;
   }
 
+  .ask-drawing .panel-title {
+    flex-wrap: nowrap;
+    align-items: baseline;
+  }
+
+  .ask-drawing .panel-title h2 {
+    min-width: 0;
+    text-wrap: balance;
+  }
+
+  .ask-drawing .panel-title .more-link {
+    flex: none;
+    white-space: nowrap;
+  }
+
   .ask-key {
     display: inline-flex;
     align-items: center;
