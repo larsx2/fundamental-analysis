@@ -13,23 +13,24 @@
   --color-text-3: #a3a29b;
   --color-transparent: transparent;
 
-  /* The six parts of a dollar of revenue, in the order the income statement
-     reads. Checked as a set for colour blindness and for 3:1 on surface-0. */
-  --color-part-cost: #3987e5;
-  --color-part-research: #d95926;
-  --color-part-selling: #199e70;
-  --color-part-other: #c98500;
-  --color-part-below: #d55181;
-  --color-part-kept: #008300;
-  --color-part-interest: #a08ae6;
+  /* The parts of a dollar of revenue, in the order the income statement
+     reads. Soft colours, with green for what was kept, the same green as a
+     rise, and rose for interest and tax. Checked as a set for the three
+     common kinds of colour blindness and for 3:1 on surface-0. */
+  --color-part-cost: #7a71ac;
+  --color-part-research: #d0975f;
+  --color-part-selling: #f9eac6;
+  --color-part-other: #836145;
+  --color-part-below: #ca6b74;
+  --color-part-kept: #6cd79d;
+  --color-part-interest: #6ba9bd;
 
   --color-delta-up: #6fd39b;
   --color-delta-down: #f08a6c;
 
-  /* Text set inside a part of a dollar: near-black on the five lighter
-     parts, white on net income's darker green. */
+  /* Text set inside a part of a dollar: near-black on every part. */
   --color-text-on-part: #0b0b0c;
-  --color-text-on-kept: #ffffff;
+  --color-text-on-kept: #0b0b0c;
 
   /* The quiet lines of a chart: grid, baseline at zero, the chosen year
      and the year under the pointer. */
