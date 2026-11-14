@@ -162,6 +162,15 @@ export const withoutAt = (question: string, companies: ReadonlyArray<Company>) =
 
 export const useThreads = () => useSyncExternalStore(subscribe, read, () => none);
 
+const ignore = () => () => undefined;
+
+export const useThreadsKnown = () =>
+  useSyncExternalStore(
+    ignore,
+    () => true,
+    () => false,
+  );
+
 export const startThread = (thread: Omit<Thread, "updatedAt">) => {
   const updatedAt = thread.turns.at(-1)?.askedAt ?? Date.now();
   write([{ ...thread, updatedAt }, ...read().filter((each) => each.id !== thread.id)]);

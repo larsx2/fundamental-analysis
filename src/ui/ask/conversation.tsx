@@ -6,7 +6,14 @@ import { plainName, shortName } from "../logo-tile";
 import { Screen } from "../screen";
 import { Activity } from "./activity";
 import { AskComposer } from "./composer";
-import { addTurn, type Company, companiesOfTurn, startThread, useThreads } from "./conversations";
+import {
+  addTurn,
+  type Company,
+  companiesOfTurn,
+  startThread,
+  useThreads,
+  useThreadsKnown,
+} from "./conversations";
 import { useFollowBottom } from "./follow";
 import { History } from "./history";
 import { namedCompanyQuery } from "./named-company";
@@ -136,7 +143,9 @@ export function Conversation({
   const context =
     lastTurn !== undefined ? companiesOfTurn(lastTurn) : start === null ? [] : [start];
   const name = start === null ? null : shortName(start.name);
-  const blank = turns.length === 0 && pending === "";
+  const known = useThreadsKnown();
+  const waiting = !known && t !== undefined;
+  const blank = turns.length === 0 && pending === "" && !waiting;
 
   return (
     <Screen active="ask" className="ask-page" settle={false}>

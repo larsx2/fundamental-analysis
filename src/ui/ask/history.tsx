@@ -2,7 +2,14 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Icon } from "../icons";
 import { LogoTile, plainName } from "../logo-tile";
-import { clearThreads, companiesOf, deleteThread, type Thread, withoutAt } from "./conversations";
+import {
+  clearThreads,
+  companiesOf,
+  deleteThread,
+  type Thread,
+  useThreadsKnown,
+  withoutAt,
+} from "./conversations";
 
 export function History({
   threads,
@@ -32,7 +39,8 @@ export function History({
     return () => clearTimeout(timer);
   }, [deleting]);
   const count = threads.length;
-  const body = (
+  const known = useThreadsKnown();
+  const body = !known ? null : (
     <>
       {count === 0 ? (
         <p className="ask-history-empty">Your conversations stay here, in this browser.</p>
@@ -131,7 +139,7 @@ export function History({
         ))}
     </>
   );
-  if (count === 0) return null;
+  if (known && count === 0) return null;
   return (
     <nav className="ask-history" aria-label="Conversations">
       <Link
@@ -148,7 +156,7 @@ export function History({
       <h2 className="ask-history-head">Conversations</h2>
       <div className="ask-history-wide">{body}</div>
       <details className="ask-history-narrow">
-        <summary>{count === 0 ? "Conversations" : `Conversations (${count})`}</summary>
+        <summary>{!known || count === 0 ? "Conversations" : `Conversations (${count})`}</summary>
         {body}
       </details>
     </nav>
