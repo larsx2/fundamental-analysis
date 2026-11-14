@@ -254,3 +254,23 @@ What the eval found besides:
 - **Gaps in the collected figures, found on the held-out companies:** NVIDIA's capital expenditure, which it reports under another line, and Cloudflare's $3.27 billion of convertible notes. Both lines are now read. Cloudflare's dividends, which it has never paid, still show as a gap, but the agent now searches the report when a figure is a gap and says so.
 - **Costco's dividend answer said the total "has varied"** without saying why. With a rule to search the report when a total jumps, it now gives the dividend for each share and names the special dividend of fiscal 2024.
 - **Still open:** NVIDIA's "what does it say about its year" quoted its cash flow instead of what drove revenue, and a "cannot answer" sometimes still adds an unrelated figure. Both the fixes and these were judged on the held-out companies, so a new held-out company should judge the next change.
+
+### A second held-out set
+
+NVIDIA and Cloudflare had shaped those fixes, so they joined the tuning set, and Alphabet, Intel and Salesforce were held out in their place. The agent had never seen them. Three more changes were then tried, each shaped on the tuning companies and judged on the new ones:
+
+| Change                                                               | On the held-out companies                                    | Kept        |
+| -------------------------------------------------------------------- | ------------------------------------------------------------ | ----------- |
+| A "cannot answer" gives no figures                                   | Intel's GPU question went from right in 1 run of 2 to 2 of 2 | Yes         |
+| Say a report names no rivals only after searching its lists of them  | No change: already right                                     | Yes         |
+| For "what does it say about its year", search for what drove revenue | Intel went from 1 to 2 runs right, Salesforce from 2 to 0    | No, removed |
+
+| Held-out companies, 73 questions | Before | After  |
+| -------------------------------- | ------ | ------ |
+| Right, two runs                  | 73, 69 | 71, 71 |
+
+The difference is within what two runs of the same code differ by, so the changes neither helped nor hurt overall. The tuning set scored 123 of 123.
+
+Each answer now reports its round trips to the model and its tokens. A text answer takes 2 trips, sometimes 3, and about 36,000 input tokens, most of them cached, in about 9 seconds. Two trips are the fewest a search allows: one to search, one to answer. Reaching the 7-second mark would need the report's passages read before the question is asked, as the usual figures already are.
+
+Still open: Intel's "what does it say about its year" answers with job cuts and its AI efforts rather than what drove revenue, and its uses of cash leaves out that it bought back no shares.

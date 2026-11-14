@@ -17,7 +17,7 @@ EVAL_SET=held-out bun run eval --outputFile.json=evals/results/held-out-1.json
 EVAL_ONLY=COST-15,COST-16 bun run eval --outputFile.json=evals/results/costco.json
 ```
 
-Apple, Costco and Microsoft are the tuning set: changes to the agent may be shaped by their answers. NVIDIA and Cloudflare are held out: their answers judge a change, and are never used to shape one.
+Apple, Costco, Microsoft, NVIDIA and Cloudflare are the tuning set: changes to the agent may be shaped by their answers. Alphabet, Intel and Salesforce are held out: their answers judge a change, and are never used to shape one. Once a held-out company's answers have shaped a change, it moves to the tuning set and a new company is held out.
 
 ## Reading results
 
@@ -26,6 +26,8 @@ bun evals/score.ts evals/results/tuning-1.json
 bun evals/compare.ts before=a.json,b.json after=c.json,d.json
 bunx vitest-evals serve evals/results/
 ```
+
+Each answer also records its round trips to the model and its input tokens, which `compare.ts` shows for the text questions.
 
 A change counts as better only when its gain is larger than the difference between two runs of the same code, about three answers.
 

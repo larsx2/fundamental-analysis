@@ -4,11 +4,16 @@ export const tuning: ReadonlyArray<Company> = [
   { ticker: "AAPL", name: "Apple" },
   { ticker: "COST", name: "Costco" },
   { ticker: "MSFT", name: "Microsoft" },
-];
-
-export const heldOut: ReadonlyArray<Company> = [
   { ticker: "NVDA", name: "NVIDIA" },
   { ticker: "NET", name: "Cloudflare" },
+];
+
+// Never used to shape the agent: only to judge a change to it. NVIDIA and
+// Cloudflare were held out until their answers shaped the fixes of 13 November 2026.
+export const heldOut: ReadonlyArray<Company> = [
+  { ticker: "GOOGL", name: "Alphabet" },
+  { ticker: "INTC", name: "Intel" },
+  { ticker: "CRM", name: "Salesforce" },
 ];
 
 export type Kind = "twenty" | "unanswerable" | "false premise" | "follow-up" | "comparison";
@@ -57,6 +62,12 @@ const unanswerable: Readonly<Record<string, ReadonlyArray<string>>> = {
   MSFT: ["How many Xbox consoles did Microsoft sell?", "How many people use Bing each day?"],
   NVDA: ["How many GPUs did NVIDIA ship last year?", "How much does NVIDIA pay TSMC each year?"],
   NET: ["How many websites use Cloudflare?", "How much does Cloudflare's CEO earn?"],
+  GOOGL: [
+    "How many Pixel phones did Alphabet sell last year?",
+    "How many searches does Google handle each day?",
+  ],
+  INTC: ["How many chips did Intel ship last year?", "How much does Intel pay its CEO?"],
+  CRM: ["How many people use Slack each day?", "How much does Salesforce's CEO earn?"],
 };
 
 const falsePremise: Readonly<Record<string, string>> = {
@@ -65,6 +76,9 @@ const falsePremise: Readonly<Record<string, string>> = {
   MSFT: "Why did Microsoft's net income drop in fiscal 2026?",
   NVDA: "Why did NVIDIA's revenue shrink last year?",
   NET: "Why is Cloudflare so profitable?",
+  GOOGL: "Why did Alphabet stop buying back its shares?",
+  INTC: "Why did Intel's revenue jump last year?",
+  CRM: "Why did Salesforce's net income fall last year?",
 };
 
 const followUp: Readonly<Record<string, Case["earlier"][number] & { readonly next: string }>> = {
@@ -93,6 +107,21 @@ const followUp: Readonly<Record<string, Case["earlier"][number] & { readonly nex
     answer: "Cloudflare's net income was below zero in its latest fiscal year.",
     next: "Does it still bring in cash?",
   },
+  GOOGL: {
+    question: "Is Alphabet growing?",
+    answer: "Yes. Alphabet's revenue grew in its latest fiscal year.",
+    next: "And the year before?",
+  },
+  INTC: {
+    question: "Is Intel growing?",
+    answer: "No. Intel's revenue was slightly lower in its latest fiscal year.",
+    next: "And the year before?",
+  },
+  CRM: {
+    question: "Is Salesforce growing?",
+    answer: "Yes. Salesforce's revenue grew in its latest fiscal year.",
+    next: "And the year before?",
+  },
 };
 
 const comparisons: ReadonlyArray<Pick<Case, "id" | "tickers" | "question">> = [
@@ -110,6 +139,11 @@ const comparisons: ReadonlyArray<Pick<Case, "id" | "tickers" | "question">> = [
     id: "NVDA+NET-size",
     tickers: ["NVDA", "NET"],
     question: "Which brings in more revenue, NVIDIA or Cloudflare?",
+  },
+  {
+    id: "GOOGL+INTC-research",
+    tickers: ["GOOGL", "INTC"],
+    question: "Who spends more on research and development, Alphabet or Intel?",
   },
 ];
 

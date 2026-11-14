@@ -36,12 +36,12 @@ export const percentsIn = (words: string) =>
 export const centsIn = (words: string) =>
   [...words.matchAll(/(\d+)\s?¢/g)].map((match) => Number(match[1]));
 
-const near = (value: number, wanted: number) =>
-  Math.abs(value - wanted) <= Math.max(Math.abs(wanted) * 0.006, 0.5e6);
-
-export const states = (label: string, dollars: number): Check => ({
+export const states = (label: string, dollars: number, within = 0.006): Check => ({
   name: `states ${label}`,
-  pass: (output) => amountsIn(text(output)).some((value) => near(value, dollars)),
+  pass: (output) =>
+    amountsIn(text(output)).some(
+      (value) => Math.abs(value - dollars) <= Math.max(Math.abs(dollars) * within, 0.5e6),
+    ),
 });
 
 export const statesPercent = (label: string, percent: number): Check => ({
@@ -96,7 +96,7 @@ export const saysInLead = (label: string, pattern: RegExp): Check => ({
 });
 
 const judgement =
-  /\b(strong|weak|impressive|attractive|healthy|solid|excellent|poor|undervalued|overvalued|cheap|expensive|a good|a bad|should (buy|sell))\b/i;
+  /\b(impressive|attractive|healthy|solid|excellent|undervalued|overvalued|cheap|expensive|a good|a bad|should (buy|sell)|(strong|weak|poor) (balance sheet|position|business|company|performance|results|investment))\b/i;
 
 export const neutral: Check = {
   name: "passes no judgement",

@@ -24,6 +24,9 @@ export type AskOutput = {
   failure: string | null;
   reads: Read[];
   seconds: number;
+  trips: number | null;
+  inputTokens: number | null;
+  cachedInputTokens: number | null;
 };
 
 const endpoint = process.env.ASK_URL ?? "http://127.0.0.1:4100/api/ask";
@@ -46,6 +49,9 @@ export const ask = async (input: Case, signal?: AbortSignal): Promise<AskOutput>
       failure: `The app answered ${response.status}: ${await response.text()}`,
       reads: [],
       seconds: 0,
+      trips: null,
+      inputTokens: null,
+      cachedInputTokens: null,
     };
   }
   const events = (await response.text())
@@ -59,6 +65,7 @@ export const ask = async (input: Case, signal?: AbortSignal): Promise<AskOutput>
   );
   const answered = events.find((event) => event.type === "answer");
   const failed = events.find((event) => event.type === "failed");
+  const usage = events.find((event) => event.type === "usage");
   return {
     answer:
       answered?.type === "answer"
@@ -84,6 +91,9 @@ export const ask = async (input: Case, signal?: AbortSignal): Promise<AskOutput>
         : [],
     ),
     seconds: Math.round((performance.now() - started) / 100) / 10,
+    trips: usage?.type === "usage" ? usage.trips : null,
+    inputTokens: usage?.type === "usage" ? usage.inputTokens : null,
+    cachedInputTokens: usage?.type === "usage" ? usage.cachedInputTokens : null,
   };
 };
 

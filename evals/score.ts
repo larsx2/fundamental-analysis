@@ -12,6 +12,8 @@ export const grade = (id: string, output: AskOutput) => {
     failed,
     checks: checks.length,
     seconds: output.seconds,
+    trips: output.trips ?? null,
+    inputTokens: output.inputTokens ?? null,
   };
 };
 

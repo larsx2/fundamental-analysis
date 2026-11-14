@@ -28,13 +28,18 @@ for (const id of ids) {
     console.log([id, ...counts].join(" | "));
   }
 }
+const median = (values: ReadonlyArray<number | null>) => {
+  const known = values.filter((value): value is number => value !== null).sort((a, b) => a - b);
+  return known.length === 0 ? "unknown" : String(known[Math.floor(known.length / 2)]);
+};
+
 for (const group of graded) {
   const totals = group.runs.map((run) => run.filter((each) => each.right).length);
-  const seconds = group.runs
-    .flat()
-    .map((each) => each.seconds)
-    .sort((a, b) => a - b);
+  const answers = group.runs.flat();
+  const text = answers.filter((each) => /-1[567]$/.test(each.id));
   console.log(
-    `${group.label}: right ${totals.join(", ")} of ${group.runs[0]?.length ?? 0}; median ${seconds[Math.floor(seconds.length / 2)] ?? 0}s, slowest ${seconds.at(-1) ?? 0}s`,
+    `${group.label}: right ${totals.join(", ")} of ${group.runs[0]?.length ?? 0}; ` +
+      `median ${median(answers.map((each) => each.seconds))}s, slowest ${median([Math.max(...answers.map((each) => each.seconds))])}s; ` +
+      `text questions: median ${median(text.map((each) => each.seconds))}s, ${median(text.map((each) => each.trips))} trips, ${median(text.map((each) => each.inputTokens))} input tokens`,
   );
 }

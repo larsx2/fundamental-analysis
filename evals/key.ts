@@ -217,23 +217,118 @@ const reports: Readonly<Record<string, Report>> = {
     ],
     year: /customers|revenue increased/i,
   },
+  GOOGL: {
+    revenue: 402.836 * billion,
+    growth: 15.1,
+    growthBefore: 13.9,
+    netIncome: 132.17 * billion,
+    costCents: 40,
+    netCents: 33,
+    netMargin: 32.8,
+    operatingCashFlow: 164.713 * billion,
+    capex: 91.447 * billion,
+    debt: (1.996 + 46.547) * billion,
+    assets: 595.281 * billion,
+    liabilities: 180.016 * billion,
+    dividends: 10.049 * billion,
+    buybacks: 45.709 * billion,
+    research: 61.087 * billion,
+    returnBeforeTax: 27.8,
+    business: /search|advertis|Google|YouTube|cloud/i,
+    sources: /Search|YouTube|Google Cloud|advertising|subscriptions|United States|EMEA|APAC/i,
+    rivals: saysNot(
+      "a rival the report does not name",
+      /Microsoft|Amazon|\bMeta\b|OpenAI|Apple|TikTok|ByteDance|Bing/,
+    ),
+    risks: [
+      /compet/i,
+      /advertis/i,
+      /regulat|antitrust|legal|law|privacy/i,
+      /\bAI\b|artificial intelligence/,
+      /security|cyber/i,
+      /econom/i,
+    ],
+    year: /Search|YouTube|Cloud|search queries/i,
+  },
+  INTC: {
+    revenue: 52.853 * billion,
+    growth: -0.5,
+    growthBefore: -2.1,
+    netIncome: -0.267 * billion,
+    costCents: 65,
+    netCents: 1,
+    netMargin: -0.5,
+    operatingCashFlow: 9.697 * billion,
+    capex: 14.646 * billion,
+    debt: (2.499 + 44.086) * billion,
+    assets: 211.429 * billion,
+    liabilities: (211.429 - 126.36) * billion,
+    dividends: null,
+    buybacks: null,
+    research: 13.774 * billion,
+    returnBeforeTax: -1.3,
+    business: /chip|processor|semiconductor|CPU|foundry|\bPC|data center/i,
+    sources:
+      /Client Computing|CCG|Data Center|DCAI|Foundry|Altera|Mobileye|United States|China|Taiwan|Singapore/i,
+    rivals: atLeast(1, "the rivals the report names", [
+      /AMD|Advanced Micro|NVIDIA|Nvidia|TSMC|Samsung|Qualcomm|\bArm\b/,
+    ]),
+    risks: [
+      /compet/i,
+      /manufactur|foundry|process technolog/i,
+      /China|geopolit|trade|tariff|export/i,
+      /demand|customer/i,
+      /debt|capital|liquidity|fund/i,
+      /regulat|legal|law/i,
+    ],
+    year: /CCG|DCAI|server|client|\bPC|data center|flat/i,
+  },
+  CRM: {
+    revenue: 41.525 * billion,
+    growth: 9.6,
+    growthBefore: 8.7,
+    netIncome: 7.457 * billion,
+    costCents: 22,
+    netCents: 18,
+    netMargin: 18.0,
+    operatingCashFlow: 14.996 * billion,
+    capex: 0.594 * billion,
+    debt: (4.0 + 10.439) * billion,
+    assets: 112.305 * billion,
+    liabilities: 53.163 * billion,
+    dividends: 1.587 * billion,
+    buybacks: 12.596 * billion,
+    research: 5.993 * billion,
+    returnBeforeTax: 11.3,
+    business: /CRM|customer relationship|software|cloud|Agentforce|Slack|\bAI\b/i,
+    sources: /subscription|support|professional services|Americas|Europe|Asia/i,
+    rivals: saysNot(
+      "a rival the report does not name",
+      /Microsoft|Oracle|\bSAP\b|HubSpot|ServiceNow|Adobe|Workday|Google|Amazon/,
+    ),
+    risks: [
+      /compet/i,
+      /security|breach|cyber/i,
+      /\bAI\b|artificial intelligence/,
+      /acquisition/i,
+      /econom|macro/i,
+      /regulat|privacy|law/i,
+    ],
+    year: /new business|new customers|upgrades|subscription/i,
+  },
 };
 
 const noDividend =
-  /no dividend|not pa(y|id)|never (paid|declared)|does not pay|did not pay|has not paid/i;
+  /\$0 in dividends|dividends were \$0|no dividend|not pa(y|id)|never (paid|declared)|does not pay|did not pay|has not paid|suspend|stopped|no longer pa/i;
 const noBuybacks =
-  /buybacks were \$0|\$0 in share buybacks|no (share )?buyback|did not buy back|not (buy|bought) back|no repurchase|cannot tell|does not collect/i;
+  /no purchases|repurchased no shares|buybacks were \$0|\$0 in share buybacks|no (share )?buyback|did not buy back|not (buy|bought) back|no repurchase|cannot tell|does not collect/i;
 const rose = /rose|risen|grew|increased|higher|did not (fall|drop|stop|shrink)/i;
 
 const twenty = (report: Report, ticker: string, question: number): ReadonlyArray<Check> => {
   const freeCashFlow = report.operatingCashFlow - report.capex;
   switch (question) {
     case 1:
-      return [
-        answers,
-        says("what the business is", report.business),
-        states("revenue", report.revenue),
-      ];
+      return [answers, says("what the business is", report.business)];
     case 2:
       return [
         anyOf(
@@ -251,8 +346,11 @@ const twenty = (report: Report, ticker: string, question: number): ReadonlyArray
           /steady|every year|each year|varied|uneven|not steady|in \d+ of \d+/i,
         ),
         {
-          name: "states a yearly change of revenue",
-          pass: (output) => percentsIn(output.answer?.sentences.join(" ") ?? "").length > 0,
+          name: "states a yearly change of revenue, or how many years it rose",
+          pass: (output) => {
+            const sentences = output.answer?.sentences.join(" ") ?? "";
+            return percentsIn(sentences).length > 0 || /in \d+ of \d+/.test(sentences);
+          },
         },
       ];
     case 5:
@@ -269,13 +367,14 @@ const twenty = (report: Report, ticker: string, question: number): ReadonlyArray
     case 6:
       return [
         anyOf(
-          "states net income's share of revenue",
+          "states net income's share of revenue, or the loss",
           statesPercent("net margin", report.netMargin),
           statesCents("net income's share", report.netCents),
+          ...(report.netIncome < 0 ? [states("net loss", report.netIncome)] : []),
         ),
         says(
           "whether margins rose or fell",
-          /rose|risen|rising|increase|higher|fell|fallen|falling|lower|decrease|flat|unchanged|similar/i,
+          /rose|risen|rising|increase|higher|fell|fallen|falling|lower|decrease|flat|unchanged|similar|direction|mixed/i,
         ),
       ];
     case 7:
@@ -393,9 +492,24 @@ const falsePremise: Readonly<Record<string, ReadonlyArray<Check>>> = {
     statesPercent("revenue growth", reports.NVDA!.growth),
   ],
   NET: [
-    says("Cloudflare made a loss", /loss|not profitable|below zero|negative/i),
+    says(
+      "Cloudflare made a loss",
+      /loss|not profitable|below zero|negative|not (report )?positive|−\$/i,
+    ),
     states("net loss", reports.NET!.netIncome),
   ],
+  GOOGL: [
+    says("Alphabet still buys back shares", /did not stop|still|bought back|repurchased/i),
+    states("share buybacks", reports.GOOGL!.buybacks!),
+  ],
+  INTC: [
+    says(
+      "revenue did not jump",
+      /did not (jump|rise|grow|increase)|fell|declined|decreased|lower|down/i,
+    ),
+    statesPercent("revenue change", reports.INTC!.growth),
+  ],
+  CRM: [says("net income did not fall", rose), states("net income", reports.CRM!.netIncome)],
 };
 
 const followUp: Readonly<Record<string, ReadonlyArray<Check>>> = {
@@ -420,6 +534,9 @@ const followUp: Readonly<Record<string, ReadonlyArray<Check>>> = {
       states("free cash flow", reports.NET!.operatingCashFlow - reports.NET!.capex),
     ),
   ],
+  GOOGL: [statesPercent("fiscal 2024 revenue growth", reports.GOOGL!.growthBefore)],
+  INTC: [statesPercent("fiscal 2024 revenue change", reports.INTC!.growthBefore)],
+  CRM: [statesPercent("fiscal 2025 revenue growth", reports.CRM!.growthBefore)],
 };
 
 const comparisons: Readonly<Record<string, ReadonlyArray<Check>>> = {
@@ -440,6 +557,11 @@ const comparisons: Readonly<Record<string, ReadonlyArray<Check>>> = {
     ),
     states("NVIDIA's revenue", reports.NVDA!.revenue),
     states("Cloudflare's revenue", reports.NET!.revenue),
+  ],
+  "GOOGL+INTC-research": [
+    says("Alphabet spends more", /Alphabet (spends|spent) more/i),
+    states("Alphabet's research and development", reports.GOOGL!.research!),
+    states("Intel's research and development", reports.INTC!.research!),
   ],
 };
 
