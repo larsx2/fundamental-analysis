@@ -125,7 +125,7 @@ export const catalog = [
   {
     name: "search_report",
     description:
-      'Searches the company\'s latest annual report (10-K) and returns up to 8 whole paragraphs with their line numbers. Words match by stem, so a prefix such as compet* matches every form; OR, AND, NOT, "phrases" and NEAR(a b, 10) work too.',
+      'Searches the company\'s latest annual report (10-K) and returns up to 8 whole paragraphs, each with its line number and the headings it sits under. Words match the headings too, and section: limits them to the headings, as in section:overview or section:"risk factors". Words match by stem, so a prefix such as compet* matches every form; OR, AND, NOT, "phrases" and NEAR(a b, 10) work too.',
     inputSchema: {
       type: "object",
       properties: { ticker, query: { type: "string" } },

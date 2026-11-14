@@ -17,7 +17,7 @@ EVAL_SET=held-out bun run eval --outputFile.json=evals/results/held-out-1.json
 EVAL_ONLY=COST-15,COST-16 bun run eval --outputFile.json=evals/results/costco.json
 ```
 
-Apple, Costco, Microsoft, NVIDIA and Cloudflare are the tuning set: changes to the agent may be shaped by their answers. Alphabet, Intel and Salesforce are held out: their answers judge a change, and are never used to shape one. Once a held-out company's answers have shaped a change, it moves to the tuning set and a new company is held out.
+Apple, Costco, Microsoft, NVIDIA, Cloudflare and Intel are the tuning set: changes to the agent may be shaped by their answers. Alphabet and Salesforce are held out: their answers judge a change, and are never used to shape one. Once a held-out company's answers have shaped a change, it moves to the tuning set and a new company is held out.
 
 ## Reading results
 

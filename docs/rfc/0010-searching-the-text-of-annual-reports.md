@@ -273,4 +273,21 @@ The difference is within what two runs of the same code differ by, so the change
 
 Each answer now reports its round trips to the model and its tokens. A text answer takes 2 trips, sometimes 3, and about 36,000 input tokens, most of them cached, in about 9 seconds. Two trips are the fewest a search allows: one to search, one to answer. Reaching the 7-second mark would need the report's passages read before the question is asked, as the usual figures already are.
 
-Still open: Intel's "what does it say about its year" answers with job cuts and its AI efforts rather than what drove revenue, and its uses of cash leaves out that it bought back no shares.
+Then open: Intel's "what does it say about its year" answers with job cuts and its AI efforts rather than what drove revenue, and its uses of cash leaves out that it bought back no shares.
+
+### Intel's two misses
+
+Both were fixed on Intel's own answers, so Intel joined the tuning set and Alphabet and Salesforce stay held out.
+
+- **Uses of cash said nothing of buybacks.** Intel's cash flow statement shows $0 for buybacks and then leaves the line out, as statements leave out a line that is zero, so the agent read a gap. The lookup now says when the latest year had no dividend or no buybacks, and calls a line that stops after a real payment a gap to search the report for.
+- **"What does it say about its year" missed what drove revenue.** The search threw away every line under six words, so it lost the report's headings, and short table labels outranked the paragraphs that explain. Each paragraph is now stored with the headings above it, nested by how prominently each is set, and the search matches them; table labels, captions and page headers are no longer kept, and ranking leans away from fragments. One line in the agent's instructions says a report discusses its year in its overview and results of operations. Salesforce, which the earlier attempt broke, now finds its paragraph on new business.
+
+| Run                               | Before                   | After                  |
+| --------------------------------- | ------------------------ | ---------------------- |
+| Intel's uses of cash              | Wrong                    | Right in 3 runs of 3   |
+| Intel's year                      | Wrong                    | Right in 3 runs of 3   |
+| Tuning set, now with Intel        | 123 of 123 without Intel | 146 of 147             |
+| Alphabet and Salesforce, two runs | 48, 48 of 48             | 49, 49 of 49           |
+| Text questions                    | 2 trips, 35,397 tokens   | 2 trips, 36,476 tokens |
+
+The comparison of Alphabet with Intel became Alphabet with Salesforce, which adds the 49th held-out question. The one tuning miss, Costco's dividends, was right in 2 of 3 reruns. Three grader checks were widened after reading right answers they failed: Apple's buybacks as its report states them, Alphabet's "had not stopped" buying back, and Salesforce's revenue by product.

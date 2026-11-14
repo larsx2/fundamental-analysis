@@ -301,7 +301,8 @@ const reports: Readonly<Record<string, Report>> = {
     research: 5.993 * billion,
     returnBeforeTax: 11.3,
     business: /CRM|customer relationship|software|cloud|Agentforce|Slack|\bAI\b/i,
-    sources: /subscription|support|professional services|Americas|Europe|Asia/i,
+    sources:
+      /subscription|support|professional services|Americas|Europe|Asia|Sales|Service|Platform|Slack|Marketing|Commerce|Integration|Analytics/i,
     rivals: saysNot(
       "a rival the report does not name",
       /Microsoft|Oracle|\bSAP\b|HubSpot|ServiceNow|Adobe|Workday|Google|Amazon/,
@@ -321,7 +322,7 @@ const reports: Readonly<Record<string, Report>> = {
 const noDividend =
   /\$0 in dividends|dividends were \$0|no dividend|not pa(y|id)|never (paid|declared)|does not pay|did not pay|has not paid|suspend|stopped|no longer pa/i;
 const noBuybacks =
-  /no purchases|repurchased no shares|buybacks were \$0|\$0 in share buybacks|no (share )?buyback|did not buy back|not (buy|bought) back|no repurchase|cannot tell|does not collect/i;
+  /no purchases|repurchased no shares|bought back no shares|buybacks were \$0|\$0 in share buybacks|no (share )?buyback|did not buy back|not (buy|bought) back|no repurchase|cannot tell|does not collect/i;
 const rose = /rose|risen|grew|increased|higher|did not (fall|drop|stop|shrink)/i;
 
 const twenty = (report: Report, ticker: string, question: number): ReadonlyArray<Check> => {
@@ -428,7 +429,9 @@ const twenty = (report: Report, ticker: string, question: number): ReadonlyArray
               states("share buybacks", report.buybacks),
               ...(ticker === "NVDA"
                 ? [states("shares repurchased, from the report", 40.4 * billion)]
-                : []),
+                : ticker === "AAPL"
+                  ? [states("shares repurchased, from the report", 85.8 * billion)]
+                  : []),
             ),
           ];
     case 13:
@@ -499,7 +502,10 @@ const falsePremise: Readonly<Record<string, ReadonlyArray<Check>>> = {
     states("net loss", reports.NET!.netIncome),
   ],
   GOOGL: [
-    says("Alphabet still buys back shares", /did not stop|still|bought back|repurchased/i),
+    says(
+      "Alphabet still buys back shares",
+      /did not stop|not stopped|still|bought back|repurchased/i,
+    ),
     states("share buybacks", reports.GOOGL!.buybacks!),
   ],
   INTC: [
@@ -558,10 +564,10 @@ const comparisons: Readonly<Record<string, ReadonlyArray<Check>>> = {
     states("NVIDIA's revenue", reports.NVDA!.revenue),
     states("Cloudflare's revenue", reports.NET!.revenue),
   ],
-  "GOOGL+INTC-research": [
+  "GOOGL+CRM-research": [
     says("Alphabet spends more", /Alphabet (spends|spent) more/i),
     states("Alphabet's research and development", reports.GOOGL!.research!),
-    states("Intel's research and development", reports.INTC!.research!),
+    states("Salesforce's research and development", reports.CRM!.research!),
   ],
 };
 

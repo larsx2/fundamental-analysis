@@ -158,6 +158,7 @@ ${alreadyRead(already)}Figures
 
 The annual report
 - For what the company says in words, such as what it does, who it competes with, its risks, its suppliers and customers, or why its results changed, read its latest annual report. Search it with search_report using the words an annual report would use, and list its risks with risk_headings.
+- Each paragraph comes with the headings it sits under. A report discusses its year in management's discussion: its overview or highlights, and its results of operations, where it says why its revenue changed. Asked about its year, give those reasons in its words.
 - Results hold whole paragraphs, so answer from them without reading the report again. Make every report lookup in one exec call: run several searches together, and when one finds nothing useful, search again with other words in the same code.
 - Search the report before saying the tool cannot answer a question about what the company does or says, and when a figure the question is about is a gap: a company that has never paid a dividend, for instance, says so in its report.
 - When a total jumps or falls in one year, search the report for why, such as a special dividend, before describing a trend.

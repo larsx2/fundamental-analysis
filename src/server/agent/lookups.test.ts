@@ -6,6 +6,7 @@ import { Collect } from "../collect";
 import { databaseLayer } from "../database";
 import { ReportedNumbers } from "../reported-numbers";
 import { Sec } from "../sec";
+import type { StatementYear } from "../terms/statements";
 import { statementsFor } from "../terms/terms";
 import { type CompanyData, LookupProblem, runLookup } from "./lookups";
 
@@ -52,9 +53,9 @@ describe("the agent's lookups, from trimmed SEC data", () => {
     Effect.gen(function* () {
       const data = yield* companyData("apple");
       const notes = (unexpectedNumbers: number) =>
-        runLookup({ ...data, unexpectedNumbers }, "company", { ticker: "AAPL" }).notes.filter(
-          (note) => note.includes("cannot read"),
-        );
+        runLookup({ ...data, unexpectedNumbers }, "company", {
+          ticker: "AAPL",
+        }).notes.filter((note) => note.includes("cannot read"));
       expect(notes(0)).toEqual([]);
       expect(notes(1)).toEqual([
         "One number the SEC holds for apple came in a shape the tool cannot read, so it was left out.",
@@ -138,5 +139,62 @@ describe("checking the figures in an answer", () => {
     expect(pieces.filter((piece) => piece.kind === "unchecked").map((piece) => piece.text)).toEqual(
       ["12%"],
     );
+  });
+});
+
+describe("what a company did with its cash in its latest year", () => {
+  const reported = (value: number) =>
+    ({
+      kind: "reported",
+      value,
+      latest: { tag: "t", value, accession: "a", filedOn: "2026-01-01" },
+      original: { tag: "t", value, accession: "a", filedOn: "2026-01-01" },
+      doubtful: null,
+    }) as const;
+  const withYears = (
+    rows: ReadonlyArray<{ dividends?: number; shareBuybacks?: number }>,
+  ): CompanyData => ({
+    cik: 1,
+    name: "Example",
+    ticker: "EX",
+    years: rows.map((row, index) => ({
+      fiscalYear: 2022 + index,
+      startOn: `${2022 + index}-01-01`,
+      endOn: `${2022 + index}-12-31`,
+      terms: Object.fromEntries(
+        Object.entries(row).map(([key, value]) => [key, reported(value)]),
+      ) as StatementYear["terms"],
+    })),
+    events: [],
+    description: null,
+    months: [],
+    unexpectedNumbers: 0,
+  });
+  const notes = (data: CompanyData) => runLookup(data, "uses_of_cash", { ticker: "EX" }).notes;
+
+  it("says plainly that it paid no dividend when the latest year is zero", () => {
+    expect(notes(withYears([{ dividends: 5 }, { dividends: 0 }]))).toContain(
+      "In fiscal 2023 it paid no dividend.",
+    );
+  });
+
+  it("reads a line left out after a year of zero as none, and one left out after a payment as a gap", () => {
+    const stopped = notes(
+      withYears([{ shareBuybacks: 9, dividends: 4 }, { shareBuybacks: 0, dividends: 4 }, {}, {}]),
+    );
+    expect(stopped).toContain(
+      "In fiscal 2025 it made no share buybacks: the cash flow statement shows $0 in fiscal 2023 and leaves the line out after that, as statements leave out a line that is zero.",
+    );
+    expect(stopped).toContain(
+      "Dividends has no line after fiscal 2023: a gap, not zero. Search the annual report for whether it stopped.",
+    );
+  });
+
+  it("adds nothing about the latest year while it still pays", () => {
+    expect(
+      notes(withYears([{ dividends: 4, shareBuybacks: 9 }])).filter((note) =>
+        /fiscal 2022 it|no line after/.test(note),
+      ),
+    ).toEqual([]);
   });
 });

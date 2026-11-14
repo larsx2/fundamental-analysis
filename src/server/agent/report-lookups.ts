@@ -8,7 +8,12 @@ import { annualReport, LookupProblem } from "./lookups/common";
 
 export { isReportLookup } from "../../shared/answer-figures";
 
-type Paragraph = { readonly line: number; readonly text: string };
+type Paragraph = { readonly line: number; readonly section: string | null; readonly text: string };
+
+const place = (paragraph: Paragraph) =>
+  paragraph.section
+    ? `line ${paragraph.line}, under ${paragraph.section}`
+    : `line ${paragraph.line}`;
 
 type Report = {
   readonly accession: string;
@@ -44,8 +49,10 @@ const result = (
   lookup: name,
   title: `${annualReport}, filed on ${longDate(report.filedOn)}`,
   detail,
-  figures: Object.fromEntries(paragraphs.map((each) => [`line ${each.line}`, each.text])),
-  notes: ["Each line is one paragraph of the annual report. Quote it character for character."],
+  figures: Object.fromEntries(paragraphs.map((each) => [place(each), each.text])),
+  notes: [
+    "Each line is one paragraph of the annual report, after the headings it sits under. Quote the paragraph character for character.",
+  ],
   drawing: null,
   filings: [
     {
@@ -72,9 +79,9 @@ export const reportLookup = (
     if (name === "search_report") {
       const query = typeof input.query === "string" ? input.query.trim() : "";
       const found = yield* sql<Paragraph>`
-        SELECT line, text FROM report_paragraph
+        SELECT line, section, text FROM report_paragraph
         WHERE report_paragraph MATCH ${query} AND cik = ${company.cik}
-        ORDER BY bm25(report_paragraph) LIMIT 8
+        ORDER BY bm25(report_paragraph) * min(1.0, 0.4 + length(text) / 400.0) LIMIT 8
       `.pipe(
         Effect.mapError(
           () =>
@@ -93,14 +100,14 @@ export const reportLookup = (
       const from = lineNumber(input.line, 0);
       const count = Math.min(lineNumber(input.count, 1) || 1, 10);
       const found = yield* sql<Paragraph>`
-        SELECT line, text FROM report_paragraph
+        SELECT line, section, text FROM report_paragraph
         WHERE cik = ${company.cik} AND line >= ${from}
         ORDER BY line LIMIT ${count}
       `;
       return result(name, company, report, `${found.length} paragraphs read`, found);
     }
     const headings = yield* sql<Paragraph>`
-      SELECT line, text FROM report_paragraph
+      SELECT line, section, text FROM report_paragraph
       WHERE cik = ${company.cik} AND heading = 1
       ORDER BY line
     `;

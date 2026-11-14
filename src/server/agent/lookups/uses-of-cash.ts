@@ -9,11 +9,32 @@ const uses = [
     name: "Capital expenditure",
     term: "Capital expenditure",
   },
-  { key: "dividends", name: "Dividends", term: "Dividend" },
-  { key: "shareBuybacks", name: "Share buybacks", term: "Share buyback" },
+  { key: "dividends", name: "Dividends", term: "Dividend", none: "paid no dividend" },
+  {
+    key: "shareBuybacks",
+    name: "Share buybacks",
+    term: "Share buyback",
+    none: "made no share buybacks",
+  },
   { key: "acquisitions", name: "Acquisitions", term: "Acquisition" },
   { key: "debtRepaid", name: "Debt repaid", term: "Debt" },
 ] as const;
+
+const latestYear = (
+  name: string,
+  none: string,
+  values: ReadonlyArray<number | null>,
+  years: ReadonlyArray<number>,
+) => {
+  const latest = last(years);
+  if (values.at(-1) === 0) return `In fiscal ${latest} it ${none}.`;
+  if (values.at(-1) !== null) return null;
+  const at = values.findLastIndex((value) => value !== null);
+  if (at === -1) return null;
+  return values[at] === 0
+    ? `In fiscal ${latest} it ${none}: the cash flow statement shows $0 in fiscal ${years[at]} and leaves the line out after that, as statements leave out a line that is zero.`
+    : `${name} has no line after fiscal ${years[at]}: a gap, not zero. Search the annual report for whether it stopped.`;
+};
 
 export const usesOfCash = (data: CompanyData): LookupResult => {
   const list = recent(data);
@@ -31,6 +52,15 @@ export const usesOfCash = (data: CompanyData): LookupResult => {
       notes.push(`${use.name} has no separate line in these years: a gap, not zero.`);
     } else {
       figures[`${use.name}, total ${span(list)}`] = money(total);
+    }
+    if ("none" in use) {
+      const note = latestYear(
+        use.name,
+        use.none,
+        values,
+        list.map((year) => year.fiscalYear),
+      );
+      if (note !== null) notes.push(note);
     }
     return { use, total, known: known.length };
   });

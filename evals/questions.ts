@@ -6,13 +6,14 @@ export const tuning: ReadonlyArray<Company> = [
   { ticker: "MSFT", name: "Microsoft" },
   { ticker: "NVDA", name: "NVIDIA" },
   { ticker: "NET", name: "Cloudflare" },
+  { ticker: "INTC", name: "Intel" },
 ];
 
 // Never used to shape the agent: only to judge a change to it. NVIDIA and
-// Cloudflare were held out until their answers shaped the fixes of 13 November 2026.
+// Cloudflare were held out until their answers shaped the fixes of 13 November 2026,
+// and Intel until its answers shaped those of 14 November 2026.
 export const heldOut: ReadonlyArray<Company> = [
   { ticker: "GOOGL", name: "Alphabet" },
-  { ticker: "INTC", name: "Intel" },
   { ticker: "CRM", name: "Salesforce" },
 ];
 
@@ -141,9 +142,9 @@ const comparisons: ReadonlyArray<Pick<Case, "id" | "tickers" | "question">> = [
     question: "Which brings in more revenue, NVIDIA or Cloudflare?",
   },
   {
-    id: "GOOGL+INTC-research",
-    tickers: ["GOOGL", "INTC"],
-    question: "Who spends more on research and development, Alphabet or Intel?",
+    id: "GOOGL+CRM-research",
+    tickers: ["GOOGL", "CRM"],
+    question: "Who spends more on research and development, Alphabet or Salesforce?",
   },
 ];
 

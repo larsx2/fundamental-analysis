@@ -4,13 +4,101 @@ export type Paragraph = {
   readonly line: number;
   readonly text: string;
   readonly heading: boolean;
+  readonly section: string;
 };
 
 const wordCount = (line: string) => line.split(" ").length;
 
+const hasWords = (line: string | undefined) => line !== undefined && /[A-Za-z]{2}/.test(line);
+
 // Prose, not a table row: enough words, and mostly letters rather than figures.
 const isProse = (line: string) =>
   wordCount(line) >= 6 && (line.match(/[A-Za-z]/g) ?? []).length / line.length > 0.6;
+
+const isCaption = (line: string) => /^\([^()]*\)$/.test(line);
+
+type Line = { readonly text: string; readonly rank: number };
+
+const pageFurniture = (lines: ReadonlyArray<Line>) => {
+  const texts = lines.map((line) => line.text);
+  const pageNumber = texts.map(
+    (text, index) =>
+      /^\d{1,3}$/.test(text) && hasWords(texts[index - 1]) && hasWords(texts[index + 1]),
+  );
+  const keys = lines.map((line) => `${line.rank} ${line.text}`);
+  const seen = new Map<string, { all: number; nearPageNumber: number }>();
+  keys.forEach((key, index) => {
+    const count = seen.get(key) ?? { all: 0, nearPageNumber: 0 };
+    count.all += 1;
+    if ([-2, -1, 1, 2].some((step) => pageNumber[index + step])) count.nearPageNumber += 1;
+    seen.set(key, count);
+  });
+  return texts.map((text, index) => {
+    const count = seen.get(keys[index]!)!;
+    return (
+      pageNumber[index]! ||
+      text.includes("|") ||
+      (hasWords(text) &&
+        (count.all >= 20 || (count.all >= 3 && count.nearPageNumber * 2 >= count.all)))
+    );
+  });
+};
+
+const prominence = (style: string, text: string) => {
+  const size = /font-size:\s*([\d.]+)(pt|px)/i.exec(style);
+  const points = size === null ? 0 : Number(size[1]) * (size[2]!.toLowerCase() === "px" ? 0.75 : 1);
+  return (
+    Math.round(points * 10) * 100 +
+    (/text-decoration:[^;]*underline/i.test(style) ? 8 : 0) +
+    (/[a-z]/.test(text) ? 0 : 4) +
+    (/font-weight:\s*(bold|[6-9]00)/i.test(style) ? 2 : 0) +
+    (/font-style:\s*italic/i.test(style) ? 0 : 1)
+  );
+};
+
+const styleMark = /\ue000([^\ue001]*)\ue001/;
+
+const styledLinesOf = (html: string): ReadonlyArray<Line> =>
+  linesOf(
+    html.replace(
+      /<span\b[^>]*\bstyle="([^"]*)"[^>]*>/gi,
+      (tag, style: string) => `${tag}\ue000${style}\ue001`,
+    ),
+  ).flatMap((line) => {
+    const text = line.replace(new RegExp(styleMark, "g"), "").replace(/\s+/g, " ").trim();
+    return text === "" ? [] : [{ text, rank: prominence(styleMark.exec(line)?.[1] ?? "", text) }];
+  });
+
+const sectionsOf = (lines: ReadonlyArray<Line>) => {
+  const texts = lines.map((line) => line.text);
+  const furniture = pageFurniture(lines);
+  const isLabel = new Array<boolean>(lines.length).fill(false);
+  const isHeading = new Array<boolean>(lines.length).fill(false);
+  let leadsToProse = false;
+  for (let index = texts.length - 1; index >= 0; index--) {
+    const text = texts[index]!;
+    isLabel[index] =
+      !furniture[index] &&
+      hasWords(text) &&
+      (wordCount(text) <= 12 || /^item\s*\d/i.test(text)) &&
+      !/[.;,]$/.test(text) &&
+      !(text.endsWith(":") && wordCount(text) > 6) &&
+      !/^[•▪●◦·(–—-]/.test(text);
+    if (isLabel[index]) isHeading[index] = leadsToProse;
+    else if (isProse(text)) leadsToProse = true;
+    else if (!furniture[index]) leadsToProse = false;
+  }
+  let open: ReadonlyArray<Line> = [];
+  const sections = lines.map((line, index) => {
+    const above = open
+      .slice(-3)
+      .map((each) => each.text)
+      .join(" › ");
+    if (isHeading[index]) open = [...open.filter((each) => each.rank > line.rank), line];
+    return above;
+  });
+  return { isLabel, sections };
+};
 
 // The body of Item 1A: the "Item 1A" heading followed by a long paragraph,
 // which skips the table of contents, up to the next item.
@@ -71,9 +159,13 @@ export const riskHeadings = (html: string, lines: ReadonlyArray<string> = linesO
 };
 
 export const paragraphsOf = (html: string): ReadonlyArray<Paragraph> => {
-  const lines = linesOf(html);
+  const styled = styledLinesOf(html);
+  const lines = styled.map((line) => line.text);
   const headings = new Set(riskHeadings(html, lines));
+  const { isLabel, sections } = sectionsOf(styled);
   return lines.flatMap((text, line) =>
-    isProse(text) ? [{ line, text, heading: headings.has(line) }] : [],
+    isProse(text) && !isCaption(text) && (!isLabel[line] || headings.has(line))
+      ? [{ line, text, heading: headings.has(line), section: sections[line]! }]
+      : [],
   );
 };

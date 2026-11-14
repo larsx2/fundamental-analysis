@@ -56,3 +56,50 @@ describe("report paragraphs", () => {
     expect(paragraphsOf(html).map((each) => each.text)).toEqual([long("markets")]);
   });
 });
+
+const span = (style: string, text: string) => `<div><span style="${style}">${text}</span></div>`;
+const body = (text: string) => span("font-size:10pt", text);
+const footer = (page: number) =>
+  `${span("font-size:8pt", "MD&A")}<div>${page}</div>${span("font-size:8pt", "Table of Contents")}`;
+
+const discussion = [
+  span("font-size:18pt", "Results of Operations"),
+  body(long("revenue")),
+  footer(20),
+  span("font-size:14pt", "Revenue"),
+  span("font-size:10pt;font-weight:bold", "2026 vs. 2025"),
+  body(
+    "Revenue was roughly flat, as lower client revenue was offset by higher data center revenue.",
+  ),
+  footer(21),
+  span("font-size:14pt", "Operating Expenses"),
+  body("The following table shows our operating expenses for each of the last two years."),
+  "<table><tr><td>Research and development spending</td><td>1,234</td><td>1,111</td></tr></table>",
+  span("font-size:10pt;font-weight:bold", "2026 vs. 2025"),
+  body("Research and development expenses decreased because of lower payroll costs this year."),
+  footer(22),
+  body("(In millions, except per share amounts)"),
+].join("");
+
+const sectionOf = (html: string, start: string) =>
+  paragraphsOf(html).find((each) => each.text.startsWith(start))?.section;
+
+describe("report sections", () => {
+  it("gives each paragraph the headings above it, nested by how prominently they are set", () => {
+    expect(sectionOf(discussion, "Revenue was roughly flat")).toBe(
+      "Results of Operations › Revenue › 2026 vs. 2025",
+    );
+    expect(sectionOf(discussion, "Research and development expenses")).toBe(
+      "Results of Operations › Operating Expenses › 2026 vs. 2025",
+    );
+  });
+
+  it("leaves out page headers and footers, table labels, captions and the headings themselves", () => {
+    const texts = paragraphsOf(discussion).map((each) => each.text);
+    expect(texts).toHaveLength(4);
+    expect(
+      texts.some((text) => /Table of Contents|MD&A|Research and development spending/.test(text)),
+    ).toBe(false);
+    expect(texts.some((text) => text.startsWith("(In millions"))).toBe(false);
+  });
+});

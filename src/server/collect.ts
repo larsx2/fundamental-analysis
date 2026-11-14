@@ -173,6 +173,7 @@ export class Collect extends Context.Service<
             accession: filing.accession,
             line: paragraph.line,
             heading: paragraph.heading ? 1 : 0,
+            section: paragraph.section,
             text: paragraph.text,
           }));
           yield* Effect.gen(function* () {

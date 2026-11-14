@@ -11,17 +11,26 @@ const paragraphs = [
   {
     line: 226,
     heading: 0,
+    section: "Item 1. Business › Competition",
     text: "Our industry is highly competitive. Walmart, Target, Kroger, and Amazon are among our significant general merchandise retail competitors in the U.S.",
   },
   {
     line: 345,
     heading: 1,
+    section: "Item 1A. Risk Factors",
     text: "We face strong competition from other retailers and warehouse club operators.",
   },
   {
     line: 353,
     heading: 1,
+    section: "Item 1A. Risk Factors",
     text: "Suppliers may be unable to timely provide us with quality merchandise at competitive prices.",
+  },
+  {
+    line: 636,
+    heading: 0,
+    section: "OVERVIEW › Highlights for 2026 include:",
+    text: "•Net sales increased 10% to $297,247, driven by an increase in comparable sales and sales at new warehouses;",
   },
 ];
 
@@ -72,8 +81,14 @@ describe("the annual report lookups", () => {
         query: "compet*",
       });
       expect(collected.count).toBe(1);
-      expect(Object.keys(first.figures)).toEqual(["line 226"]);
-      expect(Object.keys(again.figures).sort()).toEqual(["line 226", "line 345", "line 353"]);
+      expect(Object.keys(first.figures)).toEqual([
+        "line 226, under Item 1. Business › Competition",
+      ]);
+      expect(Object.keys(again.figures).sort()).toEqual([
+        "line 226, under Item 1. Business › Competition",
+        "line 345, under Item 1A. Risk Factors",
+        "line 353, under Item 1A. Risk Factors",
+      ]);
       expect(first.filings[0]?.url).toBe(
         "https://www.sec.gov/Archives/edgar/data/909832/000090983226000093/cost-20260830.htm",
       );
@@ -84,7 +99,26 @@ describe("the annual report lookups", () => {
     Effect.gen(function* () {
       yield* withFiling;
       const headings = yield* reportLookup(costco, "risk_headings", {});
-      expect(Object.keys(headings.figures)).toEqual(["line 345", "line 353"]);
+      expect(Object.keys(headings.figures)).toEqual([
+        "line 345, under Item 1A. Risk Factors",
+        "line 353, under Item 1A. Risk Factors",
+      ]);
+    }).pipe(Effect.provide(layer({ count: 0 }))),
+  );
+
+  it.effect("match the words of the headings a paragraph sits under", () =>
+    Effect.gen(function* () {
+      yield* withFiling;
+      const anywhere = yield* reportLookup(costco, "search_report", { query: "highlights" });
+      const headingsOnly = yield* reportLookup(costco, "search_report", {
+        query: "section:compet*",
+      });
+      expect(Object.keys(anywhere.figures)).toEqual([
+        "line 636, under OVERVIEW › Highlights for 2026 include:",
+      ]);
+      expect(Object.keys(headingsOnly.figures)).toEqual([
+        "line 226, under Item 1. Business › Competition",
+      ]);
     }).pipe(Effect.provide(layer({ count: 0 }))),
   );
 
