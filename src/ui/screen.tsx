@@ -59,6 +59,7 @@ export function BottomBar({ active }: { readonly active: ScreenName }) {
       <div className="dock">
         <nav aria-label="Screens">
           <ScreenLink to="/" label="Home" icon="home" active={active === "home"} />
+          <ScreenLink to="/ask" label="Ask" icon="ask" active={active === "ask"} />
           <ScreenLink
             to="/companies"
             label="Companies"

@@ -74,6 +74,12 @@ const paths = {
   ),
   filter: <path d="M4 6h16M7 12h10M10 18h4" />,
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  ask: (
+    <>
+      <path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h11A1.5 1.5 0 0 1 19 6.5v8a1.5 1.5 0 0 1-1.5 1.5H11l-4 3.5V16H6.5A1.5 1.5 0 0 1 5 14.5z" />
+      <path d="M9 9.5h6M9 12.5h3.5" />
+    </>
+  ),
   plus: <path d="M12 5v14M5 12h14" />,
   more: (
     <>
