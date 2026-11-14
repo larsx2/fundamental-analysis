@@ -44,6 +44,7 @@ export function MoneyExplorer({
   const closeButton = useRef<HTMLButtonElement>(null);
   const drawer = useRef<HTMLElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+  const stage = useRef<HTMLDivElement>(null);
 
   const index = years.findIndex((each) => each.fiscalYear === year.fiscalYear);
   const previous = index > 0 ? years[index - 1] : undefined;
@@ -139,6 +140,28 @@ export function MoneyExplorer({
   }, [compare]);
 
   useEffect(() => {
+    const element = stage.current;
+    if (element === null) return;
+    let pull = 0;
+    let rest = 0;
+    let last = 0;
+    const onWheel = (event: WheelEvent) => {
+      if (lens !== "profit" || (!event.ctrlKey && !event.metaKey)) return;
+      event.preventDefault();
+      if (event.timeStamp < rest) return;
+      if (event.timeStamp - last > 200 || Math.sign(event.deltaY) !== Math.sign(pull)) pull = 0;
+      last = event.timeStamp;
+      pull += event.deltaY;
+      if (Math.abs(pull) < 24) return;
+      setZoom(pull < 0 ? 1 : 0);
+      pull = 0;
+      rest = event.timeStamp + 450;
+    };
+    element.addEventListener("wheel", onWheel, { passive: false });
+    return () => element.removeEventListener("wheel", onWheel);
+  }, [lens]);
+
+  useEffect(() => {
     for (const each of lenses) {
       const id = picked[each];
       flows.current[each]?.focus(open && each === lens && id !== "gross" ? id : null);
@@ -169,17 +192,22 @@ export function MoneyExplorer({
         return;
       }
       if (event.key === "Escape") {
-        if (open) setOpen(false);
-        else setZoom(0);
+        if (open) {
+          event.preventDefault();
+          setOpen(false);
+        } else if (zoom === 1) {
+          event.preventDefault();
+          setZoom(0);
+        }
       } else if (lens === "profit" && (event.key === "+" || event.key === "=")) {
         setZoom(1);
       } else if (lens === "profit" && event.key === "-") {
         setZoom(0);
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, lens]);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, lens, zoom]);
 
   const values = current.profit;
   const gross = values?.gross ?? 0;
@@ -188,7 +216,7 @@ export function MoneyExplorer({
 
   return (
     <div className={`flow-explorer${open ? " is-open" : ""}`}>
-      <div className="flow-stage">
+      <div ref={stage} className="flow-stage">
         <div className={`flow-crumbs${zoom === 1 ? " is-zoomed" : ""}`} hidden={lens !== "profit"}>
           <button type="button" aria-current={zoom === 0} onClick={() => setZoom(0)}>
             Each dollar of revenue

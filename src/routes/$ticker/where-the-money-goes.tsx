@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { StatementYear } from "../../functions/company";
 import { valueOf } from "../../shared/figures";
 import { CompanyFrame, searchYear, useReadyCompany } from "../../ui/company-frame";
@@ -7,6 +8,7 @@ import { centsOfDollar, lowerFirst, money, percent } from "../../shared/format";
 import { Icon } from "../../ui/icons";
 import { shortName } from "../../ui/logo-tile";
 import { GapMark } from "../../ui/marks";
+import { useFullScreen } from "../../ui/full-screen";
 import { useChooseYear } from "../../ui/company-header";
 import { MoneyExplorer } from "../../ui/money-flow/explorer";
 import { FiguresTable } from "../../ui/money-flow/figures-table";
@@ -55,6 +57,8 @@ function MoneyFlow() {
   const chooseYear = useChooseYear();
   const [compare, setCompare] = useState(false);
   const lens = search.follow ?? "profit";
+  const expand = useRef<HTMLButtonElement>(null);
+  const [full, setFull] = useFullScreen(panel, expand);
   const follow = (next: "profit" | "cash") =>
     void navigate({
       search: (was) => ({ ...was, follow: next === "cash" ? next : undefined }),
@@ -69,7 +73,16 @@ function MoneyFlow() {
       title="where the money goes"
     >
       <Hero name={name} year={year} />
-      <section ref={panel} className="panel panel-pad" aria-labelledby="chart-title">
+      {full &&
+        createPortal(
+          <div className="panel-scrim" aria-hidden="true" onClick={() => setFull(false)} />,
+          document.body,
+        )}
+      <section
+        ref={panel}
+        className={`panel panel-pad${full ? " is-full" : ""}`}
+        aria-labelledby="chart-title"
+      >
         <div className="panel-title">
           <h2 id="chart-title">
             {drawing === "flow" && lens === "cash"
@@ -129,6 +142,17 @@ function MoneyFlow() {
                 },
               ]}
             />
+            <div className="segmented chart-switch">
+              <button
+                ref={expand}
+                type="button"
+                aria-label={full ? "Exit full screen" : "Full screen"}
+                data-tip={full ? "Exit" : "Full screen"}
+                onClick={() => setFull(!full)}
+              >
+                <Icon name={full ? "shrink" : "expand"} />
+              </button>
+            </div>
           </div>
         </div>
         {(drawing === "table" || lens === "profit") && <p className="verdict">{verdict(year)}</p>}

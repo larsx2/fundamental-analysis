@@ -97,6 +97,8 @@ const paths = {
       <path d="m20 20-4.2-4.2M11 8.5v5M8.5 11h5" />
     </>
   ),
+  expand: <path d="M14 5h5v5M10 19H5v-5M19 5l-5.5 5.5M5 19l5.5-5.5" />,
+  shrink: <path d="M19 10h-5V5M5 14h5v5M14 10l5.5-5.5M10 14l-5.5 5.5" />,
   zoomOut: (
     <>
       <circle cx="11" cy="11" r="6.5" />
