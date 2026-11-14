@@ -110,7 +110,7 @@ export function History({
             <div>
               <button
                 type="button"
-                className="button primary"
+                className="ask-clear-yes"
                 onClick={() => {
                   clearThreads();
                   setClearing(false);
@@ -119,7 +119,7 @@ export function History({
               >
                 Clear
               </button>
-              <button type="button" className="button" onClick={() => setClearing(false)}>
+              <button type="button" className="ask-clear-no" onClick={() => setClearing(false)}>
                 Keep
               </button>
             </div>
@@ -139,6 +139,9 @@ export function History({
         to="/ask"
         onClick={() => requestAnimationFrame(() => document.getElementById("ask-next")?.focus())}
       >
+        <span className="ask-new-mark" aria-hidden="true">
+          <Icon name="plus" />
+        </span>
         <span>New conversation</span>
       </Link>
       <h2 className="ask-history-head">Conversations</h2>
