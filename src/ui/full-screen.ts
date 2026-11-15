@@ -34,15 +34,11 @@ export function useFullScreen(
     const root = document.documentElement;
     root.classList.add("is-locked");
     const quieted: Array<HTMLElement> = [];
-    for (let node: HTMLElement | null = element; node !== null && node !== document.body;) {
-      const parent: HTMLElement | null = node.parentElement;
-      for (const sibling of parent?.children ?? []) {
-        if (
-          sibling !== node &&
-          sibling instanceof HTMLElement &&
-          !sibling.inert &&
-          !sibling.classList.contains("panel-scrim")
-        ) {
+    let node = element;
+    while (node.parentElement !== null && node.parentElement !== document.body) {
+      const parent = node.parentElement;
+      for (const sibling of parent.children) {
+        if (sibling !== node && sibling instanceof HTMLElement && !sibling.inert) {
           sibling.inert = true;
           quieted.push(sibling);
         }

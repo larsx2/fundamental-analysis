@@ -86,8 +86,12 @@ export function PaletteProvider({ children }: { readonly children: ReactNode }) 
       {children}
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
-          <Dialog.Backdrop className="palette-backdrop" />
-          {open && <Palette close={() => setOpen(false)} />}
+          {open && (
+            <>
+              <Dialog.Backdrop className="palette-backdrop" />
+              <Palette close={() => setOpen(false)} />
+            </>
+          )}
         </Dialog.Portal>
       </Dialog.Root>
     </PaletteContext.Provider>
