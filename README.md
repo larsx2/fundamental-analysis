@@ -107,14 +107,14 @@ It is open source under the [MIT licence](./LICENSE). The typefaces, Inter and N
 
 ## Where things are
 
-| File or folder                   | What it holds                                                                                           |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| [`GLOSSARY.md`](./GLOSSARY.md)   | The official words of the project, in the order to learn them. The tool uses these words and no others. |
-| [`field-map.md`](./field-map.md) | A short map of the field: what it is called, what it includes, and where the data comes from.           |
-| [`todo.md`](./todo.md)           | The work to reach the first version, in order, with a check for every task.                             |
-| [`docs/rfc/`](./docs/rfc/)       | Open questions and ideas being explored. Start with its README.                                         |
-| [`docs/adr/`](./docs/adr/)       | Decisions that were made, and why. Each one is a short file.                                            |
-| [`public/brand/`](./public/brand/) | The falcon logo (`fundamental-analysis-logo.png`) and the standalone icon (`mark.png`). |
+| File or folder                     | What it holds                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| [`GLOSSARY.md`](./GLOSSARY.md)     | The official words of the project, in the order to learn them. The tool uses these words and no others. |
+| [`field-map.md`](./field-map.md)   | A short map of the field: what it is called, what it includes, and where the data comes from.           |
+| [`todo.md`](./todo.md)             | The work to reach the first version, in order, with a check for every task.                             |
+| [`docs/rfc/`](./docs/rfc/)         | Open questions and ideas being explored. Start with its README.                                         |
+| [`docs/adr/`](./docs/adr/)         | Decisions that were made, and why. Each one is a short file.                                            |
+| [`public/brand/`](./public/brand/) | The falcon logo (`fundamental-analysis-logo.png`) and the standalone icon (`mark.png`).                 |
 
 ## Tasks
 
