@@ -1,3 +1,5 @@
+![Fundamental Analysis](public/brand/fundamental-analysis-logo.png)
+
 # Fundamental Analysis
 
 A local tool for understanding how a public company works by looking at its numbers, its decisions and the world around it, all on one timeline.
@@ -112,6 +114,7 @@ It is open source under the [MIT licence](./LICENSE). The typefaces, Inter and N
 | [`todo.md`](./todo.md)           | The work to reach the first version, in order, with a check for every task.                             |
 | [`docs/rfc/`](./docs/rfc/)       | Open questions and ideas being explored. Start with its README.                                         |
 | [`docs/adr/`](./docs/adr/)       | Decisions that were made, and why. Each one is a short file.                                            |
+| [`public/brand/`](./public/brand/) | The falcon logo (`fundamental-analysis-logo.png`) and the standalone icon (`mark.png`). |
 
 ## Tasks
 
