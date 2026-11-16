@@ -98,6 +98,11 @@ tasks:
     preconditions: [*needs-bun, *needs-install]
     cmd: SCREENS_PORT="${SCREENS_PORT:-$(bun scripts/free-port.ts)}" bunx playwright test --update-snapshots
 
+  starter:record:
+    desc: Ask the SEC again for the nine companies a new database starts with, and save its answers in the repo
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun scripts/starter-database.ts --record
+
   readme:pictures:
     desc: Take the pictures in the README again, from the same extracts as the screenshot tests
     preconditions: [*needs-bun, *needs-install]

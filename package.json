@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --bun vp dev",
+    "dev": "bun scripts/starter-database.ts && bun --bun vp dev",
     "check": "bun --bun effect-tsgo vp check --deny-warnings",
     "fix": "bun --bun effect-tsgo vp check --fix",
     "test": "bun --bun vp test run",

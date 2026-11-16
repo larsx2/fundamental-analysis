@@ -56,7 +56,7 @@ task init
 task dev
 ```
 
-Then open http://127.0.0.1:4100. The first time, the tool asks for [your contact details for the SEC](#your-contact-details-for-the-sec). Apple, Microsoft, Costco, Tesla and NVIDIA are then collected on their own, so the home page has something to show.
+Then open http://127.0.0.1:4100. The first time, the tool builds its database with nine companies saved in this repo: Apple, Microsoft, Costco, Tesla and NVIDIA for the home page, and Cloudflare, Intel, Alphabet and Salesforce for the evals. It asks for [your contact details for the SEC](#your-contact-details-for-the-sec) when you first collect another company.
 
 To ask questions, sign in to ChatGPT once with `bunx codex login` in the tool's folder. If you already use Codex on this computer and signed in with ChatGPT, there is nothing to do: the tool uses that sign-in.
 
@@ -120,22 +120,23 @@ It is open source under the [MIT licence](./LICENSE). The typefaces, Inter and N
 
 Commands are run through [Task](https://taskfile.dev).
 
-| Command                | What it does                                                             |
-| ---------------------- | ------------------------------------------------------------------------ |
-| `task`                 | Lists every task                                                         |
-| `task doctor`          | Checks the tools the project needs, without changing anything            |
-| `task init`            | Installs what the project depends on                                     |
-| `task dev`             | Starts the tool at http://127.0.0.1:4100                                 |
-| `task collect -- AAPL` | Collects one company from the SEC and prints where its money goes        |
-| `task check`           | Looks for problems without changing any file                             |
-| `task fix`             | Applies the automatic fixes                                              |
-| `task test`            | Runs the tests                                                           |
-| `task screens`         | Runs the browser tests, and compares pictures with the saved ones        |
-| `task screens:update`  | Saves new pictures of the company screens, after looking at what changed |
-| `task readme:pictures` | Takes the pictures in this README again                                  |
-| `task build`           | Builds the tool                                                          |
-| `task ci`              | Runs everything that must pass before work is handed over                |
-| `task land`            | Puts this worktree's commits on main, after the same checks as `task ci` |
+| Command                | What it does                                                              |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `task`                 | Lists every task                                                          |
+| `task doctor`          | Checks the tools the project needs, without changing anything             |
+| `task init`            | Installs what the project depends on                                      |
+| `task dev`             | Starts the tool at http://127.0.0.1:4100                                  |
+| `task starter:record`  | Saves the SEC's answers for the nine companies a new database starts with |
+| `task collect -- AAPL` | Collects one company from the SEC and prints where its money goes         |
+| `task check`           | Looks for problems without changing any file                              |
+| `task fix`             | Applies the automatic fixes                                               |
+| `task test`            | Runs the tests                                                            |
+| `task screens`         | Runs the browser tests, and compares pictures with the saved ones         |
+| `task screens:update`  | Saves new pictures of the company screens, after looking at what changed  |
+| `task readme:pictures` | Takes the pictures in this README again                                   |
+| `task build`           | Builds the tool                                                           |
+| `task ci`              | Runs everything that must pass before work is handed over                 |
+| `task land`            | Puts this worktree's commits on main, after the same checks as `task ci`  |
 
 The rules behind these names are written at the top of [`Taskfile.yml`](./Taskfile.yml).
 

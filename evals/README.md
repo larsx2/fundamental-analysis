@@ -9,7 +9,7 @@ The Ask agent is judged against a fixed set of questions with an answer key writ
 
 ## Running
 
-The app must be running (`task dev`). Each run uses the reader's ChatGPT plan: about 1.5 million input tokens, most of them cached, and two minutes.
+The app must be running (`task dev`). A new database already holds every company the evals ask about, saved in the repo ([decision](../docs/adr/0012-a-new-database-starts-with-nine-saved-companies.md)). Each run uses the reader's ChatGPT plan: about 1.5 million input tokens, most of them cached, and two minutes.
 
 ```sh
 bun run eval --outputFile.json=evals/results/tuning-1.json

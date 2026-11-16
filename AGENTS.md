@@ -8,6 +8,7 @@ Every change lands on `main` the same day, in small commits, through `bun run la
   `git fetch origin main && git worktree add .worktrees/<name> -b <name> origin/main && cd .worktrees/<name> && bun install --frozen-lockfile`
 - To build on what landed since: `git fetch origin main && git rebase origin/main`. Never `git pull`.
 - Never use port 4100, which is the owner's. Start the dev server on a free port: `bun run dev --port $(bun scripts/free-port.ts)`. `task screens` picks a free port by itself.
+- The first `bun run dev` in a worktree builds its database with nine companies saved in the repo, the ones on the home page and in the evals. Work with those. Collecting another company asks the SEC, so do it only when the task needs it.
 
 ## Landing
 

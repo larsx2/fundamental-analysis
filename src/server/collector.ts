@@ -71,6 +71,48 @@ const reasonOf = (cause: Cause.Cause<unknown>) => {
   return error instanceof Error ? error.message : String(error);
 };
 
+const noteUnexpected = (cik: number, unexpected: ReadonlyArray<UnexpectedNumber>) =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient;
+    yield* sql`UPDATE company SET unexpected_numbers = ${unexpected.length} WHERE cik = ${cik}`;
+    if (unexpected.length > 0) {
+      yield* Effect.logWarning(
+        `${unexpected.length} numbers from the SEC for company ${cik} came in a shape the tool cannot read and were left out`,
+        unexpected.slice(0, 3),
+      );
+    }
+  });
+
+// Collects a company in full and marks it ready. The starter database is
+// built with the same steps.
+export const collectInFull = (cik: number) =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient;
+    const collect = yield* Collect;
+    const logos = yield* Logos;
+    const step = (number: number) =>
+      sql`UPDATE company SET collect_step = ${number} WHERE cik = ${cik}`;
+    yield* sql`UPDATE company SET state = 'collecting', collect_step = 1 WHERE cik = ${cik}`;
+    yield* collect.filings(cik);
+    yield* step(2);
+    yield* noteUnexpected(cik, (yield* collect.reportedNumbers(cik)).unexpected);
+    const years = yield* statementsFor(cik);
+    if (years.length === 0) return yield* new NoRevenue({ cik });
+    yield* step(3);
+    yield* collect.annualReport(cik);
+    yield* logos.fetch(cik);
+    const checkedOn = yield* today;
+    yield* sql`
+      UPDATE company SET
+        state = 'ready',
+        failure_reason = NULL,
+        collect_step = NULL,
+        as_of = (SELECT max(filed_on) FROM filing WHERE cik = ${cik}),
+        last_checked_on = ${checkedOn}
+      WHERE cik = ${cik}
+    `;
+  });
+
 export class Collector extends Context.Service<
   Collector,
   {
@@ -116,44 +158,12 @@ export class Collector extends Context.Service<
         `,
       });
 
-      const noteUnexpected = (cik: number, unexpected: ReadonlyArray<UnexpectedNumber>) =>
-        Effect.gen(function* () {
-          yield* sql`UPDATE company SET unexpected_numbers = ${unexpected.length} WHERE cik = ${cik}`;
-          if (unexpected.length > 0) {
-            yield* Effect.logWarning(
-              `${unexpected.length} numbers from the SEC for company ${cik} came in a shape the tool cannot read and were left out`,
-              unexpected.slice(0, 3),
-            );
-          }
-        });
-
-      const step = (cik: number, number: number) =>
-        sql`UPDATE company SET collect_step = ${number} WHERE cik = ${cik}`;
-
       const collectOne = (cik: number) =>
-        Effect.gen(function* () {
-          yield* sql`UPDATE company SET state = 'collecting', collect_step = 1 WHERE cik = ${cik}`;
-          yield* collect.filings(cik);
-          yield* step(cik, 2);
-          yield* noteUnexpected(cik, (yield* collect.reportedNumbers(cik)).unexpected);
-          const years = yield* statementsFor(cik).pipe(
-            Effect.provideService(ReportedNumbers, reported),
-          );
-          if (years.length === 0) return yield* new NoRevenue({ cik });
-          yield* step(cik, 3);
-          yield* collect.annualReport(cik);
-          yield* logos.fetch(cik);
-          const checkedOn = yield* today;
-          yield* sql`
-            UPDATE company SET
-              state = 'ready',
-              failure_reason = NULL,
-              collect_step = NULL,
-              as_of = (SELECT max(filed_on) FROM filing WHERE cik = ${cik}),
-              last_checked_on = ${checkedOn}
-            WHERE cik = ${cik}
-          `;
-        }).pipe(
+        collectInFull(cik).pipe(
+          Effect.provideService(SqlClient, sql),
+          Effect.provideService(Collect, collect),
+          Effect.provideService(Logos, logos),
+          Effect.provideService(ReportedNumbers, reported),
           Effect.catchCause((cause) =>
             sql`
               UPDATE company SET
@@ -208,7 +218,9 @@ export class Collector extends Context.Service<
           if (Option.isNone(company) || company.value.state !== "ready") return;
           const added = yield* collect.newFilings(cik);
           if (added.some((filing) => annualReportForms.has(filing.form))) {
-            yield* noteUnexpected(cik, (yield* collect.reportedNumbers(cik)).unexpected);
+            yield* noteUnexpected(cik, (yield* collect.reportedNumbers(cik)).unexpected).pipe(
+              Effect.provideService(SqlClient, sql),
+            );
           }
           yield* collect.addFilings(cik, added);
           if (added.some((filing) => filing.form === "10-K" || filing.form === "10-KT")) {

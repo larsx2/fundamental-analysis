@@ -126,7 +126,7 @@ The database on each reader's computer may hold data written by any older versio
   3. Remove the old shape once nothing uses it, and only after any flag covering the change is gone.
 - Never edit, revert, renumber or delete a migration that has landed. Databases that ran it would not run it again. Roll forward with a new one.
 - Pick a new migration's number after rebasing. If `bun run land` stops on a clash in `migrations/index.ts`, renumber yours.
-- Test each migration on a database filled by the ones before it, as `migrations/index.test.ts` does. A new worktree's `data/` is empty, so to try one by hand, copy the owner's database or build one with `bun scripts/screens-database.ts`.
+- Test each migration on a database filled by the ones before it, as `migrations/index.test.ts` does. To try one by hand on a filled database, start `bun run dev` once before adding the migration. A new worktree's first start builds its database with the nine saved companies, using the migrations that exist at that moment.
 
 ## For the owner
 
