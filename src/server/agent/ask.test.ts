@@ -1,9 +1,13 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "@effect/vitest";
+import { BunServices } from "@effect/platform-bun";
+import { afterAll, beforeAll, describe, expect, it } from "@effect/vitest";
+import { Effect, Fiber, Layer, Stream } from "effect";
 import type { LookupResult } from "../../shared/lookups";
+import { Agent } from "./agent";
 import {
+  ask,
   checkQuotes,
   type Prefetched,
   promptFor,
@@ -12,8 +16,10 @@ import {
   settingsFor,
   toEvent,
   usedBy,
+  warm,
 } from "./ask";
 import { flagsFor, type Notification } from "./codex-app-server";
+import type { LookupReply } from "./look-up";
 
 const apple = { name: "Apple Inc.", ticker: "AAPL" };
 const costco = { name: "COSTCO WHOLESALE CORP /NEW", ticker: "COST" };
@@ -301,21 +307,29 @@ describe("figures read before the question", () => {
     expect(usedBy(answer, [dollar, cash], [called])).toEqual([]);
   });
 
-  it("skip a lookup that fails and read each company's own", async () => {
-    const asked: Array<string> = [];
-    const all = await readUpFront([{ ticker: "COST" }, { ticker: "AAPL" }], 2025, (name, input) => {
-      asked.push(`${(input as { ticker: string }).ticker} ${name}`);
-      return Promise.resolve(
-        name === "marks" ? { error: "No figures." } : { result: result(name, {}) },
+  it.effect("skip a lookup that fails and read each company's own", () =>
+    Effect.gen(function* () {
+      const asked: Array<string> = [];
+      const all = yield* readUpFront(
+        [{ ticker: "COST" }, { ticker: "AAPL" }],
+        2025,
+        (name, input): Effect.Effect<LookupReply, string> => {
+          asked.push(`${(input as { ticker: string }).ticker} ${name}`);
+          if (name === "balance") return Effect.fail("The database is locked.");
+          return Effect.succeed(
+            name === "marks" ? { error: "No figures." } : { result: result(name, {}) },
+          );
+        },
       );
-    });
-    expect(asked).toContain("AAPL dollar");
-    expect(all.some((each) => each.lookup === "marks")).toBe(false);
-    expect(all.find((each) => each.id === "COST-dollar")?.input).toEqual({
-      ticker: "COST",
-      fiscalYear: 2025,
-    });
-  });
+      expect(asked).toContain("AAPL dollar");
+      expect(all.some((each) => each.lookup === "marks")).toBe(false);
+      expect(all.some((each) => each.lookup === "balance")).toBe(false);
+      expect(all.find((each) => each.id === "COST-dollar")?.input).toEqual({
+        ticker: "COST",
+        fiscalYear: 2025,
+      });
+    }),
+  );
 });
 
 describe("quotes from the annual report", () => {
@@ -387,4 +401,153 @@ describe("the settings Codex starts with", () => {
       'mcp_servers.lookups={ "command" = "bun", "args" = ["bridge.ts"] }',
     ]);
   });
+});
+
+describe("one answer from Codex", () => {
+  const folder = mkdtempSync(join(tmpdir(), "fake-codex-"));
+  const sent = join(folder, "sent.log");
+  const before = { home: process.env.CODEX_HOME, log: process.env.FAKE_CODEX_LOG };
+
+  beforeAll(() => {
+    process.env.CODEX_HOME = folder;
+    process.env.FAKE_CODEX_LOG = sent;
+  });
+
+  afterAll(() => {
+    process.env.CODEX_HOME = before.home;
+    process.env.FAKE_CODEX_LOG = before.log;
+  });
+
+  const agent = Agent.layerWith([process.execPath, "src/server/agent/testdata/fake-codex.ts"]).pipe(
+    Layer.provide(BunServices.layer),
+  );
+
+  const lookupsUrl = "http://127.0.0.1:4100/api/lookup";
+
+  const question = (text: string) =>
+    ask({
+      question: text,
+      companies: [apple],
+      fiscalYear: null,
+      earlier: [],
+      lookupsUrl,
+      read: () => Effect.succeed<LookupReply>({ error: "Not read in this test." }),
+    });
+
+  const all = (text: string) => Stream.runCollect(question(text));
+
+  // The methods Codex was sent, once the given one is among them or after a
+  // second.
+  const sentOnce = (method: string) =>
+    Effect.gen(function* () {
+      const methods = Effect.sync(() =>
+        existsSync(sent) ? readFileSync(sent, "utf8").trim().split("\n") : [],
+      );
+      for (let tries = 0; tries < 50; tries++) {
+        if ((yield* methods).includes(method)) break;
+        yield* Effect.sleep("20 millis");
+      }
+      return yield* methods;
+    });
+
+  it.live("streams the thinking, then the answer, then the tokens it took", () =>
+    Effect.gen(function* () {
+      const events = yield* all("Can you answer?");
+      expect(events.map((event) => event.type)).toEqual(["thinking", "answer", "usage"]);
+      expect(events.at(-1)).toEqual({
+        type: "usage",
+        trips: 1,
+        inputTokens: 100,
+        cachedInputTokens: 40,
+        outputTokens: 20,
+      });
+    }).pipe(Effect.provide(agent)),
+  );
+
+  it.live(
+    "says Codex stopped when it stops halfway, and starts it again for the next question",
+    () =>
+      Effect.gen(function* () {
+        const stopped = yield* all("Will you crash?");
+        expect(stopped.at(-1)).toEqual({
+          type: "failed",
+          signedOut: false,
+          message: "Codex stopped before it answered.",
+        });
+        const next = yield* all("Now answer, please.");
+        expect(next.map((event) => event.type)).toContain("answer");
+      }).pipe(Effect.provide(agent)),
+  );
+
+  it.live("shows a sign-in failure when Codex refuses the question", () =>
+    Effect.gen(function* () {
+      const events = yield* all("I refuse.");
+      expect(events).toEqual([{ type: "failed", signedOut: true, message: "401 Unauthorized" }]);
+    }).pipe(Effect.provide(agent)),
+  );
+
+  it.live("interrupts Codex's turn when the reader leaves", () =>
+    Effect.gen(function* () {
+      writeFileSync(sent, "");
+      const first = yield* question("Please wait.").pipe(Stream.take(1), Stream.runCollect);
+      expect(first.map((event) => event.type)).toEqual(["thinking"]);
+      expect(yield* sentOnce("thread/unsubscribe")).toEqual(
+        expect.arrayContaining(["turn/start", "turn/interrupt", "thread/unsubscribe"]),
+      );
+    }).pipe(Effect.provide(agent)),
+  );
+
+  it.live("interrupts the turn when the reader leaves while it starts", () =>
+    Effect.gen(function* () {
+      writeFileSync(sent, "");
+      const asking = yield* question("Go slow.").pipe(Stream.runDrain, Effect.forkChild);
+      expect(yield* sentOnce("turn/start")).toContain("turn/start");
+      yield* Fiber.interrupt(asking);
+      expect(yield* sentOnce("turn/interrupt")).toEqual(
+        expect.arrayContaining(["turn/interrupt", "thread/unsubscribe"]),
+      );
+    }).pipe(Effect.provide(agent)),
+  );
+
+  it.live("stops the answer and the turn when Codex steps outside the lookups", () =>
+    Effect.gen(function* () {
+      writeFileSync(sent, "");
+      const events = yield* all("Go stray.");
+      expect(events.at(-1)).toEqual(stopped);
+      expect(yield* sentOnce("turn/interrupt")).toContain("turn/interrupt");
+    }).pipe(Effect.provide(agent)),
+  );
+
+  it.live("tells Codex no when it asks the tool something, and still answers", () =>
+    Effect.gen(function* () {
+      const events = yield* all("Please check.");
+      expect(events.map((event) => event.type)).toEqual(["thinking", "answer", "usage"]);
+    }).pipe(Effect.provide(agent)),
+  );
+
+  it.live("starts a new thread when the spare one could not be started", () =>
+    Effect.gen(function* () {
+      process.env.FAKE_CODEX_REFUSE_FIRST_THREAD = "1";
+      yield* warm(lookupsUrl);
+      const events = yield* all("Can you answer?");
+      expect(events.map((event) => event.type)).toContain("answer");
+    }).pipe(
+      Effect.ensuring(Effect.sync(() => delete process.env.FAKE_CODEX_REFUSE_FIRST_THREAD)),
+      Effect.provide(agent),
+    ),
+  );
+
+  it.live("keeps two questions asked at once apart", () =>
+    Effect.gen(function* () {
+      const both = yield* Effect.all([all("Please answer one."), all("Please answer two.")], {
+        concurrency: 2,
+      });
+      const leads = both.map((events) => {
+        expect(events.map((event) => event.type)).toEqual(["thinking", "answer", "usage"]);
+        const answered = events.find((event) => event.type === "answer");
+        return answered?.type === "answer" ? answered.answer.lead : "";
+      });
+      expect(new Set(leads).size).toBe(2);
+    }).pipe(Effect.provide(agent)),
+  );
 });

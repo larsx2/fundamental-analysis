@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
+import { Data, Effect, Queue, Schema, Stream } from "effect";
 import { figuresOf, isReportLookup, splitFigures } from "../../shared/answer-figures";
 import type { Answer, AskEvent, LookupResult } from "../../shared/lookups";
-import { appServer, flagsFor, type Notification } from "./codex-app-server";
+import { Agent } from "./agent";
+import { CodexUnexpected, type Connection, flagsFor, type Notification } from "./codex-app-server";
 import type { LookupReply } from "./look-up";
 import { catalog } from "./lookups";
 
@@ -48,12 +50,12 @@ export const upFront = (ticker: string, fiscalYear: number | null) => {
   ];
 };
 
-type Schema = {
+type InputSchema = {
   readonly type?: string;
   readonly items?: { readonly enum?: ReadonlyArray<string> };
 };
 
-const argument = (name: string, schema: Schema, required: ReadonlyArray<string>) => {
+const argument = (name: string, schema: InputSchema, required: ReadonlyArray<string>) => {
   const type =
     schema.type === "array"
       ? `(${schema.items?.enum?.map((each) => JSON.stringify(each)).join(" | ") ?? "string"})[]`
@@ -65,7 +67,7 @@ const argument = (name: string, schema: Schema, required: ReadonlyArray<string>)
 
 const signature = (lookup: (typeof catalog)[number]) => {
   const { properties, required } = lookup.inputSchema as {
-    readonly properties: Readonly<Record<string, Schema>>;
+    readonly properties: Readonly<Record<string, InputSchema>>;
     readonly required: ReadonlyArray<string>;
   };
   const args = Object.entries(properties)
@@ -312,7 +314,9 @@ export const settingsFor = (lookupsUrl: string, readerConfig: string | null | Er
     settings: {
       model_reasoning_summary: "concise",
       web_search: "disabled",
-      thread_unload_delay_secs: 86400,
+      // A finished question's thread, and the lookups program it started, ends
+      // soon after. The spare thread stays, since the tool is still subscribed to it.
+      thread_unload_delay_secs: 30,
       include_permissions_instructions: false,
       include_environment_context: false,
       include_collaboration_mode_instructions: false,
@@ -427,34 +431,80 @@ export const toEvent = (notification: Notification): AskEvent | null => {
   return null;
 };
 
-export const readUpFront = async (
+export const readUpFront = <E, R>(
   companies: ReadonlyArray<{ readonly ticker: string }>,
   fiscalYear: number | null,
-  read: (name: string, input: unknown) => Promise<LookupReply>,
-): Promise<ReadonlyArray<Prefetched>> => {
-  const wanted = companies.flatMap((company) =>
-    upFront(company.ticker, fiscalYear).map((each) => ({
-      ...each,
-      ticker: company.ticker,
-    })),
-  );
-  const replies = await Promise.all(
-    wanted.map((each) => read(each.lookup, each.input).catch(() => null)),
-  );
-  return wanted.flatMap((each, index) => {
-    const reply = replies[index];
-    return reply != null && "result" in reply
-      ? [{ id: `${each.ticker}-${each.lookup}`, ...each, result: reply.result }]
-      : [];
+  read: (name: string, input: unknown) => Effect.Effect<LookupReply, E, R>,
+) =>
+  Effect.gen(function* () {
+    const wanted = companies.flatMap((company) =>
+      upFront(company.ticker, fiscalYear).map((each) => ({
+        ...each,
+        ticker: company.ticker,
+      })),
+    );
+    const replies = yield* Effect.forEach(
+      wanted,
+      (each) =>
+        read(each.lookup, each.input).pipe(
+          Effect.catch((error) =>
+            Effect.logWarning(
+              `The ${each.lookup} lookup for ${each.ticker} could not be read before the question`,
+              error,
+            ).pipe(Effect.as(null)),
+          ),
+        ),
+      { concurrency: "unbounded" },
+    );
+    return wanted.flatMap((each, index): ReadonlyArray<Prefetched> => {
+      const reply = replies[index];
+      return reply != null && "result" in reply
+        ? [{ id: `${each.ticker}-${each.lookup}`, ...each, result: reply.result }]
+        : [];
+    });
   });
-};
 
-export const warm = (lookupsUrl: string) => {
-  const configured = settingsFor(lookupsUrl, readReaderConfig());
-  if ("settings" in configured) appServer(flagsFor(configured.settings)).warm();
-};
+export class SettingsRefused extends Data.TaggedError("SettingsRefused")<{
+  readonly reason: string;
+}> {
+  override get message() {
+    return this.reason;
+  }
+}
 
-export async function* ask(input: {
+export class AnswerUnreadable extends Data.TaggedError("AnswerUnreadable")<{}> {
+  override get message() {
+    return "The answer came back in a shape the tool cannot read.";
+  }
+}
+
+const TurnStarted = Schema.Struct({ turn: Schema.Struct({ id: Schema.String }) });
+
+// The running Codex, started with the reader's settings if it is not running.
+const connectionFor = (lookupsUrl: string) =>
+  Effect.gen(function* () {
+    const configured = settingsFor(lookupsUrl, yield* Effect.sync(() => readReaderConfig()));
+    if ("refused" in configured) return yield* new SettingsRefused({ reason: configured.refused });
+    const agent = yield* Agent;
+    return yield* agent.connection(flagsFor(configured.settings));
+  });
+
+// Starts Codex and a spare thread before the first question, so it waits less.
+export const warm = (lookupsUrl: string) =>
+  connectionFor(lookupsUrl).pipe(
+    Effect.flatMap((connection) => connection.warm),
+    Effect.catch((error) => Effect.logWarning("Codex could not be warmed up", error)),
+  );
+
+// A request whose reply nobody waits for: the answer is already finished.
+const inBackground = (connection: Connection, method: string, params: unknown) =>
+  connection.request(method, params).pipe(
+    Effect.catch((error) => Effect.logDebug(`Codex did not take ${method}`, error)),
+    Effect.forkDetach,
+    Effect.asVoid,
+  );
+
+export type AskInput<E, R> = {
   readonly question: string;
   readonly companies: ReadonlyArray<{
     readonly name: string;
@@ -466,161 +516,153 @@ export async function* ask(input: {
     readonly answer: string;
   }>;
   readonly lookupsUrl: string;
-  readonly read: (name: string, input: unknown) => Promise<LookupReply>;
-  readonly signal: AbortSignal;
-}): AsyncGenerator<AskEvent> {
-  const configured = settingsFor(input.lookupsUrl, readReaderConfig());
-  if ("refused" in configured) {
-    yield { type: "failed", signedOut: false, message: configured.refused };
-    return;
-  }
-  const server = appServer(flagsFor(configured.settings));
-  const [thread, already] = await Promise.all([
-    server.thread().catch((cause: unknown) => cause as Error),
-    readUpFront(input.companies, input.fiscalYear, input.read),
-  ]);
-  if (thread instanceof Error) {
-    yield failed(thread);
-    return;
-  }
-  if (input.signal.aborted) return;
-  const queue: Array<Notification> = [];
-  let wake: (() => void) | null = null;
-  const stopListening = server.listen(thread, (notification) => {
-    queue.push(notification);
-    wake?.();
-  });
-  let turn: string | null = null;
-  let finished = false;
-  const interrupt = () => {
-    if (turn !== null && !finished) {
-      finished = true;
-      void server
-        .request("turn/interrupt", { threadId: thread, turnId: turn })
-        .catch(() => undefined);
-    }
-    wake?.();
-  };
-  input.signal.addEventListener("abort", interrupt, { once: true });
-  try {
-    const started = (await server.request("turn/start", {
-      threadId: thread,
-      input: [
-        {
-          type: "text",
-          text: promptFor(
-            input.question,
-            input.companies,
-            input.fiscalYear,
-            input.earlier,
-            already,
+  readonly read: (name: string, input: unknown) => Effect.Effect<LookupReply, E, R>;
+};
+
+// The events of one answer, ending with the answer or with why there is none.
+// Stopping the stream stops Codex's turn.
+export const ask = <E, R>(input: AskInput<E, R>): Stream.Stream<AskEvent, never, Agent | R> =>
+  Stream.callback<AskEvent, never, Agent | R>((queue) => {
+    const emit = (event: AskEvent) =>
+      Effect.gen(function* () {
+        if (event.type === "failed") {
+          yield* Effect.logWarning(`The answer failed: ${event.message}`);
+        }
+        yield* Queue.offer(queue, event);
+      });
+
+    const answer = Effect.gen(function* () {
+      // Codex starts while the figures are read. A thread or turn that Codex
+      // starts is always let go of, even when the reader leaves while it starts.
+      const [[connection, thread], already] = yield* Effect.all(
+        [
+          Effect.gen(function* () {
+            const connection = yield* connectionFor(input.lookupsUrl);
+            const thread = yield* Effect.acquireRelease(connection.thread, (id) =>
+              inBackground(connection, "thread/unsubscribe", { threadId: id }),
+            );
+            return [connection, thread] as const;
+          }),
+          readUpFront(input.companies, input.fiscalYear, input.read),
+        ],
+        { concurrency: 2 },
+      );
+      const { next } = yield* connection.listen(thread);
+
+      let finished = false;
+      yield* Effect.acquireRelease(
+        connection
+          .request("turn/start", {
+            threadId: thread,
+            input: [
+              {
+                type: "text",
+                text: promptFor(
+                  input.question,
+                  input.companies,
+                  input.fiscalYear,
+                  input.earlier,
+                  already,
+                ),
+                text_elements: [],
+              },
+            ],
+            outputSchema: answerSchema,
+            effort: "medium",
+          })
+          .pipe(
+            Effect.flatMap((started) =>
+              Schema.decodeUnknownEffect(TurnStarted)(started).pipe(
+                Effect.mapError((cause) => new CodexUnexpected({ method: "turn/start", cause })),
+              ),
+            ),
           ),
-          text_elements: [],
-        },
-      ],
-      outputSchema: answerSchema,
-      effort: "medium",
-    })) as { turn: { id: string } };
-    turn = started.turn.id;
-    if (input.signal.aborted) interrupt();
-    let answered = false;
-    let trips = 0;
-    let usage: Usage = { inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
-    const counted = (notification: Notification) => {
-      if (notification.method !== "thread/tokenUsage/updated") return false;
-      trips += 1;
-      const total = (notification.params.tokenUsage as { readonly total?: Usage } | undefined)
-        ?.total;
-      if (total !== undefined) {
-        usage = {
-          inputTokens: total.inputTokens,
-          cachedInputTokens: total.cachedInputTokens,
-          outputTokens: total.outputTokens,
-        };
-      }
-      return true;
-    };
-    const live: Array<LookupResult> = [];
-    while (!input.signal.aborted) {
-      const notification = queue.shift();
-      if (notification === undefined) {
-        await new Promise<void>((settle) => {
-          wake = settle;
-        });
-        wake = null;
-        continue;
-      }
-      if (notification.method === "turn/completed") {
-        finished = true;
-        const error = (
-          notification.params.turn as { readonly error?: { readonly message?: string } | null }
-        ).error;
-        if (error?.message !== undefined) {
-          yield failed(error.message);
-          answered = true;
-        }
-        break;
-      }
-      if (counted(notification)) continue;
-      const next = toEvent(notification);
-      if (next === null) continue;
-      if (next === strayed) {
-        yield next;
-        return;
-      }
-      if (next.type === "read" && next.result !== null) live.push(next.result);
-      if (next.type === "answer") {
-        const checked = checkQuotes(next.answer, live);
-        for (const read of usedBy(checked, already, live)) {
-          yield {
-            type: "reading",
-            id: read.id,
-            lookup: read.lookup,
-            input: read.input,
-          };
-          yield {
-            type: "read",
-            id: read.id,
-            lookup: read.lookup,
-            result: read.result,
-            error: null,
+        (started) =>
+          finished
+            ? Effect.void
+            : inBackground(connection, "turn/interrupt", {
+                threadId: thread,
+                turnId: started.turn.id,
+              }),
+      );
+
+      let trips = 0;
+      let usage: Usage = { inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
+      const counted = (notification: Notification) => {
+        if (notification.method !== "thread/tokenUsage/updated") return false;
+        trips += 1;
+        const total = (notification.params.tokenUsage as { readonly total?: Usage } | undefined)
+          ?.total;
+        if (total !== undefined) {
+          usage = {
+            inputTokens: total.inputTokens,
+            cachedInputTokens: total.cachedInputTokens,
+            outputTokens: total.outputTokens,
           };
         }
-      }
-      if (next.type === "answer" || next.type === "failed") answered = true;
-      yield next.type === "answer"
-        ? { type: "answer", answer: checkQuotes(next.answer, live) }
-        : next;
-      if (next.type === "answer") {
-        // The last trip's tokens arrive after the answer, which is already on
-        // screen, so they are counted while the turn finishes.
-        const until = Date.now() + 3000;
-        while (!finished && !input.signal.aborted && Date.now() < until) {
-          const later = queue.shift();
-          if (later === undefined) {
-            await new Promise<void>((settle) => {
-              wake = settle;
-              setTimeout(settle, until - Date.now());
+        return true;
+      };
+      const live: Array<LookupResult> = [];
+      while (true) {
+        const notification = yield* next;
+        if (notification.method === "turn/completed") {
+          finished = true;
+          const error = (
+            notification.params.turn as { readonly error?: { readonly message?: string } | null }
+          ).error;
+          if (error?.message !== undefined) return yield* emit(failed(error.message));
+          return yield* new AnswerUnreadable();
+        }
+        if (counted(notification)) continue;
+        const event = toEvent(notification);
+        if (event === null) continue;
+        // A failure, including a step outside the lookups, ends the answer.
+        if (event.type === "failed") return yield* emit(event);
+        if (event.type === "read" && event.result !== null) live.push(event.result);
+        if (event.type === "answer") {
+          const checked = checkQuotes(event.answer, live);
+          for (const read of usedBy(checked, already, live)) {
+            yield* emit({
+              type: "reading",
+              id: read.id,
+              lookup: read.lookup,
+              input: read.input,
             });
-            wake = null;
-            continue;
+            yield* emit({
+              type: "read",
+              id: read.id,
+              lookup: read.lookup,
+              result: read.result,
+              error: null,
+            });
           }
-          if (later.method === "turn/completed") finished = true;
-          else counted(later);
+          yield* emit({ type: "answer", answer: checked });
+          // The last trip's tokens arrive after the answer, which is already on
+          // screen, so they are counted while the turn finishes.
+          yield* Effect.gen(function* () {
+            while (!finished) {
+              const later = yield* next;
+              if (later.method === "turn/completed") finished = true;
+              else counted(later);
+            }
+          }).pipe(
+            Effect.timeoutOption("3 seconds"),
+            Effect.catch((error) =>
+              Effect.logDebug("Codex stopped while the tokens were counted", error),
+            ),
+          );
+          yield* emit({ type: "usage", trips, ...usage });
+          return;
         }
-        yield { type: "usage", trips, ...usage };
+        yield* emit(event);
       }
-      if (answered) break;
-    }
-    if (!answered && !input.signal.aborted) {
-      yield failed("The answer came back in a shape the tool cannot read.");
-    }
-  } catch (cause) {
-    if (!input.signal.aborted) yield failed(cause);
-  } finally {
-    input.signal.removeEventListener("abort", interrupt);
-    interrupt();
-    stopListening();
-    void server.request("thread/unsubscribe", { threadId: thread }).catch(() => undefined);
-  }
-}
+    });
+
+    return answer.pipe(
+      Effect.catch((error) => emit(failed(error))),
+      Effect.catchDefect((defect) =>
+        Effect.logError("The answer broke", defect).pipe(Effect.andThen(emit(failed(defect)))),
+      ),
+      Effect.andThen(Queue.end(queue)),
+    );
+  });

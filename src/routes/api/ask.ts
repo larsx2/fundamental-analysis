@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Effect, Stream } from "effect";
 import { findCompany } from "../../server/company-view";
 import { ask, warm } from "../../server/agent/ask";
 import { lookUp } from "../../server/agent/look-up";
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/api/ask")({
     handlers: {
       GET: ({ request }) => {
         if (!fromThisComputer(request)) return refused();
-        warm(lookupsUrlFor(request));
+        runtime.runFork(warm(lookupsUrlFor(request)));
         return new Response(null, { status: 204 });
       },
       POST: async ({ request }) => {
@@ -60,27 +61,27 @@ export const Route = createFileRoute("/api/ask")({
           companies.push({ name: row.name, ticker: row.ticker ?? ticker.toUpperCase() });
         }
         const encoder = new TextEncoder();
-        const events = ask({
-          question,
-          companies,
-          fiscalYear,
-          earlier,
-          lookupsUrl: lookupsUrlFor(request),
-          read: (name, input) => runtime.runPromise(lookUp(name, input)),
-          signal: request.signal,
+        // The answer stops when the reader leaves, which stops Codex's turn.
+        const left = Effect.callback<void>((resume) => {
+          if (request.signal.aborted) return resume(Effect.void);
+          const leave = () => resume(Effect.void);
+          request.signal.addEventListener("abort", leave, { once: true });
+          return Effect.sync(() => request.signal.removeEventListener("abort", leave));
         });
-        const stream = new ReadableStream<Uint8Array>({
-          async start(controller) {
-            try {
-              for await (const event of events) {
-                controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
-              }
-              controller.close();
-            } catch {
-              await events.return(undefined);
-            }
-          },
-        });
+        const stream = await runtime.runPromise(
+          ask({
+            question,
+            companies,
+            fiscalYear,
+            earlier,
+            lookupsUrl: lookupsUrlFor(request),
+            read: lookUp,
+          }).pipe(
+            Stream.map((event) => encoder.encode(`${JSON.stringify(event)}\n`)),
+            Stream.interruptWhen(left),
+            Stream.toReadableStreamEffect(),
+          ),
+        );
         return new Response(stream, {
           headers: {
             "content-type": "application/x-ndjson",
