@@ -22,8 +22,15 @@ export default defineConfig({
   testDir: "screens",
   globalSetup: "./screens/network-log.ts",
   snapshotPathTemplate: "{testDir}/pictures/{arg}{ext}",
-  fullyParallel: false,
-  workers: 1,
+  // Three tests at a time, which takes a run from about 27 seconds to 13.
+  // Collecting a company writes to the shared database and makes every open
+  // screen show a notice, so it runs on its own, after the others.
+  fullyParallel: true,
+  workers: process.env.CI ? 2 : 3,
+  projects: [
+    { name: "screens", testIgnore: /collect\.spec\.ts/ },
+    { name: "collect", testMatch: /collect\.spec\.ts/, dependencies: ["screens"] },
+  ],
   reporter: "list",
   use: {
     baseURL: `http://127.0.0.1:${screensPort}`,
