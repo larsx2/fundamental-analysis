@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { readNetworkLog } from "./network-log";
+import { screensPort } from "./port";
 
 const harmless = [
   /^https:\/\/www\.sec\.gov\/Archives\/edgar\/data\/1\//,
@@ -10,7 +11,7 @@ const harmless = [
 test("collecting a company asks for the SEC contact once and opens it when ready", async ({
   page,
 }) => {
-  expect(readNetworkLog()).toContain("listening on port 4120 with the fake");
+  expect(readNetworkLog()).toContain(`listening on port ${screensPort} with the fake`);
 
   await page.goto("/companies", { waitUntil: "networkidle" });
   const find = page.getByRole("combobox", {

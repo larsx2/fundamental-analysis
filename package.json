@@ -9,7 +9,9 @@
     "test": "bun --bun vp test run",
     "collect": "bun src/cli/collect.ts",
     "build": "bun --bun vp build",
-    "eval": "vitest run --config evals/vitest.config.ts --reporter=vitest-evals/reporter --reporter=json"
+    "eval": "vitest run --config evals/vitest.config.ts --reporter=vitest-evals/reporter --reporter=json",
+    "land": "bun scripts/land.ts",
+    "prepare": "[ \"$(git config core.hooksPath)\" = .githooks ] || git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

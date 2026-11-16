@@ -91,17 +91,22 @@ tasks:
   screens:
     desc: Run the browser tests, and compare pictures of the company screens for Apple, Costco and Microsoft with the saved ones
     preconditions: [*needs-bun, *needs-install]
-    cmd: bunx playwright test {{.CLI_ARGS}}
+    cmd: SCREENS_PORT="${SCREENS_PORT:-$(bun scripts/free-port.ts)}" bunx playwright test {{.CLI_ARGS}}
 
   screens:update:
     desc: Save new pictures of the company screens, after looking at what changed
     preconditions: [*needs-bun, *needs-install]
-    cmd: bunx playwright test --update-snapshots
+    cmd: SCREENS_PORT="${SCREENS_PORT:-$(bun scripts/free-port.ts)}" bunx playwright test --update-snapshots
 
   readme:pictures:
     desc: Take the pictures in the README again, from the same extracts as the screenshot tests
     preconditions: [*needs-bun, *needs-install]
     cmd: bun scripts/readme-pictures.ts
+
+  land:
+    desc: Put this worktree's commits on main. The push hook first runs the same checks as `task ci`
+    preconditions: [*needs-bun, *needs-install]
+    cmd: bun run land {{.CLI_ARGS}}
 
   ci:
     desc: Run everything that must pass before work is handed over

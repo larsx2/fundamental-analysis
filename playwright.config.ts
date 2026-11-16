@@ -1,4 +1,5 @@
 import { defineConfig } from "@playwright/test";
+import { screensPort } from "./screens/port";
 
 // Nothing here may reach the SEC, Wikidata or FRED. The preload answers every outside
 // request itself, the dead proxy stops one that somehow got past it, and the run
@@ -10,7 +11,7 @@ const server = [
   "unset SEC_CONTACT_NAME SEC_CONTACT_EMAIL",
   "bun scripts/screens-database.ts --made-up",
   "rm -f data/no-network.log",
-  `DATABASE_FILE=data/screens.db BUN_OPTIONS=--preload=./screens/no-network.ts ${deadProxy} ${noProxy} bun --bun vp dev --port 4120 --strictPort`,
+  `DATABASE_FILE=data/screens.db BUN_OPTIONS=--preload=./screens/no-network.ts ${deadProxy} ${noProxy} bun --bun vp dev --port ${screensPort} --strictPort`,
 ].join(" && ");
 
 // Browser tests of the screens, against a database built out of the committed
@@ -25,7 +26,7 @@ export default defineConfig({
   workers: 1,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:4120",
+    baseURL: `http://127.0.0.1:${screensPort}`,
     viewport: { width: 1440, height: 1500 },
     deviceScaleFactor: 1,
     reducedMotion: "reduce",
@@ -34,7 +35,7 @@ export default defineConfig({
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002 } },
   webServer: {
     command: server,
-    url: "http://127.0.0.1:4120/companies",
+    url: `http://127.0.0.1:${screensPort}/companies`,
     reuseExistingServer: false,
     timeout: 120_000,
   },

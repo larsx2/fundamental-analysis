@@ -1,0 +1,3 @@
+#!/bin/sh
+# Checks every push to main before it leaves this computer. See scripts/pre-push.ts.
+exec bun scripts/pre-push.ts "$@"

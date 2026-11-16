@@ -30,7 +30,7 @@ The riskiest work comes first: whether the stack runs on Bun, then whether filin
 
 ## Rules for every task
 
-- A task is done when `task ci` passes and its "Check" has been carried out.
+- A task is done when it has landed with `task land` and its "Check" has been carried out.
 - Screens and messages use the words in [`GLOSSARY.md`](./GLOSSARY.md) and no others.
 - Collected data is never committed. Tests use small made-up data in the same shape as the SEC's, or small extracts of the SEC's public data for Apple, Costco and Microsoft, trimmed to the tags the tests need and kept beside the tests. `task ci` never reaches the SEC.
 - Exact versions are fixed for everything installed.

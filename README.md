@@ -135,10 +135,11 @@ Commands are run through [Task](https://taskfile.dev).
 | `task readme:pictures` | Takes the pictures in this README again                                  |
 | `task build`           | Builds the tool                                                          |
 | `task ci`              | Runs everything that must pass before work is handed over                |
+| `task land`            | Puts this worktree's commits on main, after the same checks as `task ci` |
 
 The rules behind these names are written at the top of [`Taskfile.yml`](./Taskfile.yml).
 
-On GitHub, every push to main and every pull request runs the same checks, tests and build, and runs the browser tests without comparing pictures. The pictures are compared only with `task ci` on your own machine, because they differ by operating system.
+Every push to main first runs everything `task ci` runs, pictures included, through the repo's push hook. `task land` rebases a worktree's commits and pushes them. On GitHub, every push to main runs the same checks, tests and build again, and runs the browser tests without comparing pictures, because pictures differ by operating system. How changes are made and landed is in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## How ideas become decisions
 
