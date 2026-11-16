@@ -44,7 +44,7 @@ Two changes made side by side always meet in the end. When each lands within hou
 
 There are two builds, and neither replaces the other:
 
-- **Before:** the push hook runs every check on exactly what is pushed. A push is only accepted by GitHub if it moves `main` forward from where it was checked, so every version of `main` was checked as it stands. Never push to find out whether something passes.
+- **Before:** the push hook runs every check on exactly what is pushed. A push that changes only the docs listed in `scripts/docs-only.ts` runs only the formatting check. A push is only accepted by GitHub if it moves `main` forward from where it was checked, so every version of `main` was checked as it stands. Never push to find out whether something passes.
 - **After:** GitHub builds `main` again after every landing, on Linux. It catches what differs from this computer.
 
 Changes land without a lock or a queue. When two agents push at once, the second is refused, rebases and runs its checks again. That wastes a minute now and then, but there is nothing to wait for or clean up.

@@ -5,6 +5,7 @@
 import { spawnSync } from "node:child_process";
 import { writeFileSync, appendFileSync } from "node:fs";
 import { flags } from "../src/server/flags";
+import { isDoc } from "./docs-only";
 
 const git = (...args: ReadonlyArray<string>) =>
   spawnSync("git", args, { encoding: "utf8" }).stdout.trim();
@@ -38,13 +39,31 @@ const env = {
   SCREENS_PORT: port,
 };
 
-const checks: ReadonlyArray<ReadonlyArray<string>> = [
-  ["bun", "install", "--frozen-lockfile"],
-  ["bun", "run", "check"],
-  ["bun", "run", "test"],
-  ["bun", "run", "build"],
-  ["bunx", "playwright", "test"],
-];
+// A push that only changes docs needs only the formatting check. Anything git
+// cannot answer plainly means the full checks.
+const docsOnly = (() => {
+  const [update] = updates;
+  const remoteSha = update?.[3] ?? "";
+  if (updates.length !== 1 || /^0*$/.test(remoteSha)) return false;
+  const ask = (...args: ReadonlyArray<string>) => spawnSync("git", args, { encoding: "utf8" });
+  if (ask("cat-file", "-e", `${remoteSha}^{commit}`).status !== 0) return false;
+  if (ask("merge-base", "--is-ancestor", remoteSha, "HEAD").status !== 0) return false;
+  const diff = ask("diff", "--no-renames", "--name-only", "-z", remoteSha, "HEAD");
+  if (diff.status !== 0) return false;
+  const changed = diff.stdout.split("\0").filter((file) => file !== "");
+  return changed.length > 0 && changed.every(isDoc);
+})();
+if (docsOnly) console.log("Only docs changed, so only the formatting check runs.");
+
+const checks: ReadonlyArray<ReadonlyArray<string>> = docsOnly
+  ? [["bun", "run", "check"]]
+  : [
+      ["bun", "install", "--frozen-lockfile"],
+      ["bun", "run", "check"],
+      ["bun", "run", "test"],
+      ["bun", "run", "build"],
+      ["bunx", "playwright", "test"],
+    ];
 
 const run = (command: ReadonlyArray<string>) => {
   const [program = "bun", ...args] = command;
