@@ -102,7 +102,7 @@ It is open source under the [MIT licence](./LICENSE). The typefaces, Inter and N
 
 - Everything the tool is built on must have a licence that allows it to be shared under MIT.
 - The repository holds code and documents only. It never holds collected filing data, share prices, index values, company logos, or screens from other products. Each person collects their own data when they run the tool, and the tool fetches each collected company's logo from Wikidata onto that computer.
-- No secrets, personal settings or references to private work are committed.
+- No secrets, personal settings or references to private work are committed. The push hook, and GitHub again after it, reads every commit for a secret, because one a later commit removes is still in the history.
 - Nothing here is investment advice.
 
 ## Where things are

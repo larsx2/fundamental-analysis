@@ -30,6 +30,23 @@ for (const [, localSha = ""] of updates) {
 const status = git("status", "--porcelain");
 if (status !== "") refuse(`commit every change first, new files included:\n${status}`);
 
+// A secret removed by a later commit is still in the history that GitHub
+// publishes, so every commit about to be pushed is read. A machine without
+// gitleaks is covered by the same scan on GitHub.
+const secrets = spawnSync("gitleaks", ["git", "--no-banner", "--redact", "--verbose"], {
+  encoding: "utf8",
+  maxBuffer: 1 << 28,
+});
+const code = (secrets.error as { code?: string } | undefined)?.code;
+if (code === "ENOENT") {
+  console.log("gitleaks is not installed here, so only GitHub scans for secrets.");
+} else if (secrets.error !== undefined) {
+  refuse(`gitleaks could not run: ${secrets.error.message}`);
+} else if (secrets.status !== 0) {
+  const found = `${secrets.stdout}${secrets.stderr}`.trim();
+  refuse(`a commit carries a secret:\n${found}`);
+}
+
 const log = git("rev-parse", "--path-format=absolute", "--git-path", "push-checks.log");
 writeFileSync(log, "");
 const port = spawnSync("bun", ["scripts/free-port.ts"], { encoding: "utf8" }).stdout.trim();

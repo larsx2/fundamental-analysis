@@ -32,6 +32,7 @@ Two changes made side by side always meet in the end. When each lands within hou
 5. **Land it** with `bun run land`. It rebases the commits on the latest `main` and pushes them. Before the push leaves this computer, the repo's push hook:
    - refuses it unless it carries exactly the checked-out commit, with nothing uncommitted, new files included;
    - runs everything CI runs on it: install, `check`, `test`, `build`, and the browser tests with pictures of the screens compared, on a free port and with every flag at its default;
+   - reads every commit for a secret with gitleaks, when it is installed here, because a secret a later commit removes is still in the history;
    - refuses it if any of them fails, showing the end of the output.
 
    If another agent landed first, `main` has moved and GitHub refuses the push. `bun run land` then rebases on the new `main` and pushes again, so the checks run once more on the new combination. Running it again is always safe. A check that fails once and passes when run again is reported as flaky.
@@ -45,7 +46,7 @@ Two changes made side by side always meet in the end. When each lands within hou
 There are two builds, and neither replaces the other:
 
 - **Before:** the push hook runs every check on exactly what is pushed. A push that changes only the docs listed in `scripts/docs-only.ts` runs only the formatting check. A push is only accepted by GitHub if it moves `main` forward from where it was checked, so every version of `main` was checked as it stands. Never push to find out whether something passes.
-- **After:** GitHub builds `main` again after every landing, on Linux. It catches what differs from this computer.
+- **After:** GitHub builds `main` again after every landing, on Linux. It also reads every commit for a secret, with the same gitleaks, so a leak is caught even from a machine without it. It catches what differs from this computer.
 
 Changes land without a lock or a queue. When two agents push at once, the second is refused, rebases and runs its checks again. That wastes a minute now and then, but there is nothing to wait for or clean up.
 
