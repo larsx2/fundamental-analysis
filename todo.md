@@ -32,7 +32,7 @@ The riskiest work comes first: whether the stack runs on Bun, then whether filin
 
 - A task is done when it has landed with `task land` and its "Check" has been carried out.
 - Screens and messages use the words in [`GLOSSARY.md`](./GLOSSARY.md) and no others.
-- Collected data is never committed. Tests use small made-up data in the same shape as the SEC's, or small extracts of the SEC's public data for Apple, Costco and Microsoft, trimmed to the tags the tests need and kept beside the tests. `task ci` never reaches the SEC.
+- Local databases and additional collected data are never committed. The nine-company SEC starter snapshot is the documented exception in [A new database starts with nine saved companies](./docs/adr/0012-a-new-database-starts-with-nine-saved-companies.md). Tests use small made-up data in the same shape as the SEC's, or small extracts of the SEC's public data for Apple, Costco and Microsoft, trimmed to the tags the tests need and kept beside the tests. `task ci` never reaches the SEC.
 - Exact versions are fixed for everything installed.
 - Before adopting anything new, confirm its licence allows sharing under MIT.
 - Commits follow the conventional commits format.
@@ -360,7 +360,7 @@ Coarse on purpose. Each task is broken down when it is reached.
 
 ### T23b: What the Overview still lacks
 
-From the review by a financial adviser, a product manager and a designer on 11 November 2026.
+From the Overview review on 11 November 2026.
 
 - [ ] Collect short-term investments, so cash and net debt count everything a company can turn into money quickly. Until then the Overview shows neither, because Apple and Microsoft would look as if they owe more than they hold.
 - [ ] Mark a year whose net income was moved by a one-off item, such as Tesla's tax gain or Microsoft's charge under the 2017 US tax law, so a beginner does not read it as the business changing.
@@ -428,7 +428,7 @@ From the review by a financial adviser, a product manager and a designer on 11 N
 
 ### T31: Make it runnable by someone else
 
-- [ ] The README says how to install and start it from nothing.
+- [x] The README says how to install and start it from nothing.
 - [ ] A fresh copy on another machine reaches a ready company by following the README alone.
 
 ### T32: Licence and housekeeping
@@ -436,7 +436,7 @@ From the review by a financial adviser, a product manager and a designer on 11 N
 - [x] Add the MIT licence file.
 - [x] Confirm the licence of everything installed, and of the typeface and icons.
 - [x] Decide which email address appears on the commits before the history becomes public.
-- [ ] Add a short guide for contributors and for coding agents: the glossary rule, the rules for tests, RFCs and decision records, the task names, the commit format.
+- [x] Add a short guide for contributors and for coding agents: the glossary rule, the rules for tests, RFCs and decision records, the task names, the commit format.
 
 ### T33: Checks that run by themselves
 

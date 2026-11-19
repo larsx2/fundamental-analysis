@@ -9,7 +9,7 @@ The repo holds the SEC's answers for nine companies, in `starter/sec-answers.jso
 
 We chose this because up to ten agents work at once, each in a worktree of its own whose database starts empty. Without it, each would collect the same companies from the SEC before doing anything, and together they could break the SEC's limit of ten requests per second for this computer. It also gives a new person a full home page before they give any contact details, and gives every worktree the same annual reports the evals' answer key was written from.
 
-This changes [Collect companies on demand, with no fixed list](0002-collect-companies-on-demand.md), which said the project ships no data. The SEC's information is public and may be copied and shared. Every other company is still collected only when asked for.
+This changes [Collect companies on demand, with no fixed list](0002-collect-companies-on-demand.md), which said the project ships no data. The SEC's [webmaster FAQ](https://www.sec.gov/about/webmaster-frequently-asked-questions) describes EDGAR public filing content as free to access and reuse. The snapshot retains its collection date and source URLs; it is SEC source material, not project-authored code under the MIT licence. Every other company is still collected only when asked for.
 
 ## Consequences
 

@@ -49,9 +49,12 @@ These pictures come from the small extracts of Apple's, Microsoft's and Costco's
 
 ## Start it
 
-You need [Bun](https://bun.com) and [Task](https://taskfile.dev).
+You need Git, [Bun 1.4.0](https://bun.com) (the version fixed in `package.json`) and [Task 3](https://taskfile.dev).
 
 ```sh
+git clone https://github.com/larsx2/fundamental-analysis.git
+cd fundamental-analysis
+task doctor
 task init
 task dev
 ```
@@ -63,6 +66,8 @@ To ask questions, sign in to ChatGPT once with `bunx codex login` in the tool's 
 ## Where it runs
 
 Entirely on your own machine. There is no account and no service to sign up for. It refuses requests from other computers, and from other websites open in the same browser. The internet is used to collect a company's filings from the SEC and the economic figures that go with them, and to answer questions. Everything already collected works offline.
+
+This is a local, single-user tool, not a hosted service. Do not expose its port to the internet or put it behind a public reverse proxy; it has no user authentication.
 
 Questions about a company are answered with your own ChatGPT subscription, through the Codex that comes with the tool. Each question, and the figures the tool looks up for it, goes to OpenAI; the collected data stays on your machine.
 
@@ -94,16 +99,21 @@ Both are needed together. The dialog wins over the environment: details given or
 
 ## Status
 
-The first version is being finished. Collecting, the Companies list, the four company screens, the Glossary and questions all work. What is left before publishing is in [`todo.md`](./todo.md).
+This is an early-stage, local-only project. Collecting, the Companies list, the four company screens, the Glossary and questions work; known gaps and unfinished work are in [`todo.md`](./todo.md).
 
-It is open source under the [MIT licence](./LICENSE). The typefaces, Inter and Newsreader, are under the SIL Open Font Licence.
+The project's code is under the [MIT licence](./LICENSE). Dependencies retain their own licences; the typefaces, Inter and Newsreader, are under the SIL Open Font Licence. SEC source material is described below, separately from the code licence.
 
 ## Rules that follow from being open source
 
-- Everything the tool is built on must have a licence that allows it to be shared under MIT.
-- The repository holds code and documents only. It never holds collected filing data, share prices, index values, company logos, or screens from other products. Each person collects their own data when they run the tool, and the tool fetches each collected company's logo from Wikidata onto that computer.
+- Dependencies must permit distribution with this MIT-licensed project, with their own licence terms and notices preserved.
+- The repo includes the SEC responses for nine starter companies in `starter/sec-answers.json.gz`, and small SEC extracts beside the tests. The snapshot includes its collection date and source URLs; [the decision record](./docs/adr/0012-a-new-database-starts-with-nine-saved-companies.md) explains how it is refreshed. The SEC describes EDGAR public filing content as free to access and reuse in its [webmaster FAQ](https://www.sec.gov/about/webmaster-frequently-asked-questions). These are SEC source materials, not project-authored code.
+- Local databases, additional collected data, share prices, index values, company logos and screenshots from other products are not committed. Each copy fetches company logos from Wikidata onto that person's computer.
 - No secrets, personal settings or references to private work are committed. The push hook, and GitHub again after it, reads every commit for a secret, because one a later commit removes is still in the history.
 - Nothing here is investment advice.
+
+## Contributing and security
+
+Start with [CONTRIBUTING.md](./CONTRIBUTING.md) for bug reports, proposals and patches. Report suspected vulnerabilities privately using [SECURITY.md](./SECURITY.md), not in a public issue.
 
 ## Where things are
 

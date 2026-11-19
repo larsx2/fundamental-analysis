@@ -16,11 +16,11 @@ The whole point of the tool is that using it is enough to learn how a company's 
 
 ## What we know
 
-The prototype needs readable figures, clear statement tables, labelled charts and sources beside written analysis.
+The useful patterns were a restrained surface, clear groups of figures, statement tables with periods as columns, charts labelled at their ends, and sources beside written analysis. The requirements below adapt those patterns to learning about a business.
 
 ## Options
 
-**Borrow**
+**Shared interface patterns**
 
 - The near-black surface with a glow in the company's brand colour. Settled on 11 November 2026: the prototype is dark only, with no light version.
 - Hairline panels and the white-and-grey text scale.
@@ -30,7 +30,7 @@ The prototype needs readable figures, clear statement tables, labelled charts an
 - The sources column beside any text the agent writes.
 - The floating bar and keyboard keys.
 
-**Change**
+**Adapt for learning**
 
 - Revenue and where it goes should be the largest thing on a company page. Share price is not the focus of this tool.
 - Every term on screen should open its glossary entry, and every number should be able to show where it came from in the filing.
@@ -108,7 +108,7 @@ Looked at: financial stats, comparing financial metrics, comparing stock metrics
 
 ### Settled on 11 November 2026, from a review of the Overview
 
-A financial adviser, a product manager and a designer reviewed the Overview. What they agreed on:
+The Overview review identified these changes:
 
 - **Each figure is said once near the top.** The headline gives revenue and the cents left as net income; the line under it gives only how both changed. The label "in plain words" is gone.
 - **Net income is what is left of each dollar, not what is kept.** Most of it goes back out as dividends, share buybacks and investment, so no screen says "kept" any more. A loss says how much was lost.

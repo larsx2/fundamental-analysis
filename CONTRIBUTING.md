@@ -1,6 +1,24 @@
 # Contributing
 
-Most changes here are written by coding agents, often a dozen at once, and directed by one owner. They all work the same way, which this file describes. `AGENTS.md` holds the rules agents read every session; this file gives the reasons and the longer steps.
+Bug reports and small patches are welcome. The maintainer lands accepted changes on `main`; contributors do not need push access or a coding agent.
+
+## Reporting a bug or proposing a change
+
+Open an [issue](https://github.com/larsx2/fundamental-analysis/issues) with what you expected, what happened, the steps to reproduce it, your operating system and Bun version. For a wrong figure, include the company, fiscal year and filing link. Do not attach your database, SEC contact details or Codex credentials. Report suspected vulnerabilities privately as described in [SECURITY.md](./SECURITY.md).
+
+Discuss a larger change in an issue before implementing it. This project does not use pull requests: for a small fix, link a commit on your fork or attach a patch to the issue. Include how you checked the change. The maintainer reviews it and lands it through the workflow below.
+
+## What to preserve
+
+- Use the terms in [GLOSSARY.md](./GLOSSARY.md).
+- Keep tests focused on observable mistakes; see the [test rules](./todo.md#rules-for-tests).
+- Keep changes small and use the [task commands](./README.md#tasks) and [commit format](#commits).
+- Keep useful research and alternatives in [RFCs](./docs/rfc/README.md), and lasting decisions in [ADRs](./docs/adr/). They explain why the project works this way.
+- Keep scratch reviews, local mockups, private-project material and third-party screenshots out of commits. Public references belong only where they explain a decision; they are not permission to copy another product's assets or wording.
+
+## Maintainer workflow
+
+The sections below describe the maintainer's workflow, also used by coding agents. `AGENTS.md` holds the rules agents read every session.
 
 ## One branch
 
