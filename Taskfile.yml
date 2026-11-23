@@ -45,9 +45,12 @@ tasks:
         fi
       done
       expected=$(sed -n 's/.*"packageManager": "bun@\([^"]*\)".*/\1/p' package.json)
-      if command -v bun >/dev/null 2>&1 && [ "$(bun --version)" != "$expected" ]; then
-        printf 'Bun %s is installed, but this project is fixed to %s.\n' "$(bun --version)" "$expected"
-        missing=1
+      if command -v bun >/dev/null 2>&1; then
+        installed=$(bun --version | cut -d- -f1)
+        if [ "${installed%.*}" != "${expected%.*}" ] || [ "${installed##*.}" -lt "${expected##*.}" ]; then
+          printf 'Bun %s is installed, but this project needs Bun %s or a later %s release.\n' "$installed" "$expected" "${expected%.*}"
+          missing=1
+        fi
       fi
       exit $missing
 

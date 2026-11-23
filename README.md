@@ -49,7 +49,7 @@ These pictures come from the small extracts of Apple's, Microsoft's and Costco's
 
 ## Start it
 
-You need Git, [Bun 1.4.0](https://bun.com) (the version fixed in `package.json`) and [Task 3](https://taskfile.dev).
+You need Git, [Bun](https://bun.com) 1.4.0 or a later 1.4 release, and [Task 3](https://taskfile.dev). The tests on GitHub run on exactly 1.4.0, the version in `package.json`.
 
 ```sh
 git clone https://github.com/larsx2/fundamental-analysis.git
