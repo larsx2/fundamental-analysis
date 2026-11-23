@@ -51,6 +51,8 @@ These pictures come from the small extracts of Apple's, Microsoft's and Costco's
 
 You need Git, [Bun](https://bun.com) 1.4.0 or a later 1.4 release, and [Task 3](https://taskfile.dev). The tests on GitHub run on exactly 1.4.0, the version in `package.json`.
 
+With [Nix](https://nixos.org) and flakes turned on, you can skip installing those: `nix develop` in the tool's folder opens a shell with Bun 1.4.0, Task, Git and gitleaks, and on Linux the browser the browser tests use. Run the `task` commands below inside it. It works on Linux and on Macs with Apple chips.
+
 ```sh
 git clone https://github.com/larsx2/fundamental-analysis.git
 cd fundamental-analysis

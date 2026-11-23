@@ -59,7 +59,11 @@ tasks:
     preconditions: [*needs-bun]
     cmds:
       - bun install --frozen-lockfile
-      - bunx playwright install chromium
+      - |
+        case "${PLAYWRIGHT_BROWSERS_PATH:-}" in
+          /nix/store/*) echo "The browser comes from Nix." ;;
+          *) bunx playwright install chromium ;;
+        esac
 
   dev:
     desc: Serve the tool on this machine at http://127.0.0.1:4100
