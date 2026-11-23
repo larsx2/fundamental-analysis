@@ -11,5 +11,6 @@ This narrows [Collect companies on demand, with no fixed list](0002-collect-comp
 
 ## Consequences
 
-- Removing one of the five brings it back the next time the home page loads.
+- Removing one of the five brings it back the next time the home page loads, once contact details are given.
 - Until they are ready, the home chart shows only the ones that are.
+- Since [a new database starts with nine saved companies](0012-a-new-database-starts-with-nine-saved-companies.md), a new database already holds the five, before any contact details are given and without asking the SEC. Setting the contact details now lets a removed one come back, and starts their checks for new filings.

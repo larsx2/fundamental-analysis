@@ -273,7 +273,7 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 - [x] Ready companies are listed with their as of date.
 - [x] Ready companies sit side by side in a table that sorts, with ten fiscal years of revenue and operating margin, and become cards when the table does not fit.
 
-**Check:** from an empty database, search for Costco, agree, and watch it become ready without leaving the screen.
+**Check:** from a new database, search for a company that is not saved, such as Amazon, agree, and watch it become ready without leaving the screen.
 
 ### T17: Try two forms of the money flow
 
@@ -320,7 +320,7 @@ T15 and T17 do not depend on Parts 2 and 3 and can be done alongside them.
 
 ### Checkpoint C: the first slice is done
 
-- [ ] Search, collect, and "Where the money goes" work for Apple, Costco and Microsoft from an empty database.
+- [ ] "Where the money goes" works for Apple, Costco and Microsoft from a new database, and search and collect work for a company that is not saved.
 - [ ] You can answer "where does each dollar of revenue go?" for each of the three after a few minutes.
 - [x] What was learned is written into the RFCs. Anything hard to change later has a decision record.
 - [ ] Part 5 is broken down in full, using what the slice taught.

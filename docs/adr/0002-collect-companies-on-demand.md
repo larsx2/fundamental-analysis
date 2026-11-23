@@ -16,4 +16,6 @@ Understanding 100 companies remains the learning goal. It is not a limit on the 
 - A ready company carries two dates: as of, and last checked.
 - A person can remove a company, which returns it to not collected.
 
+The project no longer ships without data: [a new database starts with nine saved companies](0012-a-new-database-starts-with-nine-saved-companies.md). Every other company is still collected only when asked for.
+
 Explored in [Which companies are covered, and how they get in](../rfc/0005-which-companies.md).

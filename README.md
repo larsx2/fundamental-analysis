@@ -15,7 +15,7 @@ It is not a course. It teaches through how it is built: clear visuals, numbers y
 ## What it covers
 
 - US-listed public companies that file an annual report (10-K). Banks, insurers and property trusts are not covered yet.
-- Any such company, collected when you ask for it. There is no fixed list.
+- Any such company, collected when you ask for it. Nine come saved in this repo; there is no other fixed list.
 - What each company reported in its filings, year by year.
 - Where each dollar of revenue goes.
 - What the company did with its money, and the notable things that happened to it.
@@ -73,7 +73,7 @@ Questions about a company are answered with your own ChatGPT subscription, throu
 
 ## Your contact details for the SEC
 
-The SEC asks every program that reads its data to name the person sending the requests. The tool asks for a name and an email address the first time it fetches the company list, keeps them on this computer, and sends them only to the SEC.
+The SEC asks every program that reads its data to name the person sending the requests. The tool asks for a name and an email address the first time you collect a company that is not saved in this repo, keeps them on this computer, and sends them only to the SEC. Until then, the saved companies are not checked for new filings.
 
 To give them without that dialog, for example on a machine that runs the tool unattended, set both:
 
