@@ -87,7 +87,7 @@ _Avoid_: GAAP number, official number, statutory number
 
 **Adjusted number**:
 A company's own version of a figure, leaving out costs that management considers one-off or not representative. Each company adjusts in its own way.
-_Example_: For 2022 Uber showed an adjusted profit of about $1.7 billion while its reported net income was a loss of about $9 billion.
+_Example_: For fiscal 2023 NVIDIA showed an adjusted net income of about $8.4 billion, leaving out the cost of paying employees in shares among other things, while its reported net income was about $4.4 billion.
 _Avoid_: Non-GAAP, core, underlying, normalized
 
 **Restated number**:
@@ -109,7 +109,7 @@ _Avoid_: P&L, profit and loss, statement of operations
 
 **Revenue**:
 The money a company brings in from customers for its products and services, before any cost is taken out.
-_Example_: Apple's revenue in fiscal 2023 was about $383 billion.
+_Example_: Apple's revenue in fiscal 2023 was about $383 billion, which its filings call net sales. Costco's revenue is its net sales plus membership fees.
 _Avoid_: Sales, net sales, top line, turnover
 
 **Cost of revenue**:
@@ -119,7 +119,7 @@ _Avoid_: Cost of goods sold, COGS, cost of sales, merchandise costs
 
 **Gross profit**:
 Revenue minus cost of revenue.
-_Example_: Apple kept about $169 billion of gross profit from its $383 billion of revenue in fiscal 2023.
+_Example_: Apple kept about $169 billion of gross profit from its $383 billion of revenue in fiscal 2023, a dollar amount its income statement labels gross margin.
 _Avoid_: Gross income, gross earnings
 
 **Operating expenses**:
@@ -168,8 +168,8 @@ _Example_: Apple's net income in fiscal 2023 was about $97 billion.
 _Avoid_: Profit, net profit, earnings, bottom line
 
 **Earnings per share**:
-Net income divided by the number of shares.
-_Example_: Apple's earnings per share for fiscal 2023 were $6.13, counting the shares already promised to employees as well as the existing ones.
+Net income divided by the average number of shares over the period, usually counting shares still to be created, such as those promised to employees. Filings also show a basic figure without those shares.
+_Example_: Apple's earnings per share for fiscal 2023 were $6.13, or $6.16 basic.
 _Avoid_: EPS, profit per share
 
 ### 5. The balance sheet
@@ -190,8 +190,8 @@ _Example_: Apple's liabilities at the end of fiscal 2023 totalled about $290 bil
 _Avoid_: Obligation, using "debt" for all liabilities
 
 **Equity**:
-Assets minus liabilities: what would be left for the owners if the company sold everything it owns and paid everything it owes.
-_Example_: Apple's equity at the end of fiscal 2023 was about $62 billion, which is $353 billion of assets minus $290 billion of liabilities.
+Assets minus liabilities: what would be left for the owners if the company sold everything it owns at the amounts on its balance sheet and paid everything it owes.
+_Example_: Apple's equity at the end of fiscal 2023 was about $62 billion, which is $352.6 billion of assets minus $290.4 billion of liabilities.
 _Avoid_: Net worth, book value, using "equity" to mean shares
 
 **Cash**:
@@ -247,7 +247,7 @@ _Example_: Apple recorded about $11.5 billion of depreciation and amortization i
 _Avoid_: D&A, write-down, wear and tear
 
 **Stock-based compensation**:
-Pay given to employees in shares instead of money. It lowers net income but uses no cash.
+Pay given to employees in shares or the right to receive shares, instead of money. It lowers net income but uses no cash.
 _Example_: Apple paid about $11 billion of stock-based compensation in fiscal 2023.
 _Avoid_: SBC, share-based pay, equity comp
 
