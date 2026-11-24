@@ -48,6 +48,41 @@ export const balanceTags: Record<Exclude<BalanceKey, "debt" | "netDebt">, Readon
   ],
 };
 
+export const cashIncludingRestrictedCash = {
+  name: "Cash including restricted cash",
+  tags: [
+    "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+    "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations",
+  ],
+} as const;
+
+export const cashOfBusinessesBeingSold = {
+  name: "Cash of businesses being sold",
+  tags: ["DisposalGroupIncludingDiscontinuedOperationCashAndCashEquivalents"],
+  includedIn:
+    "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations",
+} as const;
+
+export const restrictedCashParts = [
+  {
+    name: "Short-term restricted cash",
+    tags: [
+      "RestrictedCashCurrent",
+      "RestrictedCashAndCashEquivalentsCurrent",
+      "RestrictedCashAndCashEquivalentsAtCarryingValue",
+    ],
+  },
+  {
+    name: "Longer-term restricted cash",
+    tags: ["RestrictedCashNoncurrent", "RestrictedCashAndCashEquivalentsNoncurrent"],
+  },
+] as const;
+
+export const restrictedCashTotal = {
+  name: "Restricted cash",
+  tags: ["RestrictedCash", "RestrictedCashAndCashEquivalents"],
+} as const;
+
 // Debt is never one line. It is the short-term part plus the longer-term
 // debt due within a year and after it. The names are said in plain words.
 export const debtParts = [
@@ -106,6 +141,10 @@ export const earningsPerShareTags = [
 
 export const statementTags: ReadonlyArray<string> = [
   ...Object.values(balanceTags).flat(),
+  ...cashIncludingRestrictedCash.tags,
+  ...cashOfBusinessesBeingSold.tags,
+  ...restrictedCashParts.flatMap((part) => part.tags),
+  ...restrictedCashTotal.tags,
   ...debtParts.flatMap((part) => part.tags),
   ...longTermDebtTotalTags,
   ...liabilitiesAndEquityTags,

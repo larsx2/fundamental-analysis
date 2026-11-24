@@ -1,4 +1,5 @@
 import type { CheckedFigure, Figure } from "../../shared/figures";
+import { money } from "../../shared/format";
 import { dayInMilliseconds } from "../days";
 import {
   chooseTerms,
@@ -17,12 +18,16 @@ import {
   type CashFlowKey,
   cashFlowKeys,
   cashFlowTags,
+  cashIncludingRestrictedCash,
+  cashOfBusinessesBeingSold,
   debtParts,
   earningsPerShareTags,
   incomeTaxTags,
   liabilitiesAndEquityTags,
   longTermDebtTotalTags,
   type RatioKey,
+  restrictedCashParts,
+  restrictedCashTotal,
 } from "./statement-tags";
 import { type TermKey, termKeys, termNames, termTags } from "./term-tags";
 
@@ -169,6 +174,92 @@ const earningsPerShareFor = (
   };
 };
 
+type Part = { readonly name: string; readonly tags: ReadonlyArray<string> };
+type Taken = { readonly name: string; readonly value: number };
+type CashAndTotal = { readonly cash: number; readonly total: number };
+
+const equalNeighbours = (
+  yearEnds: ReadonlyArray<{ readonly fiscalYear: number; readonly endOn: string }>,
+  fiscalYear: number,
+  cashAndTotalOn: (endOn: string) => CashAndTotal | null,
+) => {
+  const bothFiled = yearEnds.flatMap((year) => {
+    const both = cashAndTotalOn(year.endOn);
+    return both === null ? [] : [{ fiscalYear: year.fiscalYear, ...both }];
+  });
+  const before = bothFiled.filter((each) => each.fiscalYear < fiscalYear).at(-1);
+  const after = bothFiled.find((each) => each.fiscalYear > fiscalYear);
+  if (before === undefined || after === undefined) return null;
+  return before.cash === before.total && after.cash === after.total ? { before, after } : null;
+};
+
+const howCashWasFound = (input: {
+  readonly fiscalYear: number;
+  readonly total: number;
+  readonly taken: ReadonlyArray<Taken>;
+  readonly forSale: Taken | null;
+  readonly unrestricted: ReturnType<typeof equalNeighbours>;
+}) => {
+  const { fiscalYear, forSale, unrestricted } = input;
+  if (unrestricted !== null) {
+    const lessForSale =
+      forSale !== null && forSale.value !== 0
+        ? `, less ${money(forSale.value)} of cash of businesses being sold`
+        : "";
+    return `No figure for restricted cash was filed for the end of fiscal ${fiscalYear}. Cash including restricted cash equalled cash at the end of fiscal ${unrestricted.before.fiscalYear} (${money(unrestricted.before.cash)}) and ${unrestricted.after.fiscalYear} (${money(unrestricted.after.cash)}), the nearest years where both were filed, so the ${money(input.total)} total is shown as cash${lessForSale}.`;
+  }
+  if (input.taken.every((part) => part.value === 0)) {
+    return `${forSale === null ? "Restricted cash was" : "Restricted cash and the cash of businesses being sold were"} filed as $0 for the end of fiscal ${fiscalYear}, so the total is shown as cash.`;
+  }
+  return undefined;
+};
+
+const cashFiledWithRestrictedCash = (
+  fiscalYear: number,
+  total: Figure,
+  atYearEnd: (tag: string) => ReadonlyArray<NumberRow>,
+  neighbours: (totalTag: string) => ReturnType<typeof equalNeighbours>,
+): Figure => {
+  if (total.kind !== "reported") return gap;
+  const reportedFor = (part: Part): Taken | null => {
+    for (const tag of part.tags) {
+      const rows = atYearEnd(tag);
+      const row =
+        rows.find((each) => each.accession === total.latest.accession) ??
+        [...rows].sort(byFiledOn).at(-1);
+      if (row !== undefined) return { name: part.name, value: row.value };
+    }
+    return null;
+  };
+  const whole = reportedFor(restrictedCashTotal);
+  const parts = restrictedCashParts.flatMap((part) => reportedFor(part) ?? []);
+  const includesForSale = total.latest.tag === cashOfBusinessesBeingSold.includedIn;
+  const forSale = includesForSale ? reportedFor(cashOfBusinessesBeingSold) : null;
+  if (includesForSale && forSale === null) return gap;
+  if ([whole, ...parts, forSale].some((part) => part !== null && part.value < 0)) return gap;
+  const restricted =
+    whole !== null && whole.value >= parts.reduce((added, part) => added + part.value, 0)
+      ? [whole]
+      : parts;
+  const taken = [...restricted, ...(forSale === null ? [] : [forSale])];
+  const unrestricted = restricted.length === 0 ? neighbours(total.latest.tag) : null;
+  if (restricted.length === 0 && unrestricted === null) return gap;
+  const value = taken.reduce((cash, part) => cash - part.value, total.value);
+  if (value < 0) return gap;
+  const how = howCashWasFound({ fiscalYear, total: total.value, taken, forSale, unrestricted });
+  return {
+    kind: "calculated",
+    value,
+    from: [
+      { name: cashIncludingRestrictedCash.name, value: total.value },
+      ...taken.map((part) => ({ name: part.name, value: part.value === 0 ? 0 : -part.value })),
+    ],
+    setAside: null,
+    latest: total.latest,
+    ...(how === undefined ? {} : { how }),
+  };
+};
+
 export const chooseStatements = (input: {
   readonly durations: ReadonlyArray<NumberRow>;
   readonly instants: ReadonlyArray<NumberRow>;
@@ -185,21 +276,41 @@ export const chooseStatements = (input: {
     instantsByTag.set(row.tag, [...(instantsByTag.get(row.tag) ?? []), row]);
   }
 
-  return income.fiscalYears.map(({ fiscalYear, terms }) => {
-    const revenueRows = input.durations
+  const yearEnds = income.fiscalYears.map(({ fiscalYear }) => {
+    const period = input.durations
       .filter((row) => row.fiscalYear === fiscalYear && revenueTags.has(row.tag))
-      .sort(byFiledOn);
-    const period = revenueRows.at(-1);
-    const startOn = period?.startOn ?? `${fiscalYear - 1}-01-01`;
-    const endOn = period?.endOn ?? `${fiscalYear}-12-31`;
+      .sort(byFiledOn)
+      .at(-1);
+    return {
+      fiscalYear,
+      startOn: period?.startOn ?? `${fiscalYear - 1}-01-01`,
+      endOn: period?.endOn ?? `${fiscalYear}-12-31`,
+    };
+  });
+  const onDay = (tag: string, day: string) =>
+    (instantsByTag.get(tag) ?? []).filter(
+      (row) => row.endOn !== undefined && daysApart(row.endOn, day) <= 7,
+    );
+  const latestOn = (tags: ReadonlyArray<string>, day: string) => {
+    for (const tag of tags) {
+      const row = onDay(tag, day).sort(byFiledOn).at(-1);
+      if (row !== undefined) return row.value;
+    }
+    return null;
+  };
+  const cashAndTotalOn = (totalTag: string) => (day: string) => {
+    const cash = latestOn(balanceTags.cash, day);
+    const total = latestOn([totalTag], day);
+    return cash === null || total === null ? null : { cash, total };
+  };
+
+  return income.fiscalYears.map(({ fiscalYear, terms }, index) => {
+    const { startOn, endOn } = yearEnds[index]!;
 
     // A balance is counted for a fiscal year only on its last day. The balance
     // sheet is taken whole from one filing where it can be, because a line
     // restated alone can break the sheet's own rule.
-    const atYearEnd = (tag: string) =>
-      (instantsByTag.get(tag) ?? []).filter(
-        (row) => row.endOn !== undefined && daysApart(row.endOn, endOn) <= 7,
-      );
+    const atYearEnd = (tag: string) => onDay(tag, endOn);
     const wholeSheet = atYearEnd("Assets").sort(byFiledOn).at(-1)?.accession ?? null;
     const instant = (tags: ReadonlyArray<string>): Figure => {
       for (const tag of tags) {
@@ -214,6 +325,16 @@ export const chooseStatements = (input: {
     const balance = Object.fromEntries(
       Object.entries(balanceTags).map(([key, tags]) => [key, instant(tags)]),
     ) as Record<keyof typeof balanceTags, Figure>;
+
+    const cash =
+      balance.cash.kind === "gap"
+        ? cashFiledWithRestrictedCash(
+            fiscalYear,
+            instant(cashIncludingRestrictedCash.tags),
+            atYearEnd,
+            (totalTag) => equalNeighbours(yearEnds, fiscalYear, cashAndTotalOn(totalTag)),
+          )
+        : balance.cash;
 
     if (balance.liabilities.kind === "gap") {
       balance.liabilities = difference(
@@ -264,16 +385,14 @@ export const chooseStatements = (input: {
       netMargin: checked(ratio(named("netIncome"), named("revenue"))),
       earningsPerShare: checked(earningsPerShareFor(perShare, splits, fiscalYear)),
       incomeTax: checked(flow(incomeTaxTags)),
-      cash: checked(balance.cash),
+      cash: checked(cash),
       receivables: checked(balance.receivables),
       inventory: checked(balance.inventory),
       propertyPlantAndEquipment: checked(balance.propertyPlantAndEquipment),
       goodwill: checked(balance.goodwill),
       assets: checked(balance.assets, balanceDoubtful),
       debt: checked(debt),
-      netDebt: checked(
-        difference({ name: "Debt", figure: debt }, { name: "Cash", figure: balance.cash }),
-      ),
+      netDebt: checked(difference({ name: "Debt", figure: debt }, { name: "Cash", figure: cash })),
       liabilities: checked(balance.liabilities),
       equity: checked(balance.equity),
       ...(Object.fromEntries(

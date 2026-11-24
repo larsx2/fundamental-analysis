@@ -199,6 +199,11 @@ Money in the bank plus very safe investments that can be turned into money withi
 _Example_: Apple held about $30 billion of cash at the end of fiscal 2023, plus far more in longer-dated investments.
 _Avoid_: Liquidity, cash pile, war chest
 
+**Restricted cash**:
+Money a company holds but may use only for a set purpose, such as a deposit pledged to a lender. The balance sheet keeps it out of cash, though the cash flow statement adds it in.
+_Example_: At the end of fiscal 2024 Tesla held about $0.9 billion of restricted cash, apart from its $16.1 billion of cash.
+_Avoid_: Pledged cash, escrow, encumbered cash
+
 **Receivables**:
 Money customers owe for things the company has already delivered.
 _Example_: When a supplier ships parts to a carmaker that has 60 days to pay, that amount sits in the supplier's receivables.
