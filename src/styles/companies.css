@@ -607,6 +607,10 @@
       padding-right: 44px;
     }
 
+    .ready-table tbody td:has(.date) {
+      grid-column: span 2;
+    }
+
     .ready-table .cell-label {
       display: block;
       margin-bottom: 4px;
