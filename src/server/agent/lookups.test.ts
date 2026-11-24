@@ -8,7 +8,7 @@ import { ReportedNumbers } from "../reported-numbers";
 import { Sec } from "../sec";
 import type { StatementYear } from "../terms/statements";
 import { statementsFor } from "../terms/terms";
-import { type CompanyData, LookupProblem, runLookup } from "./lookups";
+import { type CompanyData, glossaryLookup, LookupProblem, runLookup } from "./lookups";
 
 const companies = { apple: 320193, costco: 909832 } as const;
 type Company = keyof typeof companies;
@@ -119,6 +119,28 @@ describe("the agent's lookups, from trimmed SEC data", () => {
       );
     }),
   );
+});
+
+describe("the glossary lookup", () => {
+  it("finds a term by a name filings use for it, and says what else it is called", () => {
+    const result = glossaryLookup(" eps ");
+    expect(result.title).toBe("Glossary: Earnings per share");
+    expect(result.notes).toContain(
+      "Also called: EPS, diluted earnings per share, net income per share (NVIDIA's label)",
+    );
+    expect(glossaryLookup(" Net income ").title).toBe("Glossary: Net income");
+    expect(() => glossaryLookup("net")).toThrow(LookupProblem);
+    expect(glossaryLookup("Net sales").title).toBe("Glossary: Revenue");
+    expect(glossaryLookup("other income and expense").title).toBe(
+      "Glossary: Interest and other income",
+    );
+  });
+
+  it("never sends a name two terms share to either of them", () => {
+    expect(() => glossaryLookup("stock")).toThrow(LookupProblem);
+    expect(glossaryLookup("gross margin").title).toBe("Glossary: Gross margin");
+    expect(() => glossaryLookup("profit per share")).toThrow(LookupProblem);
+  });
 });
 
 describe("checking the figures in an answer", () => {

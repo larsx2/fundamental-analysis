@@ -101,7 +101,7 @@ function GlossaryPage() {
           .filter(
             (term) =>
               query === "" ||
-              `${term.name}\n${term.definition}\n${term.example}\n${term.avoid}`
+              `${term.name}\n${term.definition}\n${term.example}\n${term.alsoCalled}\n${term.avoid}`
                 .toLowerCase()
                 .includes(query),
           )
@@ -288,10 +288,18 @@ function GlossaryPage() {
                       <span className="label">Example</span>
                       {highlight(term.example, query)}
                     </p>
-                    <p className="avoid">
-                      <span className="label">Words to avoid</span>
-                      {highlight(term.avoid, query)}
-                    </p>
+                    {term.alsoCalled !== "" && (
+                      <p className="also-called">
+                        <span className="label">Also called</span>
+                        {highlight(term.alsoCalled, query)}
+                      </p>
+                    )}
+                    {term.avoid !== "" && (
+                      <p className="avoid">
+                        <span className="label">Not used for this</span>
+                        {highlight(term.avoid, query)}
+                      </p>
+                    )}
                   </article>
                 ))}
             </section>

@@ -33,6 +33,14 @@ describe("what the agent is told", () => {
     expect(prompt.endsWith("The question: What is gross profit?")).toBe(true);
   });
 
+  it("lets an answer name the other name it was asked about once, in both kinds of question", () => {
+    for (const prompt of [
+      promptFor("What is EPS?", []),
+      promptFor("What is Apple's EPS?", [apple]),
+    ])
+      expect(prompt).toContain("name it once to connect it to the glossary's term");
+  });
+
   it("names the one company a question is about", () => {
     const prompt = promptFor("Is Apple growing?", [apple]);
     expect(prompt).toContain("about Apple Inc. (ticker AAPL), a US public company");

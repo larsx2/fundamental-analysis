@@ -452,6 +452,15 @@
     font-weight: 600;
   }
 
+  .card .also-called {
+    font-size: var(--text-xs);
+  }
+
+  .card .also-called .label {
+    color: var(--color-text-3);
+    margin-right: 6px;
+  }
+
   .card .note {
     margin: 12px 0 0;
     color: var(--color-text-2);

@@ -228,10 +228,19 @@
     font-size: var(--text-s);
   }
 
+  .also-called,
   .avoid {
     margin-top: 8px !important;
     color: var(--color-text-3);
     font-size: var(--text-xs);
+  }
+
+  .also-called {
+    color: var(--color-text-2);
+  }
+
+  .also-called + .avoid {
+    margin-top: 4px !important;
   }
 
   .entry .label {

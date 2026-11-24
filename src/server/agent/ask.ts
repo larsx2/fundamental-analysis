@@ -102,6 +102,9 @@ ${already
 
 `;
 
+const otherNames =
+  "When the question uses a name the glossary says a term is also called, name it once to connect it to the glossary's term, then use only the term.";
+
 const general = (
   question: string,
   earlier: ReadonlyArray<{
@@ -118,7 +121,7 @@ ${callingLookups(["glossary"])}
 Answer
 Reply with JSON that matches the schema:
 - lead: one short sentence that answers the question.
-- sentences: one to three short sentences that explain it, in the glossary's words.
+- sentences: one to three short sentences that explain it, in the glossary's words. ${otherNames}
 - quotes: none.
 - drawing: "".
 - next: three short questions a beginner might ask next, about words or ideas, or about a company such as "Is Apple growing?".
@@ -167,7 +170,7 @@ The annual report
 - Before saying the report names no rivals, search for the lists where reports name them, such as compet* NEAR(include, 5) or "such as". When it names none, say so, and say how it describes its competition.
 
 Words
-- Use the glossary's words: revenue, not sales; net income, not profit or earnings; fiscal 2026, not FY26. Net income is what is left of each dollar, never what the company keeps.
+- Use the glossary's words: revenue, not sales; net income, not profit or earnings; fiscal 2026, not FY26. Net income is what is left of each dollar, never what the company keeps. ${otherNames}
 - Say what happened. No judgement of the company, no forecast and no advice on buying or selling. If asked whether to buy, or whether the shares are cheap, say the tool cannot tell, because it has no share prices and makes no forecasts, then say what the figures show about the business.
 - If neither the lookups nor the annual report can answer, say so in the lead and name what the tool does not collect, from the notes of the company lookup, and give no figures. Never answer from memory.
 

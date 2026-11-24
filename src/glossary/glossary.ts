@@ -5,6 +5,7 @@ export type GlossaryTerm = {
   readonly slug: string;
   readonly definition: string;
   readonly example: string;
+  readonly alsoCalled: string;
   readonly avoid: string;
   readonly section: number;
 };
@@ -31,7 +32,10 @@ export const slugOf = (text: string) =>
 
 // GLOSSARY.md is the only source of the words on screen. Each section is a
 // `### N. Title` heading, and each term is a bold name followed by its
-// definition, an `_Example_:` line and an `_Avoid_:` line.
+// definition and an `_Example_:` line, then optionally an `_Also called_:` line
+// for the names filings and articles use, and an `_Avoid_:` line for words the
+// tool does not use for this term. Either list may end a name with a note in
+// brackets, and the second may hold a misuse written as `"word" for something`.
 export const parseGlossary = (markdown: string): Glossary => {
   const lines = markdown.split("\n");
   const intro: Array<string> = [];
@@ -43,6 +47,7 @@ export const parseGlossary = (markdown: string): Glossary => {
       name: string;
       definition: Array<string>;
       example: string;
+      alsoCalled: string;
       avoid: string;
     }>;
   }> = [];
@@ -82,15 +87,18 @@ export const parseGlossary = (markdown: string): Glossary => {
         name: name[1]!,
         definition: [],
         example: "",
+        alsoCalled: "",
         avoid: "",
       });
       continue;
     }
     const term = section.terms.at(-1);
     const example = /^_Example_:\s*(.*)$/.exec(line);
+    const alsoCalled = /^_Also called_:\s*(.*)$/.exec(line);
     const avoid = /^_Avoid_:\s*(.*)$/.exec(line);
     if (term === undefined) section.note.push(line);
     else if (example !== null) term.example = example[1]!;
+    else if (alsoCalled !== null) term.alsoCalled = alsoCalled[1]!;
     else if (avoid !== null) term.avoid = avoid[1]!;
     else term.definition.push(line);
   }
@@ -107,6 +115,7 @@ export const parseGlossary = (markdown: string): Glossary => {
         slug: slugOf(term.name),
         definition: term.definition.join(" "),
         example: term.example,
+        alsoCalled: term.alsoCalled,
         avoid: term.avoid,
         section: section.number,
       })),
@@ -125,3 +134,32 @@ const byName = new Map(
 export const findTerm = (name: string) => byName.get(name.toLowerCase());
 
 export const allTerms = glossary.sections.flatMap((section) => section.terms);
+
+export const plainName = (name: string) => name.replace(/ \(.*\)$/, "");
+
+export const entriesIn = (list: string): ReadonlyArray<{ name: string; note: string }> =>
+  list
+    .split(/,(?![^()]*\))/)
+    .map((entry) => /^(.*?)(?:\s+\(([^()]*)\))?$/.exec(entry.trim())!)
+    .map(([, name = "", note = ""]) => ({ name: name.replace(/^"(.*)"$/, "$1"), note }))
+    .filter(({ name }) => name !== "" && !name.startsWith('"') && !/^using /i.test(name));
+
+export const namesIn = (list: string) => entriesIn(list).map((entry) => entry.name);
+
+export const collisionsIn = (terms: ReadonlyArray<GlossaryTerm>) => {
+  const sides = new Map<string, Array<{ term: string; note: string }>>();
+  const add = (name: string, term: string, note: string) =>
+    sides.set(name.toLowerCase(), [...(sides.get(name.toLowerCase()) ?? []), { term, note }]);
+  for (const term of terms) {
+    add(term.name, term.name, "");
+    if (plainName(term.name) !== term.name) add(plainName(term.name), term.name, "");
+    for (const entry of entriesIn(term.alsoCalled)) add(entry.name, term.name, entry.note);
+  }
+  return [...sides]
+    .filter(([, owners]) => new Set(owners.map((owner) => owner.term)).size > 1)
+    .map(([name, owners]) => ({
+      name,
+      terms: [...new Set(owners.map((owner) => owner.term))],
+      noted: owners.some((owner) => owner.note !== ""),
+    }));
+};

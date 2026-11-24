@@ -73,6 +73,12 @@ export function TermCard() {
                     <Popover.Description render={<div />}>
                       <p>{entry.definition}</p>
                       <p className="text-text-3">{entry.example}</p>
+                      {entry.alsoCalled !== "" && (
+                        <p className="also-called">
+                          <span className="label">Also called</span>
+                          {entry.alsoCalled}
+                        </p>
+                      )}
                     </Popover.Description>
                     {payload.own}
                   </>

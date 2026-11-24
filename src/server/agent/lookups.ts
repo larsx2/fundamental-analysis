@@ -154,7 +154,7 @@ export const catalog = [
   },
   {
     name: "glossary",
-    description: "A glossary term's definition and example.",
+    description: "A glossary term's definition, example and the other names filings use for it.",
     inputSchema: {
       type: "object",
       properties: { term: { type: "string" } },

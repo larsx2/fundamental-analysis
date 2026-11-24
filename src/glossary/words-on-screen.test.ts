@@ -4,7 +4,7 @@ import { parts } from "../shared/money-flow-parts";
 import { termNames } from "../server/terms/term-tags";
 import { cashParts, profitParts } from "../ui/money-flow/flows";
 import { statements } from "../ui/statements/rows";
-import { allTerms, findTerm } from "./glossary";
+import { allTerms, findTerm, namesIn, plainName } from "./glossary";
 
 const screenFiles = import.meta.glob<string>(
   ["../routes/**/*.{ts,tsx}", "../ui/**/*.{ts,tsx}", "../shared/**/*.{ts,tsx}", "!**/*.test.*"],
@@ -121,19 +121,14 @@ describe("the words on screen against the glossary", () => {
     expect([...new Set(unknown)]).toEqual([]);
   });
 
-  it("uses no word the glossary says to avoid", () => {
-    const officialNames = allTerms.flatMap((term) => [
-      term.name,
-      term.name.replace(/ \(.*\)$/, ""),
-    ]);
+  it("uses no word the glossary lists as also called or not used for a term", () => {
+    const officialNames = allTerms.flatMap((term) => [term.name, plainName(term.name)]);
     const officialLowercase = new Set(officialNames.map((name) => name.toLowerCase()));
     const avoided = [
       ...new Set(
         allTerms
-          .flatMap((term) => term.avoid.split(","))
-          .map((entry) => entry.trim())
-          .filter((entry) => entry !== "" && !/^(using|plain) /i.test(entry))
-          .map((entry) => entry.replace(/^"(.*)"$/, "$1").toLowerCase()),
+          .flatMap((term) => [...namesIn(term.alsoCalled), ...namesIn(term.avoid)])
+          .map((name) => name.toLowerCase()),
       ),
     ].filter((entry) => !officialLowercase.has(entry));
     const patternsOf = (phrases: ReadonlyArray<string>, plural: boolean) =>
@@ -160,6 +155,7 @@ describe("the words on screen against the glossary", () => {
       }),
     );
     expect(avoided).toContain("net sales");
+    expect(avoided).toContain("eps");
     expect([...new Set(hits)]).toEqual([]);
   });
 });
