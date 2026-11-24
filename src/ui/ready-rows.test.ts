@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CompanySummary, ListedCompany } from "../functions/companies";
-import { type Row, type TableView, sortRows } from "./ready-rows";
+import { type Row, type TableView, noGrowthReason, sortRows } from "./ready-rows";
 
 const row = (name: string, figures: Partial<CompanySummary> | null): Row => ({
   company: {
@@ -77,5 +77,48 @@ describe("the order of the ready companies", () => {
       "Large Stores",
       "No Figures",
     ]);
+  });
+});
+
+describe("why a company has no growth", () => {
+  const tenYears = (first: number | null, newest: number | null) =>
+    row("Ten Years", {
+      years: [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026],
+      revenue: [first, 10, 10, 10, 10, 10, 10, 10, 10, newest],
+    }).summary;
+
+  it.each([
+    { case: "no summary", summary: null, reason: "not reported" },
+    {
+      case: "a missing first fiscal year",
+      summary: tenYears(null, 20),
+      reason: "no revenue reported for fiscal 2017",
+    },
+    {
+      case: "a first fiscal year of $0 or less",
+      summary: tenYears(0, 20),
+      reason: "revenue in fiscal 2017 was $0 or less",
+    },
+    {
+      case: "no revenue in the newest fiscal year",
+      summary: tenYears(10, null),
+      reason: "no revenue reported for fiscal 2026",
+    },
+    {
+      case: "a newest fiscal year of $0",
+      summary: tenYears(10, 0),
+      reason: "revenue in fiscal 2026 was $0 or less",
+    },
+    {
+      case: "a newest fiscal year below $0",
+      summary: tenYears(10, -3),
+      reason: "revenue in fiscal 2026 was $0 or less",
+    },
+  ])("says why for $case", ({ summary, reason }) => {
+    expect(noGrowthReason(summary)).toBe(reason);
+  });
+
+  it("gives no reason when there is a rate", () => {
+    expect(noGrowthReason(tenYears(10, 20))).toBeNull();
   });
 });

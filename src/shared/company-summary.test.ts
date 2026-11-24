@@ -49,4 +49,21 @@ describe("growth of revenue across ready companies", () => {
     ];
     expect(summarise(statements)?.growth).toBeNull();
   });
+
+  it.each([
+    { which: "the first has no statement", first: [], newest: 126 },
+    { which: "the first has zero revenue", first: [year(2017, amount(0))], newest: 126 },
+    { which: "the first has negative revenue", first: [year(2017, amount(-5))], newest: 126 },
+    { which: "the newest has zero revenue", first: [year(2017, amount(117))], newest: 0 },
+    { which: "the newest has negative revenue", first: [year(2017, amount(117))], newest: -5 },
+  ])("gives no growth when $which", ({ first, newest }) => {
+    const statements = [
+      ...first,
+      ...[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025].map((fiscalYear) =>
+        year(fiscalYear, amount(fiscalYear - 1900)),
+      ),
+      year(2026, amount(newest)),
+    ];
+    expect(summarise(statements)?.growth).toBeNull();
+  });
 });

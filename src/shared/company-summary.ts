@@ -28,10 +28,23 @@ export type CompanySummary = {
   readonly freeCashFlow: number | null;
 };
 
+export type NoGrowth = "no-start" | "no-end" | "start-not-positive" | "end-not-positive";
+
+export const noGrowth = (start: number | null, end: number | null): NoGrowth | null =>
+  start === null
+    ? "no-start"
+    : end === null
+      ? "no-end"
+      : start <= 0
+        ? "start-not-positive"
+        : end <= 0
+          ? "end-not-positive"
+          : null;
+
 // The steady yearly rate that takes a number from its starting value to its
 // ending value. Without both ends, or across a loss, there is no such rate.
 export const compoundAnnualGrowthRate = (start: number | null, end: number | null, years: number) =>
-  start === null || end === null || start <= 0 || end <= 0
+  start === null || end === null || noGrowth(start, end) !== null
     ? null
     : (end / start) ** (1 / years) - 1;
 

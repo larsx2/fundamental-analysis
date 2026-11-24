@@ -1,4 +1,5 @@
 import type { CompanySummary, ListedCompany } from "../functions/companies";
+import { noGrowth } from "../shared/company-summary";
 import { plainName } from "./logo-tile";
 
 export const sortKeys = ["name", "revenue", "growth", "margin", "net", "free", "asof"] as const;
@@ -26,6 +27,23 @@ export type Row = {
 };
 
 export const newestRevenue = (summary: CompanySummary | null) => summary?.revenue.at(-1) ?? null;
+
+export const noGrowthReason = (summary: CompanySummary | null) => {
+  if (summary === null) return "not reported";
+  const first = summary.years[0];
+  switch (noGrowth(summary.revenue[0] ?? null, newestRevenue(summary))) {
+    case "no-start":
+      return `no revenue reported for fiscal ${first}`;
+    case "no-end":
+      return `no revenue reported for fiscal ${summary.fiscalYear}`;
+    case "start-not-positive":
+      return `revenue in fiscal ${first} was $0 or less`;
+    case "end-not-positive":
+      return `revenue in fiscal ${summary.fiscalYear} was $0 or less`;
+    case null:
+      return null;
+  }
+};
 
 const sortValue = (row: Row, key: SortKey, units: Units): string | number | null => {
   const { company, summary } = row;

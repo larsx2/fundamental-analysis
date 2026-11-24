@@ -16,19 +16,24 @@ import {
   type Units,
   firstOrder,
   newestRevenue,
+  noGrowthReason,
   sortRows,
 } from "./ready-rows";
 import { RemoveDialog } from "./remove-company";
 import { Segmented } from "./segmented";
 import { Term } from "./term";
 
+const growthSpoken =
+  "Growth a year: revenue's compound annual growth rate from the first to the newest of ten fiscal years";
+
 const columns: ReadonlyArray<{
   readonly key: SortKey;
   readonly label: string;
+  readonly spoken?: string;
 }> = [
   { key: "name", label: "Company" },
   { key: "revenue", label: "Revenue" },
-  { key: "growth", label: "Growth" },
+  { key: "growth", label: "Growth a year", spoken: growthSpoken },
   { key: "margin", label: "Operating margin" },
   { key: "net", label: "Net income" },
   { key: "free", label: "Free cash flow" },
@@ -205,7 +210,7 @@ function ReadyRow({
   const name = plainName(company.name);
   const revenue = newestRevenue(summary);
   const margin = summary?.operatingMargin.at(-1) ?? null;
-  const growth = summary?.growth ?? null;
+  const rate = summary?.growth ?? null;
   const per = units === "per100";
   const amount = (value: number | null) =>
     value === null ? (
@@ -272,11 +277,17 @@ function ReadyRow({
         )}
       </td>
       <td>
-        <span className="cell-label">Growth</span>
-        {growth === null ? (
-          <NoFigure why="fewer than ten fiscal years to compare" />
+        <span className="cell-label">
+          <span aria-hidden="true">Growth a year</span>
+          <span className="visually-hidden">{growthSpoken}</span>
+        </span>
+        {summary === null || rate === null ? (
+          <NoFigure why={noGrowthReason(summary) ?? "not reported"} />
         ) : (
-          <span className="fig">{percent(growth)}</span>
+          <>
+            <span className="fig">{percent(rate)}</span>
+            <span className="fig-sub">since fiscal {summary.years[0]}</span>
+          </>
         )}
       </td>
       <td>
@@ -388,7 +399,14 @@ export function ReadyTable({
                   >
                     <button type="button" className="ready-sort" onClick={() => sortBy(column.key)}>
                       {column.key !== "name" && arrow}
-                      {column.label}
+                      {column.spoken === undefined ? (
+                        column.label
+                      ) : (
+                        <>
+                          <span aria-hidden="true">{column.label}</span>
+                          <span className="visually-hidden">{column.spoken}</span>
+                        </>
+                      )}
                       {column.key === "name" && arrow}
                     </button>
                   </th>
@@ -411,6 +429,14 @@ export function ReadyTable({
           </tbody>
         </table>
       </div>
+      <p className="mt-4 mb-0 max-w-[68ch] text-xs text-text-3">
+        Growth a year is the{" "}
+        <Term name="Compound annual growth rate">compound annual growth rate</Term> of revenue over
+        each company's ten newest fiscal years. It is not the{" "}
+        <Term name="Year-over-year change">year-over-year change</Term>. A dash under Growth a year
+        means the first of those fiscal years has no revenue reported, or revenue in the first or
+        newest fiscal year was $0 or less.
+      </p>
     </section>
   );
 }
