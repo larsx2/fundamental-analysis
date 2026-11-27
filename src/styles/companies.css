@@ -572,7 +572,7 @@
     color: var(--color-text-1);
   }
 
-  @container ready (max-width: 1177px) {
+  @container ready (max-width: 1191px) {
     .ready-table thead {
       display: none;
     }

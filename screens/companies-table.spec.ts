@@ -23,10 +23,10 @@ test("the growth column says it is revenue's growth a year since a fiscal year",
   await expect(page.getByText(/It is not the\s+year-over-year change\./)).toBeVisible();
 });
 
-test("the table shows from 1226 pixels wide without spilling, and cards below", async ({
+test("the table shows from 1240 pixels wide without spilling, and cards below", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1226, height: 900 });
+  await page.setViewportSize({ width: 1240, height: 900 });
   await page.goto("/companies", { waitUntil: "networkidle" });
   const table = page.getByRole("table", { name: "Ready companies, newest fiscal year of each" });
   await expect(table.getByRole("columnheader", { name: spoken })).toBeVisible();
@@ -35,7 +35,7 @@ test("the table shows from 1226 pixels wide without spilling, and cards below", 
   );
   expect(spill).toBeLessThanOrEqual(0);
 
-  await page.setViewportSize({ width: 1225, height: 900 });
+  await page.setViewportSize({ width: 1239, height: 900 });
   await expect(table.getByRole("columnheader", { name: spoken })).toBeHidden();
   const apple = table.getByRole("row").filter({ hasText: "AAPL" });
   await expect(apple.getByText("Growth a year", { exact: true })).toBeVisible();
